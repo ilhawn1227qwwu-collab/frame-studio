@@ -1,0 +1,55 @@
+"""One-shot end-to-end test of a short user-selected media export.
+No content is shared or persisted: temporary files are deleted when complete.
+Runs only when FRAME_VERIFY_ALT=1, separately from the HTTP server.
+"""
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import tempfile
+import time
+from pathlib import Path
+
+from alternative import AlternativeError, inspect as inspect_alt, obtain_source
+from server import Job, _encode
+
+ID = os.environ.get("FRAME_PROBE_VIDEO_ID", "XDbJL-OZW1A")
+
+def log(**data):
+    print("FRAME_VERIFY: " + json.dumps(data, ensure_ascii=False), flush=True)
+
+def verify():
+    log(step="begin")
+    try:
+        info = inspect_alt(ID)
+        quality = min(info["qualities"])
+        log(step="metadata", ok=True, quality=quality,
+            duration=info["duration"], options=len(info["qualities"]))
+        with tempfile.TemporaryDirectory(prefix="frame-verify-") as tmp:
+            folder = Path(tmp)
+            def update(progress, message):
+                if progress in (5, 32, 76):
+                    log(step="progress", progress=progress)
+            source = obtain_source(ID, "mp4", quality, folder, update)
+            log(step="download", ok=True, source_bytes=source.stat().st_size)
+            target_mp4 = folder / "clip.mp4"
+            _encode(Job(id="verify", video_id=ID), source, target_mp4,
+                    mode="mp4", start=0, end=min(3.0, info["duration"]),
+                    duration=float(info["duration"]), bitrate=192)
+            log(step="mp4", ok=target_mp4.is_file() and target_mp4.stat().st_size > 1000,
+                bytes=target_mp4.stat().st_size)
+            audio_source = obtain_source(ID, "mp3", 192, folder, update)
+            target_mp3 = folder / "clip.mp3"
+            _encode(Job(id="verify-audio", video_id=ID), audio_source, target_mp3,
+                    mode="mp3", start=0, end=min(3.0, info["duration"]),
+                    duration=float(info["duration"]), bitrate=192)
+            log(step="mp3", ok=target_mp3.is_file() and target_mp3.stat().st_size > 1000,
+                bytes=target_mp3.stat().st_size)
+        log(step="finished", ok=True)
+    except Exception as e:
+        log(step="failed", kind=type(e).__name__,
+            message=str(e)[:120] if isinstance(e,AlternativeError) else "Unexpected processing error")
+
+if __name__ == "__main__":
+    verify()
