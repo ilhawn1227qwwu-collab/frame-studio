@@ -39,7 +39,8 @@ def verify():
                     duration=float(info["duration"]), bitrate=192)
             log(step="mp4", ok=target_mp4.is_file() and target_mp4.stat().st_size > 1000,
                 bytes=target_mp4.stat().st_size)
-            audio_source = obtain_source(ID, "mp3", 192, folder, update)
+            audio_source = (source if os.getenv("FRAME_VERIFY_REUSE_AUDIO") == "1"
+                            else obtain_source(ID, "mp3", 192, folder, update))
             target_mp3 = folder / "clip.mp3"
             _encode(Job(id="verify-audio", video_id=ID), audio_source, target_mp3,
                     mode="mp3", start=0, end=min(3.0, info["duration"]),
