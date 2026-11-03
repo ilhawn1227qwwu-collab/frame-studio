@@ -47,7 +47,10 @@ OPENER = urllib.request.build_opener(NoRedirect())
 def _validate_media_url(url: str) -> str:
     """Allowlist redirects even when the upstream metadata is malicious."""
     parts = urllib.parse.urlsplit(url)
-    if (parts.scheme != "https" or parts.hostname not in ALLOWED_HOSTS
+    hostname = (parts.hostname or "").lower()
+    trusted_host = (hostname == INVIDIOUS_HOST or
+                    re.fullmatch(r"yt-comp[0-9]+\\.chocolatemoo53\\.com", hostname) is not None)
+    if (parts.scheme != "https" or not trusted_host
             or parts.port not in (None, 443) or parts.username or parts.password):
         raise AlternativeError("외부 미디어 서버가 신뢰할 수 없는 주소를 반환했어요.")
     return url
