@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: frame-studio-private
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: FRAME_PUBLIC_MODE
+        value: "1"
+      - key: FRAME_SITE_PASSWORD
+        sync: false
+      - key: FRAME_MAX_DURATION
+        value: "1800"
+      - key: FRAME_MAX_FILE_BYTES
+        value: "367001600"
+      - key: FRAME_MAX_ACTIVE_JOBS
+        value: "1"
