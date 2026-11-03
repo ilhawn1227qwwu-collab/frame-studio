@@ -26,6 +26,24 @@ function clearError() {
   hide(elements.error); elements.error.textContent = '';
   hide($('fallbackSection')); hide($('fallbackJobBtn'));
 }
+$('alternateBtn').addEventListener('click', async () => {
+  if (!state.url) return showError('먼저 유튜브 주소를 입력해 주세요.');
+  const btn = $('alternateBtn');
+  setLoading(btn, true);
+  btn.textContent = '외부 서버 확인 중...';
+  try {
+    const info = await request('/api/inspect-alt', { url: state.url });
+    clearError();
+    displayVideo(info);
+    elements.video.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (error) {
+    showError(error.message);
+    show($('fallbackSection')); // Keep the separate Cobalt option available.
+  } finally {
+    setLoading(btn, false);
+    btn.textContent = '외부 서버로 불러오기';
+  }
+});
 function openExternalFallback() {
   // Opt-in browser navigation: only the YouTube URL, never our site password.
   const original = (state.url || elements.url.value).trim();
@@ -96,6 +114,13 @@ function displayVideo(info) {
   state.info = info;
   $('videoThumb').src = info.thumbnail;
   $('videoTitle').textContent = info.title;
+  const altNotice = $('altNotice');
+  if (info.provider === 'invidious') {
+    altNotice.textContent = info.notice || '외부 공개 서버에서 전달한 영상 정보를 사용하고 있어요.';
+    show(altNotice);
+  } else {
+    hide(altNotice);
+  }
   $('videoChannel').textContent = info.channel;
   $('videoId').textContent = info.id;
   $('videoDuration').textContent = timeLabel(info.duration);
@@ -115,6 +140,7 @@ elements.form.addEventListener('submit', async (event) => {
   if (state.pollTimer) clearTimeout(state.pollTimer);
   state.url = url; state.info = null;
   hide(elements.video); hide(elements.options); hide(elements.progress);
+  hide($('fallbackSection'));
   setLoading(elements.inspect, true);
   elements.inspectLabel.textContent = '영상 확인 중...';
   try {
@@ -195,6 +221,7 @@ elements.export.addEventListener('click', async () => {
   try {
     const data = await request('/api/jobs', {
       url: state.url,
+      provider: state.info.provider || 'youtube',
       mode: state.mode,
       quality: state.quality,
       start, end,
