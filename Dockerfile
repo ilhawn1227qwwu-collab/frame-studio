@@ -33,4 +33,4 @@ RUN useradd -m -u 10001 frameuser
 USER frameuser
 EXPOSE 8000
 # Local-only provider is opt-in; one application worker keeps job status in memory.
-CMD ["sh", "-c", "if [ \"${FRAME_POT_PROVIDER:-0}\" = \"1\" ]; then node /opt/bgutil/server/build/main.js --host 127.0.0.1 --port 4416 & fi; if [ \"${FRAME_PROBE_ON_STARTUP:-0}\" = \"1\" ]; then (sleep 6; python -u tools/probe_youtube.py) & fi; if [ \"${FRAME_ALT_PROBE:-0}\" = \"1\" ]; then (sleep 8; python -u tools/probe_invidious.py) & fi; if [ \"${FRAME_VERIFY_ALT:-0}\" = \"1\" ]; then (sleep 8; python -u tools/verify_alternative.py) & fi; exec uvicorn server:app --host 0.0.0.0 --port ${PORT} --workers 1"]
+CMD ["sh", "-c", "if [ \"${FRAME_POT_PROVIDER:-0}\" = \"1\" ]; then node /opt/bgutil/server/build/main.js --host 127.0.0.1 --port 4416 & fi; if [ \"${FRAME_PROBE_ON_STARTUP:-0}\" = \"1\" ]; then (sleep 6; python -u tools/probe_youtube.py) & fi; if [ \"${FRAME_ALT_PROBE:-0}\" = \"1\" ]; then (sleep 8; python -u tools/probe_invidious.py) & fi; if [ \"${FRAME_VERIFY_ALT:-0}\" = \"1\" ]; then (sleep 8; python -u -m tools.verify_alternative) & fi; exec uvicorn server:app --host 0.0.0.0 --port ${PORT} --workers 1"]
