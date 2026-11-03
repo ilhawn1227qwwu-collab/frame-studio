@@ -14,8 +14,36 @@ function timeLabel(seconds) {
   const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = Math.floor(seconds % 60);
   return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
-function showError(message) { elements.error.textContent = message; show(elements.error); }
-function clearError() { hide(elements.error); elements.error.textContent = ''; }
+function isServerBotBlock(message) {
+  return /유튜브가 이 서버의 접속|봇으로 판단|서버의 접근 제한/.test(message || '');
+}
+function showError(message) {
+  elements.error.textContent = message;
+  show(elements.error);
+  if (state.url && isServerBotBlock(message)) show($('fallbackSection'));
+}
+function clearError() {
+  hide(elements.error); elements.error.textContent = '';
+  hide($('fallbackSection')); hide($('fallbackJobBtn'));
+}
+function openExternalFallback() {
+  // Opt-in browser navigation: only the YouTube URL, never our site password.
+  const original = (state.url || elements.url.value).trim();
+  try {
+    const u = new URL(original);
+    const allowed = ['youtube.com','www.youtube.com','m.youtube.com',
+      'music.youtube.com','youtu.be','www.youtu.be'];
+    if (!allowed.includes(u.hostname) || !['http:','https:'].includes(u.protocol)) {
+      return showError('유효한 유튜브 영상 주소를 입력해 주세요.');
+    }
+    const link = 'https://cobalt.tools/#' + encodeURIComponent(original);
+    window.open(link, '_blank', 'noopener,noreferrer');
+  } catch (_) {
+    showError('유효한 유튜브 영상 주소를 입력해 주세요.');
+  }
+}
+$('fallbackBtn').addEventListener('click', openExternalFallback);
+$('fallbackJobBtn').addEventListener('click', openExternalFallback);
 async function request(url, data) {
   const response = await fetch(url, {
     method: 'POST',
@@ -138,6 +166,8 @@ async function pollJob(jobId) {
     }
     if (data.state === 'error') {
       show($('retryBtn'));
+      if (isServerBotBlock(data.error)) show($('fallbackJobBtn'));
+      else hide($('fallbackJobBtn'));
       setLoading(elements.export, false);
       return;
     }
