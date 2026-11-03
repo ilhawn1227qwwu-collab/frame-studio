@@ -24,11 +24,15 @@ profiles = [
 ]
 
 def probe():
-    try:
-        with socket.create_connection(('127.0.0.1', 4416), timeout=2):
-            provider_ready = True
-    except OSError:
-        provider_ready = False
+    provider_ready = False
+    if os.getenv('FRAME_POT_PROVIDER', '') == '1':
+        for _ in range(40):
+            try:
+                with socket.create_connection(('127.0.0.1', 4416), timeout=2):
+                    provider_ready = True
+                    break
+            except OSError:
+                time.sleep(1)
     print('FRAME_PROBE: begin (one public test video, metadata only); provider_ready=' + str(provider_ready), flush=True)
     for name, eargs in profiles:
         started = time.monotonic()
