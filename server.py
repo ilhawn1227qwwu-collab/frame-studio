@@ -312,14 +312,31 @@ def _encode(job: Job, source: Path, output: Path, *, mode: str,
         command += ['-i', str(source)]
 
     if mode == 'mp3':
-        command += ['-vn', '-c:a', 'libmp3lame', '-b:a', f'{bitrate}k']
+        command += ['-map', '0:a:0', '-vn', '-c:a', 'libmp3lame', '-b:a', f'{bitrate}k']
+    elif mode in ('m4a', 'opus'):
+        _, acodec = _media_codecs(source)
+        required = 'aac' if mode == 'm4a' else 'opus'
+        if acodec != required:
+            raise RuntimeError('요청한 원본 오디오 코덱을 찾지 못했어요.')
+        # Remux, do not convert the lossy YouTube stream a second time.
+        command += ['-map', '0:a:0', '-vn', '-c:a', 'copy']
     else:
         vcodec, acodec = _media_codecs(source)
-        if not clipped and vcodec in ('h264', 'hevc') and acodec == 'aac':
-            command += ['-c:v', 'copy', '-c:a', 'copy']
+        command += ['-map', '0:v:0', '-map', '0:a:0']
+        if not clipped and vcodec in ('h264', 'hevc'):
+            # Full-duration MP4 preserves the existing video bitstream.
+            command += ['-c:v', 'copy']
         else:
-            command += ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23',
-                        '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k']
+            # Accurate cuts/non-mobile codecs require video re-encoding.
+            # CRF 18 reduces generation loss compared with the old CRF 23.
+            command += ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18',
+                        '-pix_fmt', 'yuv420p']
+        if acodec == 'aac':
+            command += ['-c:a', 'copy']
+        else:
+            command += ['-c:a', 'aac', '-b:a', '192k']
+        if vcodec == 'hevc' and not clipped:
+            command += ['-tag:v', 'hvc1']
         command += ['-movflags', '+faststart']
 
     command += ['-progress', 'pipe:1', '-nostats', str(output)]
@@ -393,7 +410,8 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
 
         if source.stat().st_size > MAX_FILE_BYTES:
             raise RuntimeError('파일 크기 제한을 초과했어요.')
-        _update(job, stage='converting', message=('오디오를 MP3로 변환하는 중...' if mode == 'mp3'
+        _update(job, stage='converting', message=('MP3를 변환하는 중...' if mode == 'mp3'
+                                                  else '원본 음성을 저장하는 중...' if mode in ('m4a', 'opus')
                                                   else 'MP4 파일을 완성하는 중...'), progress=80)
         output = folder / f'export.{mode}'
         _encode(job, source, output, mode=mode, start=start, end=end,
@@ -460,7 +478,7 @@ def inspect_alt(payload: InspectRequest) -> dict[str, Any]:
 def create_job(payload: ExtractRequest) -> dict[str, Any]:
     _clean()
     video_id, url = canonical_url(payload.url)
-    if payload.mode not in ('mp4', 'mp3'):
+    if payload.mode not in ('mp4', 'mp3', 'm4a', 'opus'):
         raise HTTPException(400, '지원하지 않는 파일 형식이에요.')
     if payload.provider not in ('youtube', 'invidious'):
         raise HTTPException(400, '지원하지 않는 추출 방식이에요.')
@@ -471,6 +489,9 @@ def create_job(payload: ExtractRequest) -> dict[str, Any]:
             raise HTTPException(422, str(exc)) from None
     else:
         info = _inspect_video(video_id, url)
+    if payload.mode in ('m4a', 'opus') and (payload.provider != 'invidious' or
+                                             payload.mode not in info.get('audio_modes', [])):
+        raise HTTPException(400, '이 영상에서는 해당 원본 오디오 형식을 제공하지 않아요.')
     if payload.mode == 'mp4' and payload.quality not in info['qualities']:
         raise HTTPException(400, '선택한 화질을 이 영상에서 사용할 수 없어요.')
     if payload.mode == 'mp3' and payload.quality not in BITRATES:
