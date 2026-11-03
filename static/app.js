@@ -26,24 +26,31 @@ function clearError() {
   hide(elements.error); elements.error.textContent = '';
   hide($('fallbackSection')); hide($('fallbackJobBtn'));
 }
-$('alternateBtn').addEventListener('click', async () => {
-  if (!state.url) return showError('먼저 유튜브 주소를 입력해 주세요.');
-  const btn = $('alternateBtn');
-  setLoading(btn, true);
-  btn.textContent = '외부 서버 확인 중...';
+async function loadAlternativeVideo() {
+  const url = elements.url.value.trim();
+  if (!url) return showError('먼저 유튜브 주소를 입력해 주세요.');
+  state.url = url;
+  const buttons = [$('alternateBtn'), $('directAltBtn')];
+  buttons.forEach(button => setLoading(button, true));
+  $('alternateBtn').textContent = '외부 서버 확인 중...';
+  $('directAltBtn').textContent = '외부 서버 확인 중...';
+  clearError();
   try {
     const info = await request('/api/inspect-alt', { url: state.url });
-    clearError();
     displayVideo(info);
     elements.video.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } catch (error) {
     showError(error.message);
-    show($('fallbackSection')); // Keep the separate Cobalt option available.
+    show($('fallbackSection')); // Third-party fallback can be attempted separately.
   } finally {
-    setLoading(btn, false);
-    btn.textContent = '외부 서버로 불러오기';
+    buttons.forEach(button => setLoading(button, false));
+    $('alternateBtn').textContent = '외부 서버로 불러오기';
+    $('directAltBtn').textContent = '외부 서버로 바로 불러오기';
   }
-});
+}
+$('alternateBtn').addEventListener('click', loadAlternativeVideo);
+$('directAltBtn').addEventListener('click', loadAlternativeVideo);
+
 function openExternalFallback() {
   // Opt-in browser navigation: only the YouTube URL, never our site password.
   const original = (state.url || elements.url.value).trim();
