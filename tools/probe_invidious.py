@@ -22,7 +22,7 @@ def allow_url(url):
     u=urllib.parse.urlsplit(url)
     if u.scheme!="https": return False
     host=(u.hostname or "").lower()
-    return (host == HOST or host == "googlevideo.com" or host.endswith(".googlevideo.com"))
+    return host in ("yt.chocolatemoo53.com", "yt-comp2.chocolatemoo53.com") or host=="googlevideo.com" or host.endswith(".googlevideo.com")
 
 def probe_meta(path):
     started=time.monotonic()
@@ -42,26 +42,36 @@ def probe_meta(path):
 
 def check_stream(name,raw):
     if not raw:
-        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"missing"}),flush=True); return
+        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"missing"}),flush=True);return
     url=urllib.parse.urljoin(BASE,raw)
-    parts=urllib.parse.urlsplit(url)
     if not allow_url(url):
         print("FRAME_STREAM:",json.dumps({"stream":name,"result":"rejected-host"}),flush=True);return
-    req=urllib.request.Request(url,headers={"Range":"bytes=0-4095","User-Agent":"FrameStudio/1.0","Accept":"*/*"})
     started=time.monotonic()
-    try:
-        with opener.open(req,timeout=14) as response:
-            data=response.read(4096)
-            status=response.status
-            content_type=response.headers.get("content-type","")[:70]
-        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"response","status":status,
-            "type":content_type,"bytes":len(data),"seconds":round(time.monotonic()-started,2)}),flush=True)
-    except urllib.error.HTTPError as e:
-        redirect=e.headers.get("location","") if e.code in (301,302,303,307,308) else ""
-        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"http-error","status":e.code,
-           "redirect_host":urllib.parse.urlsplit(redirect).hostname}),flush=True)
-    except Exception as e:
-        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"network-error","error":type(e).__name__}),flush=True)
+    hops=0
+    while hops < 4:
+        req=urllib.request.Request(url,headers={"Range":"bytes=0-4095","User-Agent":"FrameStudio/1.0","Accept":"*/*"})
+        try:
+            with opener.open(req,timeout=14) as response:
+                data=response.read(4096)
+                status=response.status
+                content_type=response.headers.get("content-type","")[:70]
+            print("FRAME_STREAM:",json.dumps({"stream":name,"result":"response","status":status,
+                "type":content_type,"bytes":len(data),"last_host":urllib.parse.urlsplit(url).hostname,
+                "hops":hops,"seconds":round(time.monotonic()-started,2)}),flush=True)
+            return
+        except urllib.error.HTTPError as e:
+            if e.code in (301,302,303,307,308) and e.headers.get("location"):
+                next_url=urllib.parse.urljoin(url,e.headers["location"])
+                if not allow_url(next_url):
+                    print("FRAME_STREAM:",json.dumps({"stream":name,"result":"unsafe-redirect","hops":hops}),flush=True);return
+                hops+=1;url=next_url
+            else:
+                print("FRAME_STREAM:",json.dumps({"stream":name,"result":"http-error","status":e.code,
+                  "last_host":urllib.parse.urlsplit(url).hostname,"hops":hops}),flush=True);return
+        except Exception as e:
+            print("FRAME_STREAM:",json.dumps({"stream":name,"result":"network-error","error":type(e).__name__,
+                  "last_host":urllib.parse.urlsplit(url).hostname}),flush=True);return
+    print("FRAME_STREAM:",json.dumps({"stream":name,"result":"too-many-redirects"}),flush=True)
 
 def main():
     print("FRAME_STREAM: starting limited 4KB media checks",flush=True)
