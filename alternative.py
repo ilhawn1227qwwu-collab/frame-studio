@@ -7,6 +7,7 @@ Never forward cookies, site passwords, or user-supplied unvalidated URLs.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import time
@@ -19,8 +20,13 @@ from typing import Callable
 INVIDIOUS_HOST = "yt.chocolatemoo53.com"
 COMPANION_HOST = "yt-comp2.chocolatemoo53.com"
 INVIDIOUS_ORIGIN = "https://" + INVIDIOUS_HOST
-ALT_MAX_SECONDS = 180
-ALT_MAX_BYTES = 85 * 1024 * 1024
+# The hard-coded three-minute pilot limit is no longer necessary.
+# Long videos may still exceed the file-size, network, or hosting constraints.
+ALT_MAX_SECONDS = min(7200, max(60, int(os.getenv("FRAME_MAX_DURATION", "7200"))))
+ALT_MAX_MEDIA_BYTES = min(220 * 1024 * 1024,
+                          max(20 * 1024 * 1024, int(os.getenv("FRAME_MAX_FILE_BYTES", "367001600")) * 2 // 3))
+ALT_AUDIO_BYTES = min(110 * 1024 * 1024, ALT_MAX_MEDIA_BYTES)
+MAX_TRANSFER_SECONDS = 20 * 60
 REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 MAX_REDIRECTS = 3
 ALLOWED_HOSTS = frozenset((INVIDIOUS_HOST, COMPANION_HOST))
@@ -73,7 +79,7 @@ def _read_info(video_id: str) -> dict:
         raise AlternativeError("라이브·유료·제한된 영상은 이 경로에서 지원하지 않아요.")
     duration = int(info.get("lengthSeconds") or 0)
     if not 0 < duration <= ALT_MAX_SECONDS:
-        raise AlternativeError(f"외부 서버 경로는 최대 {ALT_MAX_SECONDS // 60}분 영상만 지원해요.")
+        raise AlternativeError(f"현재 서버에서는 최대 {ALT_MAX_SECONDS // 60}분 길이의 영상을 지원해요. 영상 길이가 더 길면 구간을 나누거나 별도 서버가 필요해요.")
     if not isinstance(info.get("adaptiveFormats"), list):
         raise AlternativeError("외부 서버에 영상 추출 정보가 없어요.")
     return info
@@ -118,7 +124,7 @@ def inspect(video_id: str) -> dict:
         "qualities": heights,
         "max_height": max(heights),
         "provider": "invidious",
-        "notice": "외부 공개 서버를 통해 이 영상의 정보를 확인했어요. 이 경로는 3분, 최대 720p로 제한돼요.",
+        "notice": f"외부 공개 서버에서 영상 정보를 가져왔어요. 일반 영상도 가능하며, 최대 {ALT_MAX_SECONDS // 60}분·720p까지 시도할 수 있어요. 파일 크기와 서버 상태에 따라 실패할 수 있습니다.",
     }
 
 
@@ -145,7 +151,7 @@ def _choose_sources(info: dict, mode: str, quality: int) -> tuple[dict | None, d
 
 def _download(url: str, output: Path, maximum: int, update: Callable[[int], None]):
     url = _validate_media_url(urllib.parse.urljoin(INVIDIOUS_ORIGIN, url))
-    deadline = time.monotonic() + 180
+    deadline = time.monotonic() + MAX_TRANSFER_SECONDS
     for hop in range(MAX_REDIRECTS + 1):
         request = urllib.request.Request(url, headers={
             "User-Agent": "FrameStudio/1.0", "Accept": "*/*"
@@ -169,12 +175,12 @@ def _download(url: str, output: Path, maximum: int, update: Callable[[int], None
                 raise AlternativeError("외부 서버가 영상 대신 오류 문서를 반환했어요.")
             size_text = response.headers.get("content-length", "")
             if size_text.isdigit() and int(size_text) > maximum:
-                raise AlternativeError("영상 크기가 외부 서버 경로 제한을 초과했어요.")
+                raise AlternativeError("영상 크기가 이 무료 서버의 제한을 초과했어요. 화질을 낮추거나 구간을 줄여주세요.")
             received = 0
             with output.open("wb") as file:
                 while True:
                     if time.monotonic() > deadline:
-                        raise AlternativeError("영상 다운로드 제한 시간을 초과했어요.")
+                        raise AlternativeError("외부 서버의 전송 시간 제한을 초과했어요. 더 낮은 화질로 시도해 주세요.")
                     try:
                         chunk = response.read(64 * 1024)
                     except (OSError, TimeoutError):
@@ -183,7 +189,7 @@ def _download(url: str, output: Path, maximum: int, update: Callable[[int], None
                         break
                     received += len(chunk)
                     if received > maximum:
-                        raise AlternativeError("영상 파일이 허용 크기를 초과했어요.")
+                        raise AlternativeError("영상 파일이 무료 서버의 크기 제한을 초과했어요. 화질을 낮추거나 구간을 줄여주세요.")
                     file.write(chunk)
                     if size_text.isdigit() and int(size_text) > 0:
                         update(min(99, int(100 * received / int(size_text))))
@@ -197,20 +203,22 @@ def obtain_source(
     video_id: str, mode: str, quality: int, folder: Path,
     update: Callable[[int, str], None],
 ) -> Path:
-    """Download at most one short video's separate A/V streams and combine."""
+    """Download one authorized video, bounded by storage, traffic, and time."""
     info = _read_info(video_id)
     video_format, audio_format = _choose_sources(info, mode, quality)
     audio = folder / ("alt_audio.m4a" if "audio/mp4" in audio_format["type"] else "alt_audio.webm")
     update(5, "외부 서버에서 오디오를 가져오는 중...")
-    _download(audio_format["url"], audio, ALT_MAX_BYTES // 2,
+    _download(audio_format["url"], audio, ALT_AUDIO_BYTES,
               lambda percent: update(5 + int(percent * .25), "오디오를 받아오는 중..."))
     if mode == "mp3":
         return audio
+    if audio.stat().st_size >= ALT_MAX_MEDIA_BYTES:
+        raise AlternativeError("영상과 오디오 파일이 서버 용량 제한을 초과했어요. 음질을 낮춰 주세요.")
 
     assert video_format is not None
     video = folder / ("alt_video.mp4" if "video/mp4" in video_format["type"] else "alt_video.webm")
     update(32, "외부 서버에서 영상을 가져오는 중...")
-    _download(video_format["url"], video, ALT_MAX_BYTES,
+    _download(video_format["url"], video, max(1, ALT_MAX_MEDIA_BYTES - audio.stat().st_size),
               lambda percent: update(32 + int(percent * .43), "영상을 받아오는 중..."))
     output = folder / "source.mkv"
     update(76, "영상과 오디오를 합치는 중...")
@@ -220,9 +228,12 @@ def obtain_source(
             "-i", str(video), "-i", str(audio),
             "-map", "0:v:0", "-map", "1:a:0", "-c", "copy",
             "-shortest", str(output),
-        ], capture_output=True, text=True, check=True, timeout=100)
+        ], capture_output=True, text=True, check=True, timeout=600)
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         raise AlternativeError("영상과 오디오를 결합하지 못했어요.") from None
     if not output.is_file() or not output.stat().st_size:
         raise AlternativeError("결합된 영상 파일이 생성되지 않았어요.")
+    # Keep only the merged source during export so longer videos use less disk space.
+    audio.unlink(missing_ok=True)
+    video.unlink(missing_ok=True)
     return output
