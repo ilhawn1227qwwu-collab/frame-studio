@@ -41,10 +41,13 @@ def verify():
             streams = json.loads(probe).get("streams", [])
             video_details = next((x for x in streams if x.get("codec_type") == "video"), {})
             audio_details = next((x for x in streams if x.get("codec_type") == "audio"), {})
-            log(step="source_quality", height=video_details.get("height"),
+            width, height = video_details.get("width"), video_details.get("height")
+            log(step="source_quality", width=width, height=height,
                 video_codec=video_details.get("codec_name"),
                 audio_codec=audio_details.get("codec_name"))
-            if os.getenv("FRAME_VERIFY_QUALITY") == "best" and video_details.get("height") != quality:
+            # Vertical Shorts labelled 1080p are usually 1080x1920;
+            # for portrait and landscape formats compare the short side.
+            if os.getenv("FRAME_VERIFY_QUALITY") == "best" and min(width or 0, height or 0) != quality:
                 raise RuntimeError("Selected source video resolution did not match quality")
             export_end = float(info["duration"]) if os.getenv("FRAME_VERIFY_FULL") == "1" else min(3.0, info["duration"])
             def file_duration(path):
