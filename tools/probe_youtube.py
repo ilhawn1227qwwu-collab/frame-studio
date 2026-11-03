@@ -2,11 +2,12 @@
 Run via FRAME_PROBE_ON_STARTUP=1. This does not authenticate or download media.
 """
 import json
+import os
 import sys
 import time
 import yt_dlp
 
-URL = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
+URL = 'https://www.youtube.com/watch?v=' + os.environ.get('FRAME_PROBE_VIDEO_ID', 'jNQXAC9IVRw')
 
 class QuietLog:
     def debug(self, msg): pass
