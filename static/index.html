@@ -18,7 +18,7 @@
         <span class="brand-text">FRAME<span class="brand-period">.</span></span>
         <span class="brand-sub">STUDIO</span>
       </a>
-      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.2</span></div>
+      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.3</span></div>
     </header>
 
     <main>
@@ -44,15 +44,16 @@
           </form>
           <div id="errorBox" class="error-box hidden" role="alert"></div>
           <div id="fallbackSection" class="fallback-card hidden">
-            <strong>다른 경로로 이어서 추출하기</strong>
-            <p>이 서버가 유튜브에 막힌 경우 Cobalt 웹사이트에서 다시 시도할 수 있어요. 클릭하면 링크가 외부 서비스에 전달됩니다. 화질·구간 옵션은 옮겨지지 않으며 성공을 보장하지는 않아요.</p>
-            <button id="fallbackBtn" type="button" class="fallback-button">Cobalt에서 이 영상 열기 ↗</button>
+            <strong>이 영상은 다른 서버로 불러올 수 있어요</strong>
+            <p>유튜브 직접 연결이 차단됐습니다. 아래 버튼을 누르면 외부 Invidious 공개 서버에 <b>영상 ID만 전달</b>해 정보를 불러옵니다. 이후 영상/음성을 해당 서버를 통해 받아 MP4·MP3로 변환해요. 외부 서버의 가용성과 정책에 따라 실패할 수 있습니다.</p>
+            <button id="alternateBtn" type="button" class="fallback-button">외부 서버로 불러오기</button>
+            <button id="fallbackBtn" type="button" class="fallback-button secondary-fallback">Cobalt 웹사이트에서 시도하기 ↗</button>
           </div>
 
           <div id="videoSection" class="video-section hidden" aria-live="polite">
             <div class="panel-rule"></div>
             <div class="tiny-heading"><span class="step-label">VIDEO FOUND</span><span class="found-indicator"><span></span> READY</span></div>
-            <div class="video-card"><div class="thumbnail-wrap"><img id="videoThumb" alt="영상 썸네일" referrerpolicy="no-referrer"><span id="videoDuration" class="duration-chip">--:--</span></div><div class="video-info"><span class="content-type">YOUTUBE / VIDEO</span><h3 id="videoTitle"></h3><p id="videoChannel"></p><div class="video-id">VIDEO ID <span id="videoId"></span></div></div></div>
+            <p id="altNotice" class="alt-notice hidden"></p><div class="video-card"><div class="thumbnail-wrap"><img id="videoThumb" alt="영상 썸네일" referrerpolicy="no-referrer"><span id="videoDuration" class="duration-chip">--:--</span></div><div class="video-info"><span class="content-type">YOUTUBE / VIDEO</span><h3 id="videoTitle"></h3><p id="videoChannel"></p><div class="video-id">VIDEO ID <span id="videoId"></span></div></div></div>
           </div>
 
           <div id="optionsSection" class="options-section hidden">
