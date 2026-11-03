@@ -3,6 +3,7 @@ Run via FRAME_PROBE_ON_STARTUP=1. This does not authenticate or download media.
 """
 import json
 import os
+import socket
 import sys
 import time
 import yt_dlp
@@ -15,6 +16,7 @@ class QuietLog:
     def error(self, msg): pass
 
 profiles = [
+    ('mweb_pot', {'youtube': {'player_client': ['mweb']}}),
     ('default', {}),
     ('tv_web_safari', {'youtube': {'player_client': ['tv', 'web_safari']}}),
     ('web_embedded', {'youtube': {'player_client': ['web_embedded']}}),
@@ -22,7 +24,12 @@ profiles = [
 ]
 
 def probe():
-    print('FRAME_PROBE: begin (one public test video, metadata only)', flush=True)
+    try:
+        with socket.create_connection(('127.0.0.1', 4416), timeout=2):
+            provider_ready = True
+    except OSError:
+        provider_ready = False
+    print('FRAME_PROBE: begin (one public test video, metadata only); provider_ready=' + str(provider_ready), flush=True)
     for name, eargs in profiles:
         started = time.monotonic()
         options = {
