@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1016">
+  <meta name="description" content="링크를 넣고, 필요한 장면을 원하는 형식으로. 개인용 미디어 추출 스튜디오.">
+  <title>FRAME — 미디어 추출 스튜디오</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div class="page-ambient" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="navbar">
+      <a class="brand" href="/" aria-label="FRAME STUDIO 홈">
+        <span class="brand-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M8.5 6.75L17 12l-8.5 5.25V6.75Z" fill="currentColor"/></svg></span>
+        <span class="brand-text">FRAME<span class="brand-period">.</span></span>
+        <span class="brand-sub">STUDIO</span>
+      </a>
+      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.1</span></div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="kicker"><span class="kicker-square"></span> THE MEDIA WORKSPACE <span class="kicker-line"></span> 001</div>
+          <h1>영상의 필요한 순간을<br><span class="headline-accent">꺼내 쓰는 가장 쉬운 방법.</span></h1>
+          <p class="hero-desc">유튜브 링크 하나면 충분해요. 원하는 화질, 파일 형식, 구간까지<br class="desktop-break"> 직접 선택하고 깔끔하게 저장하세요.</p>
+          <div class="hero-tags"><span><i class="tag-icon">↗</i> MP4 VIDEO</span><span><i class="tag-icon">♫</i> MP3 AUDIO</span><span><i class="tag-icon">⌁</i> PRECISION TRIM</span></div>
+        </div>
+        <div class="hero-art" aria-hidden="true"><div class="art-circle art-circle-1"></div><div class="art-circle art-circle-2"></div><div class="art-circle art-circle-3"></div><div class="art-cross art-cross-one">+</div><div class="art-cross art-cross-two">+</div><div class="art-content"><span class="art-corner tl"></span><span class="art-corner tr"></span><span class="art-corner bl"></span><span class="art-corner br"></span><div class="art-play">▶</div><span class="art-filename">FRAME_001.MP4</span></div></div>
+      </section>
+
+      <div class="section-heading"><div><span class="heading-num">01 /</span> WORKSPACE</div><span>PASTE → CUSTOMIZE → EXPORT</span></div>
+      <div class="workspace-grid">
+        <section class="main-panel" aria-label="영상 추출 작업 공간">
+          <div class="panel-heading"><div class="step-label">STEP 01 <span>/</span> SOURCE</div><h2>링크 불러오기</h2><p>추출하려는 영상의 유튜브 주소를 붙여 넣어주세요.</p></div>
+          <form id="inspectForm" autocomplete="off">
+            <label class="input-caption" for="urlInput">YOUTUBE VIDEO URL</label>
+            <div class="url-field" id="urlField"><span class="url-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M10 13.5a5 5 0 0 0 7.1 0l2-2a5 5 0 1 0-7.1-7.1l-1.1 1.1"/><path d="M14 10.5a5 5 0 0 0-7.1 0l-2 2a5 5 0 1 0 7.1 7.1l1.1-1.1"/></svg></span><input id="urlInput" type="url" spellcheck="false" placeholder="https://www.youtube.com/watch?v=..." aria-describedby="urlHelp" required><button id="pasteBtn" type="button" class="paste-button" title="클립보드에서 붙여넣기">붙여넣기</button></div>
+            <div class="field-bottom"><span id="urlHelp">일반 영상 · Shorts · youtu.be 링크 지원</span><span class="limit-mark">MAX 2 HOURS</span></div>
+            <button id="inspectBtn" type="submit" class="primary-button"><span id="inspectLabel">영상 불러오기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+          </form>
+          <div id="errorBox" class="error-box hidden" role="alert"></div>
+
+          <div id="videoSection" class="video-section hidden" aria-live="polite">
+            <div class="panel-rule"></div>
+            <div class="tiny-heading"><span class="step-label">VIDEO FOUND</span><span class="found-indicator"><span></span> READY</span></div>
+            <div class="video-card"><div class="thumbnail-wrap"><img id="videoThumb" alt="영상 썸네일" referrerpolicy="no-referrer"><span id="videoDuration" class="duration-chip">--:--</span></div><div class="video-info"><span class="content-type">YOUTUBE / VIDEO</span><h3 id="videoTitle"></h3><p id="videoChannel"></p><div class="video-id">VIDEO ID <span id="videoId"></span></div></div></div>
+          </div>
+
+          <div id="optionsSection" class="options-section hidden">
+            <div class="panel-rule"></div>
+            <div class="panel-heading compact"><div class="step-label">STEP 02 <span>/</span> FORMAT</div><h2>추출 옵션</h2><p>목적에 맞게 파일을 설정하세요.</p></div>
+            <div class="control-title">파일 형식 <span>FORMAT</span></div>
+            <div class="format-toggle" role="group" aria-label="추출 형식"><button type="button" data-mode="mp4" class="format-button selected" aria-pressed="true"><span class="format-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3V9Z"/></svg></span><span><strong>MP4 영상</strong><small>영상 + 오디오</small></span><span class="select-circle"></span></button><button type="button" data-mode="mp3" class="format-button" aria-pressed="false"><span class="format-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><span><strong>MP3 오디오</strong><small>소리만 추출</small></span><span class="select-circle"></span></button></div>
+            <div class="quality-head"><div class="control-title" id="qualityTitle">영상 화질 <span>RESOLUTION</span></div><div id="qualityNote" class="quality-note">가능한 화질만 표시됩니다</div></div>
+            <div id="qualityChoices" class="quality-choices" role="group" aria-label="화질 선택"></div>
+            <div class="trim-box"><label for="trimSwitch" class="trim-header"><span class="trim-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 7h16M4 17h16M8 3v8m8 2v8"/><circle cx="8" cy="11" r="2"/><circle cx="16" cy="13" r="2"/></svg></span><span class="trim-name"><strong>구간 자르기</strong><small>원하는 부분만 저장하기</small></span><input id="trimSwitch" class="switch-input" type="checkbox"><span class="switch-ui" aria-hidden="true"></span></label><div id="trimFields" class="trim-fields hidden"><div><label for="startInput">시작 시간</label><div class="time-input"><input id="startInput" type="text" inputmode="numeric" placeholder="00:00" value="00:00"><span>START</span></div></div><div class="trim-separator">→</div><div><label for="endInput">종료 시간</label><div class="time-input"><input id="endInput" type="text" inputmode="numeric" placeholder="예: 02:30"><span>END</span></div></div><p>입력 형식: 01:30 또는 01:02:30. 정확한 구간 추출은 변환 시간이 더 걸릴 수 있어요.</p></div></div>
+            <label class="rights-confirm"><input type="checkbox" id="rightsCheck"><span>내가 권리를 보유하거나 다운로드 허락을 받은 콘텐츠이며, 관련 약관과 법률을 준수합니다.</span></label>
+            <button id="exportBtn" type="button" class="primary-button export-button"><span>파일 추출하기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m-5-5 5 5 5-5M4 17v3h16v-3"/></svg></button>
+          </div>
+
+          <div id="progressSection" class="progress-section hidden" aria-live="polite"><div class="panel-rule"></div><div class="progress-head"><span class="step-label">STEP 03 / EXPORTING</span><span id="progressNumber">0%</span></div><div class="progress-track"><div id="progressBar" class="progress-bar"></div></div><p id="progressMessage">작업을 준비 중이에요.</p><a id="downloadLink" class="download-button hidden" href="#" download><span>완성된 파일 저장하기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m-5-5 5 5 5-5M4 17v3h16v-3"/></svg></a><button id="retryBtn" class="retry-button hidden" type="button">다시 시도하기</button></div>
+        </section>
+
+        <aside class="side-panel" aria-label="사용 안내"><div class="side-title"><span>HOW IT WORKS</span><span class="mini-star">✳</span></div><h2>단 세 단계로<br>완료하세요.</h2><div class="steps-list"><div class="guide-step"><span class="guide-index">01</span><div><strong>링크 붙여넣기</strong><p>유튜브 영상 주소만 준비하세요.</p></div><span class="guide-check">↗</span></div><div class="guide-step"><span class="guide-index">02</span><div><strong>옵션 선택하기</strong><p>MP4 또는 MP3, 화질과 구간을 선택해요.</p></div><span class="guide-check">↗</span></div><div class="guide-step"><span class="guide-index">03</span><div><strong>파일 저장하기</strong><p>변환이 끝나면 바로 저장할 수 있어요.</p></div><span class="guide-check">↗</span></div></div><div class="side-graphic" aria-hidden="true"><span class="sg-label">PRECISION IS EVERYTHING</span><div class="sg-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="sg-time">00:00:00:00 <span>● REC</span></div></div><div class="disclaimer"><span class="disclaimer-icon">i</span><div><strong>개인용 웹 도구</strong><p>영상은 이 사이트가 실행되는 서버에서 처리돼요. 결과 파일은 일정 시간이 지나면 삭제되며, 권한이 있는 콘텐츠에만 사용해야 해요.</p></div></div></aside>
+      </div>
+      <div class="bottom-banner"><span class="banner-light"></span><strong>MADE FOR YOUR MOMENTS.</strong><span>복잡함은 줄이고, 필요한 기능만.</span><span class="banner-end">FRAME STUDIO / 2026</span></div>
+    </main>
+    <footer class="footer"><span>© FRAME STUDIO. PERSONAL EDITION.</span><span>WEB-READY <span class="footer-dot">●</span> PRIVATE WORKSPACE</span></footer>
+  </div>
+</body>
+</html>
