@@ -6,3 +6,9 @@
 .fallback-card p{font-size:11px;color:#b7c2b2;line-height:1.65;margin:0 0 13px;word-break:keep-all}
 .fallback-button{width:100%;display:flex;align-items:center;justify-content:center;margin-top:12px;padding:13px 16px;border:1px solid #abc85a;color:#deedbb;border-radius:8px;background:#25331e;font-size:12px;font-weight:750}
 .fallback-button:hover{background:#324723}
+
+.secondary-fallback{margin-top:8px;border-color:#52606a;background:#151c20;color:#aebfc1}
+.secondary-fallback:hover{background:#243039}
+.alt-notice{border:1px solid #526d43;border-radius:7px;background:#202c1e;color:#d3ecb6;
+  padding:11px 14px;font-size:11px;line-height:1.8;margin:0 0 14px}
+.fallback-card b{color:#f1ffd8}
