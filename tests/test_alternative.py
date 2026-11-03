@@ -161,3 +161,15 @@ def test_long_video_download_limits_are_bounded():
     assert 0 < alternative.ALT_AUDIO_BYTES <= alternative.ALT_MAX_MEDIA_BYTES
     assert 20 * 1024 * 1024 <= alternative.ALT_MAX_MEDIA_BYTES <= 220 * 1024 * 1024
     assert alternative.MAX_TRANSFER_SECONDS >= 600
+
+
+def test_alternate_companion_hosts_are_strictly_limited():
+    for host in ["yt.chocolatemoo53.com", "yt-comp1.chocolatemoo53.com",
+                 "yt-comp2.chocolatemoo53.com", "yt-comp15.chocolatemoo53.com"]:
+        url = f"https://{host}/latest_version"
+        assert alternative._validate_media_url(url) == url
+    for host in ["yt-comp1.chocolatemoo53.com.attacker.example",
+                 "evil.chocolatemoo53.com", "yt-comp1.chocolatemoo53Xcom",
+                 "yt-comp1.example.com"]:
+        with pytest.raises(alternative.AlternativeError):
+            alternative._validate_media_url(f"https://{host}/latest_version")
