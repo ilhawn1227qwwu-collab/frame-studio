@@ -9,7 +9,7 @@
 3. 아래 환경변수를 반드시 추가합니다.
    - `FRAME_PUBLIC_MODE=1`
    - `FRAME_SITE_PASSWORD=여기에_12자_이상_강력한_비밀번호`
-   - `FRAME_MAX_DURATION=1800` (최대 30분)
+   - `FRAME_MAX_DURATION=7200` (최대 2시간, 단 파일 크기 제한 적용)
    - `FRAME_MAX_FILE_BYTES=367001600` (다운로드 원본 최대 약 350MiB)
    - `FRAME_MAX_ACTIVE_JOBS=1`
 4. Dockerfile을 자동 인식합니다. 배포가 끝나면 Railway 네트워킹 설정에서 **Generate Domain**으로 HTTPS 주소를 생성합니다.
@@ -19,7 +19,12 @@ Railway 연결 앱을 ChatGPT에 연결하면, 이 배포 절차를 앱에서 �
 
 ## Render 배포 (대안)
 
-Render(https://dashboard.render.com/)에서 `New → Blueprint`로 GitHub 저장소를 선택하면 `render.yaml`을 사용합니다. `FRAME_SITE_PASSWORD`에 12자 이상의 비밀번호를 넣어야 시작할 수 있습니다. `starter` 플랜 설정이므로 요금이 발생할 수 있습니다. 배포되면 HTTPS `onrender.com` URL이 발급됩니다.
+Render(https://dashboard.render.com/)에서 `New → Web Service`로 GitHub 저장소를 선택하고 Docker/Free를 선택하세요. `FRAME_SITE_PASSWORD`에 12자 이상의 비밀번호를 넣어야 시작할 수 있습니다. 현재 `render.yaml`도 `free` 플랜을 기본값으로 사용합니다. 웹사이트 주소는 https://frame-studio-9ho7.onrender.com 입니다. 기존 서버 배포와 영상 추출은 무료 플랜의 리소스 및 트래픽 제한 영향을 받으며, 계정 설정에 따라 초과 사용 요금 또는 중단이 발생할 수 있습니다.
+
+
+## 일반 영상 추출 및 제한
+
+쇼츠뿐만 아니라 일반 유튜브 영상도 입력할 수 있습니다. 기본 추출이 막히면 **외부 서버로 바로 불러오기**를 명시적으로 선택하세요. 이 경우 영상 ID가 외부 Invidious 서버로 전달됩니다. 최대 120분을 시도하지만 외부 경로에는 최대 720p 및 약 220MiB 원본 크기 제한이 있어 긴 영상이나 고화질 영상은 실패할 수 있습니다. 허가받은 콘텐츠에만 사용하고 외부 서버의 이용 정책을 준수하세요.
 
 ## 주의사항
 
