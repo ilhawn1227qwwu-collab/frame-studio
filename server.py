@@ -300,13 +300,33 @@ def _media_codecs(path: Path) -> tuple[str, str]:
         return '', ''
 
 
+def _is_hd_video(source: Path) -> bool:
+    """1080p sources can exhaust a 512 MiB free server when transcoding."""
+    try:
+        proc = subprocess.run([
+            'ffprobe', '-v', 'error', '-select_streams', 'v:0',
+            '-show_entries', 'stream=width,height', '-of', 'csv=p=0',
+            str(source)], capture_output=True, text=True, check=True, timeout=15)
+        width, height = (int(n) for n in proc.stdout.strip().split(',')[:2])
+        return min(width, height) >= 900
+    except (OSError, ValueError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return False
+
+
 def _encode(job: Job, source: Path, output: Path, *, mode: str,
             start: float, end: float, duration: float, bitrate: int) -> None:
     length = end - start
     command = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin', '-y']
     clipped = start > 0 or end < duration - .1
-    if clipped:
-        # Accurate input seek: avoid keyframe-only approximation.
+    is_hd_copy = (mode == 'mp4' and clipped and _is_hd_video(source)
+                  and _media_codecs(source)[0] in ('h264', 'hevc'))
+    if clipped and is_hd_copy:
+        # Keyframe-aligned seek saves RAM and avoids degrading an HD source.
+        # Cut edges may differ by a GOP interval; favor reliability on free hosting.
+        command += ['-ss', f'{start:.3f}', '-i', str(source),
+                    '-t', f'{length:.3f}', '-avoid_negative_ts', 'make_zero']
+    elif clipped:
+        # Lower resolutions preserve accurate frame-level trim via re-encoding.
         command += ['-i', str(source), '-ss', f'{start:.3f}', '-t', f'{length:.3f}']
     else:
         command += ['-i', str(source)]
@@ -323,8 +343,8 @@ def _encode(job: Job, source: Path, output: Path, *, mode: str,
     else:
         vcodec, acodec = _media_codecs(source)
         command += ['-map', '0:v:0', '-map', '0:a:0']
-        if not clipped and vcodec in ('h264', 'hevc'):
-            # Full-duration MP4 preserves the existing video bitstream.
+        if (not clipped or is_hd_copy) and vcodec in ('h264', 'hevc'):
+            # Copy 1080p bitstreams instead of allocating an x264 encoder.
             command += ['-c:v', 'copy']
         else:
             # Accurate cuts/non-mobile codecs require video re-encoding.
@@ -335,7 +355,7 @@ def _encode(job: Job, source: Path, output: Path, *, mode: str,
             command += ['-c:a', 'copy']
         else:
             command += ['-c:a', 'aac', '-b:a', '192k']
-        if vcodec == 'hevc' and not clipped:
+        if vcodec == 'hevc' and (not clipped or is_hd_copy):
             command += ['-tag:v', 'hvc1']
         command += ['-movflags', '+faststart']
 
