@@ -23,6 +23,7 @@ INVIDIOUS_ORIGIN = "https://" + INVIDIOUS_HOST
 # The hard-coded three-minute pilot limit is no longer necessary.
 # Long videos may still exceed the file-size, network, or hosting constraints.
 ALT_MAX_SECONDS = min(7200, max(60, int(os.getenv("FRAME_MAX_DURATION", "7200"))))
+ALT_MAX_HEIGHT = 1080
 ALT_MAX_MEDIA_BYTES = min(220 * 1024 * 1024,
                           max(20 * 1024 * 1024, int(os.getenv("FRAME_MAX_FILE_BYTES", "367001600")) * 2 // 3))
 ALT_AUDIO_BYTES = min(110 * 1024 * 1024, ALT_MAX_MEDIA_BYTES)
@@ -119,11 +120,18 @@ def inspect(video_id: str) -> dict:
     info = _read_info(video_id)
     heights = sorted({
         _video_height(fmt) for fmt in _candidates(info, "video")
-        if 0 < _video_height(fmt) <= 720
+        if 0 < _video_height(fmt) <= ALT_MAX_HEIGHT
     })
     if not heights or not _candidates(info, "audio"):
         raise AlternativeError("외부 서버에서 추출 가능한 영상·음성 형식을 찾지 못했어요.")
+    audios = _candidates(info, "audio")
+    audio_modes = ["mp3"]
+    if any("audio/mp4" in str(x.get("type", "")).lower() for x in audios):
+        audio_modes.append("m4a")
+    if any("opus" in str(x.get("type", "")).lower() for x in audios):
+        audio_modes.append("opus")
     return {
+        "audio_modes": audio_modes,
         "id": video_id,
         "title": str(info.get("title") or "제목 없는 영상")[:250],
         "channel": str(info.get("author") or "채널 정보 없음")[:180],
@@ -132,28 +140,49 @@ def inspect(video_id: str) -> dict:
         "qualities": heights,
         "max_height": max(heights),
         "provider": "invidious",
-        "notice": f"외부 공개 서버에서 영상 정보를 가져왔어요. 일반 영상도 가능하며, 최대 {ALT_MAX_SECONDS // 60}분·720p까지 시도할 수 있어요. 파일 크기와 서버 상태에 따라 실패할 수 있습니다.",
+        "notice": f"외부 공개 서버에서 영상 정보를 가져왔어요. 최대 {ALT_MAX_SECONDS // 60}분·{ALT_MAX_HEIGHT}p를 시도할 수 있어요(원본 형식과 서버 용량에 따라 제한). 원본 음성 저장은 추가 압축 없이 처리합니다.",
     }
+
+
+def _bitrate(fmt: dict) -> int:
+    try:
+        return max(0, int(float(fmt.get("bitrate") or 0)))
+    except (TypeError, ValueError):
+        return 0
 
 
 def _choose_sources(info: dict, mode: str, quality: int) -> tuple[dict | None, dict]:
     audio = _candidates(info, "audio")
     if not audio:
         raise AlternativeError("외부 서버에서 오디오 형식을 찾지 못했어요.")
-    audio.sort(key=lambda f: (
-        str(f.get("type", "")).startswith("audio/mp4"),
-        int(f.get("bitrate") or 0)), reverse=True)
-    chosen_audio = audio[0]
-    if mode == "mp3":
+    aac = [f for f in audio if str(f.get("type", "")).lower().startswith("audio/mp4")]
+    opus = [f for f in audio if "opus" in str(f.get("type", "")).lower()]
+    if mode == "m4a":
+        audio_options = aac
+    elif mode == "opus":
+        audio_options = opus
+    elif mode == "mp4":
+        # Prefer AAC to avoid audio re-encoding when remuxing to MP4.
+        audio_options = aac or audio
+    else:
+        # MP3 conversion is lossy. Start from the best *available source*.
+        audio_options = audio
+    if not audio_options:
+        raise AlternativeError("이 영상에서는 선택한 원본 음성 형식을 제공하지 않아요.")
+    audio_options.sort(key=lambda f: (_bitrate(f), "opus" in str(f.get("type","")).lower()),
+                       reverse=True)
+    chosen_audio = audio_options[0]
+    if mode != "mp4":
         return None, chosen_audio
     video = [f for f in _candidates(info, "video")
-             if 0 < _video_height(f) <= min(quality, 720)]
+             if 0 < _video_height(f) <= min(quality, ALT_MAX_HEIGHT)]
     if not video:
         raise AlternativeError("선택한 화질에 맞는 영상이 없어요.")
+    # Always prefer selected resolution, then mobile-friendly MP4/H.264.
     video.sort(key=lambda f: (
         _video_height(f),
-        str(f.get("type", "")).startswith("video/mp4"),
-        int(f.get("bitrate") or 0)), reverse=True)
+        str(f.get("type", "")).lower().startswith("video/mp4"),
+        _bitrate(f)), reverse=True)
     return video[0], chosen_audio
 
 
@@ -218,7 +247,7 @@ def obtain_source(
     update(5, "외부 서버에서 오디오를 가져오는 중...")
     _download(audio_format["url"], audio, ALT_AUDIO_BYTES,
               lambda percent: update(5 + int(percent * .25), "오디오를 받아오는 중..."))
-    if mode == "mp3":
+    if mode in ("mp3", "m4a", "opus"):
         return audio
     if audio.stat().st_size >= ALT_MAX_MEDIA_BYTES:
         raise AlternativeError("영상과 오디오 파일이 서버 용량 제한을 초과했어요. 음질을 낮춰 주세요.")
