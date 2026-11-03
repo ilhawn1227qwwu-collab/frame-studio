@@ -15,8 +15,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && node --version && ffmpeg -version >/dev/null
 COPY server.py .
 COPY static/ ./static/
+COPY tools/ ./tools/
 RUN useradd -m -u 10001 frameuser
 USER frameuser
 EXPOSE 8000
 # One worker only: jobs and their status are stored in local process memory.
-CMD ["sh", "-c", "exec uvicorn server:app --host 0.0.0.0 --port ${PORT} --workers 1"]
+CMD ["sh", "-c", "if [ \"${FRAME_PROBE_ON_STARTUP:-0}\" = \"1\" ]; then python -u tools/probe_youtube.py & fi; exec uvicorn server:app --host 0.0.0.0 --port ${PORT} --workers 1"]
