@@ -126,3 +126,38 @@ def test_alternative_mp4_and_mp3_job_api_without_network(monkeypatch, tmp_path):
         shutil.rmtree(server.WORKDIR / job_id, ignore_errors=True)
         with server._lock:
             server._jobs.pop(job_id, None)
+
+
+def test_long_form_video_metadata(monkeypatch):
+    """A normal 10-minute video and a two-hour video are both valid."""
+    import io
+    import json
+
+    def mocked_fetch(duration):
+        info = sample_info()
+        info["lengthSeconds"] = duration
+        data = json.dumps(info).encode("utf-8")
+        response = io.BytesIO(data)
+        response.status = 200
+        response.headers = {"content-type": "application/json"}
+        return response
+
+    for duration in [600, 1800, 3600, 7200]:
+        monkeypatch.setattr(alternative.OPENER, "open",
+                            lambda request, timeout: mocked_fetch(duration))
+        result = alternative.inspect(VIDEO_ID)
+        assert result["duration"] == duration
+        assert result["provider"] == "invidious"
+
+    monkeypatch.setattr(alternative.OPENER, "open",
+                        lambda request, timeout: mocked_fetch(7201))
+    with pytest.raises(alternative.AlternativeError):
+        alternative.inspect(VIDEO_ID)
+
+
+def test_long_video_download_limits_are_bounded():
+    """Removing the 3-minute cap must not remove safety/resource bounds."""
+    assert alternative.ALT_MAX_SECONDS == 7200
+    assert 0 < alternative.ALT_AUDIO_BYTES <= alternative.ALT_MAX_MEDIA_BYTES
+    assert 20 * 1024 * 1024 <= alternative.ALT_MAX_MEDIA_BYTES <= 220 * 1024 * 1024
+    assert alternative.MAX_TRANSFER_SECONDS >= 600
