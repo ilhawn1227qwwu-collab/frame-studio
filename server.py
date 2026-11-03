@@ -25,6 +25,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from alternative import AlternativeError, inspect as inspect_alternative, obtain_source as obtain_alternative_source
 
 try:
     import yt_dlp
@@ -69,9 +70,9 @@ async def access_control(request: Request, call_next):
         if not secrets.compare_digest(header, expected):
             return JSONResponse({'detail': '사이트 암호를 입력해 주세요.'}, status_code=401,
                                 headers={'WWW-Authenticate': 'Basic realm="FRAME STUDIO", charset="UTF-8"'})
-    if PUBLIC_MODE and request.method == 'POST' and request.url.path in ('/api/inspect', '/api/jobs'):
+    if PUBLIC_MODE and request.method == 'POST' and request.url.path in ('/api/inspect', '/api/inspect-alt', '/api/jobs'):
         key = request.url.path
-        limit, window = (30, 600) if key == '/api/inspect' else (10, 3600)
+        limit, window = (10, 600) if key == '/api/inspect-alt' else (30, 600) if key == '/api/inspect' else (10, 3600)
         now = time.monotonic()
         with _lock:
             recent = [t for t in _rate.get(key, []) if now - t < window]
@@ -89,6 +90,7 @@ class InspectRequest(BaseModel):
 
 class ExtractRequest(BaseModel):
     url: str = Field(min_length=1, max_length=1200)
+    provider: str = 'youtube'
     mode: str = 'mp4'
     quality: int = 720
     start: str = ''
@@ -349,41 +351,46 @@ def _encode(job: Job, source: Path, output: Path, *, mode: str,
 
 
 def _process(job: Job, url: str, mode: str, quality: int, start: float,
-             end: float, duration: float) -> None:
+             end: float, duration: float, provider: str = 'youtube') -> None:
     folder = WORKDIR / job.id
     try:
         folder.mkdir(parents=True, exist_ok=False)
         _update(job, state='running', stage='downloading', message='원본 파일을 가져오는 중...', progress=2)
+        if provider == 'invidious':
+            source = obtain_alternative_source(
+                job.video_id, mode, quality, folder,
+                lambda progress, message: _update(job, progress=progress, message=message))
+        else:
+            def progress_hook(data: dict[str, Any]) -> None:
+                if data.get('status') == 'downloading':
+                    total = data.get('total_bytes') or data.get('total_bytes_estimate') or 0
+                    got = data.get('downloaded_bytes') or 0
+                    if total:
+                        percentage = min(77, max(3, int(3 + 74 * got / total)))
+                        _update(job, progress=max(job.progress, percentage), message='영상을 다운로드하는 중...')
+                elif data.get('status') == 'finished':
+                    _update(job, progress=max(job.progress, 78), message='다운로드 완료. 파일을 준비하는 중...')
 
-        def progress_hook(data: dict[str, Any]) -> None:
-            if data.get('status') == 'downloading':
-                total = data.get('total_bytes') or data.get('total_bytes_estimate') or 0
-                got = data.get('downloaded_bytes') or 0
-                if total:
-                    percentage = min(77, max(3, int(3 + 74 * got / total)))
-                    _update(job, progress=max(job.progress, percentage), message='영상을 다운로드하는 중...')
-            elif data.get('status') == 'finished':
-                _update(job, progress=max(job.progress, 78), message='다운로드 완료. 파일을 준비하는 중...')
+            opts: dict[str, Any] = {
+                'format': ('bestaudio/best' if mode == 'mp3' else
+                           f'bv*[height<={quality}]+ba/b[height<={quality}]'),
+                'outtmpl': str(folder / 'source.%(ext)s'),
+                'merge_output_format': 'mkv',
+                'quiet': True, 'no_warnings': True, 'noplaylist': True,
+                'max_filesize': MAX_FILE_BYTES, 'socket_timeout': 25,
+                'retries': 3, 'fragment_retries': 3,
+                'progress_hooks': [progress_hook],
+                **_runtime_options(),
+            }
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                ydl.download([url])
 
-        opts: dict[str, Any] = {
-            'format': ('bestaudio/best' if mode == 'mp3' else
-                       f'bv*[height<={quality}]+ba/b[height<={quality}]'),
-            'outtmpl': str(folder / 'source.%(ext)s'),
-            'merge_output_format': 'mkv',
-            'quiet': True, 'no_warnings': True, 'noplaylist': True,
-            'max_filesize': MAX_FILE_BYTES, 'socket_timeout': 25,
-            'retries': 3, 'fragment_retries': 3,
-            'progress_hooks': [progress_hook],
-            **_runtime_options(),
-        }
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            ydl.download([url])
+            sources = [p for p in folder.iterdir() if p.is_file() and
+                       p.name.startswith('source.') and not p.suffix.endswith('part')]
+            if not sources:
+                raise RuntimeError('원본 파일이 생성되지 않았어요.')
+            source = max(sources, key=lambda p: p.stat().st_size)
 
-        sources = [p for p in folder.iterdir() if p.is_file() and
-                   p.name.startswith('source.') and not p.suffix.endswith('part')]
-        if not sources:
-            raise RuntimeError('원본 파일이 생성되지 않았어요.')
-        source = max(sources, key=lambda p: p.stat().st_size)
         if source.stat().st_size > MAX_FILE_BYTES:
             raise RuntimeError('파일 크기 제한을 초과했어요.')
         _update(job, stage='converting', message=('오디오를 MP3로 변환하는 중...' if mode == 'mp3'
@@ -402,6 +409,10 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
             job.message = '준비가 끝났어요. 파일을 저장할 수 있어요.'
             job.progress = 100
             job.finished = time.time()
+    except AlternativeError as exc:
+        _update(job, state='error', stage='error', error=str(exc),
+                message='외부 서버 처리에 실패했어요.', finished=time.time())
+        shutil.rmtree(folder, ignore_errors=True)
     except Exception as exc:
         _update(job, state='error', stage='error', error=_safe_error(exc),
                 message='처리에 실패했어요.', finished=time.time())
@@ -434,13 +445,32 @@ def inspect(payload: InspectRequest) -> dict[str, Any]:
     return _inspect_video(video_id, url)
 
 
+@app.post('/api/inspect-alt')
+def inspect_alt(payload: InspectRequest) -> dict[str, Any]:
+    """Opt-in alternative. The video ID is sent to a public Invidious instance."""
+    _clean()
+    video_id, _ = canonical_url(payload.url)
+    try:
+        return inspect_alternative(video_id)
+    except AlternativeError as exc:
+        raise HTTPException(422, str(exc)) from None
+
+
 @app.post('/api/jobs', status_code=202)
 def create_job(payload: ExtractRequest) -> dict[str, Any]:
     _clean()
     video_id, url = canonical_url(payload.url)
     if payload.mode not in ('mp4', 'mp3'):
         raise HTTPException(400, '지원하지 않는 파일 형식이에요.')
-    info = _inspect_video(video_id, url)
+    if payload.provider not in ('youtube', 'invidious'):
+        raise HTTPException(400, '지원하지 않는 추출 방식이에요.')
+    if payload.provider == 'invidious':
+        try:
+            info = inspect_alternative(video_id)
+        except AlternativeError as exc:
+            raise HTTPException(422, str(exc)) from None
+    else:
+        info = _inspect_video(video_id, url)
     if payload.mode == 'mp4' and payload.quality not in info['qualities']:
         raise HTTPException(400, '선택한 화질을 이 영상에서 사용할 수 없어요.')
     if payload.mode == 'mp3' and payload.quality not in BITRATES:
@@ -457,7 +487,7 @@ def create_job(payload: ExtractRequest) -> dict[str, Any]:
         _jobs[job.id] = job
     try:
         threading.Thread(target=_process, args=(job, url, payload.mode, payload.quality,
-                    start, end, float(info['duration'])), daemon=True).start()
+                    start, end, float(info['duration']), payload.provider), daemon=True).start()
     except Exception:
         _slots.release()
         with _lock:
