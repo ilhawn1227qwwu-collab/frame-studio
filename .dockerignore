@@ -1,0 +1,10 @@
+.venv
+__pycache__
+.pytest_cache
+tests
+*.pyc
+*.zip
+.git
+*.md
+start_windows.bat
+start_mac_linux.sh
