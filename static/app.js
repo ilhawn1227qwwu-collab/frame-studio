@@ -192,7 +192,7 @@ async function pollJob(jobId) {
     }
     if (data.state === 'error') {
       show($('retryBtn'));
-      if (isServerBotBlock(data.error)) show($('fallbackJobBtn'));
+      if (isServerBotBlock(data.error) || state.info?.provider === 'invidious') show($('fallbackJobBtn'));
       else hide($('fallbackJobBtn'));
       setLoading(elements.export, false);
       return;
