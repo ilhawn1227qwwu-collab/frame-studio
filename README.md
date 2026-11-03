@@ -1,0 +1,90 @@
+# FRAME STUDIO — 유튜브 영상 추출 웹사이트
+
+유튜브 영상 링크를 입력하고 **MP4 영상** 또는 **MP3 오디오**로 저장할 수 있는 개인용 웹사이트입니다. 휴대폰에서 쓸 수 있는 클라우드 배포 구성도 포함합니다. 영상 정보/썸네일 확인, 원본에서 실제 제공하는 화질(최대 1080p), 오디오 비트레이트 선택, 구간 자르기, 진행률 및 다운로드 버튼이 포함돼 있습니다.
+
+> **이용 범위:** 본인이 저작권을 보유했거나 권리자에게 다운로드 허락을 받은 콘텐츠 등 합법적이고 YouTube 약관상 허용되는 경우에만 사용하세요. 다른 사람의 영상을 무단으로 다운로드·배포해서는 안 됩니다. DRM, 연령/로그인 인증, 비공개 영상, 재생목록, 라이브 추출 기능은 제공하지 않습니다.
+
+## 스마트폰에서 주소로 사용하기
+
+스마트폰에는 아무것도 설치하지 않습니다. 외부 서버에 배포해야 접속할 수 있으며, 방법은 **[DEPLOY_MOBILE.md](DEPLOY_MOBILE.md)**에서 확인하세요. **Dockerfile / railway.json / render.yaml** 포함. 배포하지 않은 상태에서는 공용 URL이 없습니다.
+
+## 1. PC에서 직접 실행하려면
+
+1. **Python 3.11 이상**: https://www.python.org/downloads/ (Windows에서는 설치 중 `Add python.exe to PATH` 체크)
+2. **FFmpeg 및 ffprobe**: https://ffmpeg.org/download.html
+   - Windows: `winget install Gyan.FFmpeg` 로 설치하거나 FFmpeg 바이너리를 PATH에 추가하세요.
+   - macOS: `brew install ffmpeg`
+   - Ubuntu/Debian: `sudo apt install ffmpeg`
+3. **Deno 2.3 이상**: https://docs.deno.com/runtime/getting_started/installation/ (최신 yt-dlp의 YouTube JavaScript 처리에 필요)
+   - Node.js 22+도 대체 사용 가능하며 서버가 자동 감지합니다.
+
+설치 확인용 터미널 명령: `python --version` / `ffmpeg -version` / `ffprobe -version` / `deno --version`
+
+## 2. 실행하기
+
+### Windows
+1. 이 프로젝트 압축 파일을 풀어 폴더를 엽니다.
+2. **`start_windows.bat`** 더블 클릭.
+3. 최초 1회는 Python 패키지를 설치합니다. 브라우저에서 `http://127.0.0.1:8000` 을 여세요.
+4. 종료 시 명령 프롬프트를 닫으세요.
+
+### macOS / Linux
+```bash
+cd frame-studio
+./start_mac_linux.sh
+```
+브라우저에서 **http://127.0.0.1:8000** 접속. Ctrl+C로 종료합니다.
+
+### 수동 실행
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python server.py
+```
+
+## 3. 이용 방법
+
+1. 공개된 YouTube 영상 URL을 붙여넣고 **영상 불러오기** 클릭.
+2. 제목/채널/썸네일/길이를 확인합니다.
+3. MP4 또는 MP3를 고르고 화질/비트레이트를 선택합니다.
+4. 일부만 필요하면 **구간 자르기**를 켜고 시작/종료 시간을 입력합니다.
+5. 다운로드 권한을 확인한 뒤 **파일 추출하기** 클릭.
+6. 완료 후 **완성된 파일 저장하기**를 누릅니다.
+
+## 구현 방식
+
+- 프런트엔드: HTML/CSS/JavaScript (모바일 화면 대응)
+- API 서버: FastAPI / Uvicorn
+- 정보 추출/미디어 다운로드: yt-dlp + `yt-dlp-ejs` (`yt-dlp[default]` 패키지 설치)
+- 형식 변환/구간 자르기: FFmpeg
+- 임시 파일: OS 임시 폴더의 `frame-studio-jobs/`, 완료 후 1시간 지나면 다음 API 요청 시 정리
+- 기본 실행: `127.0.0.1:8000`으로 PC 로컬에서만 접속. `FRAME_PUBLIC_MODE=1`을 설정하고 웹 호스팅에 올리면 외부 HTTPS 접속 가능. 외부 공개 시 `FRAME_SITE_PASSWORD` 필수(12자 이상).
+- 동시 작업 최대 2개, 영상 길이 최대 2시간, 원본 다운로드 파일 크기 최대 1GB, 다운로드 주소는 랜덤 토큰 사용.
+
+## 문제 해결
+
+- **추출이 안 될 때**: `pip install -U "yt-dlp[default]"` 를 통해 업데이트한 뒤 재실행합니다. YouTube가 제공하는 영상 형식이나 접근 정책은 수시로 변경되어 모든 영상의 성공이 보장되지는 않습니다.
+- **Deno가 없다고 뜰 때**: Deno 설치 후 새 터미널에서 다시 실행하세요. Node.js 22+도 대체 가능합니다.
+- **FFmpeg가 없다고 뜰 때**: `ffmpeg -version`, `ffprobe -version` 이 동작하는지 확인합니다.
+- **구간 추출이 느릴 때**: 정확한 구간 맞춤을 위해 동영상 재인코딩을 수행합니다.
+- **1080p가 안 뜰 때**: 원본에 해당 해상도가 없는 경우 선택할 수 없습니다.
+- **추출한 영상이 화질이 떨어질 때**: MP4 변환이 필요한 코덱은 H.264로 재인코딩됩니다.
+- **브라우저 주소가 열리지 않을 때**: 터미널에 오류가 없는지 확인하고, 직접 `http://127.0.0.1:8000`에 접속해 보세요.
+
+## 주의: 공개 인터넷 배포
+
+비밀번호 보호, 요청 횟수 제한, 원본/출력 제한을 추가했지만 **사적인 개인 웹사이트**를 전제로 합니다. 불특정 다수를 위한 서비스로 운영하려면 더 강력한 인증, 여러 인스턴스에서의 작업 상태 저장, 비용 제한, 로깅/모니터링, 남용 방지 등 추가 설계가 필요합니다. 호스팅 서버에서 YouTube 연결이 차단되거나 요청이 실패할 수 있습니다.
+
+## 개발/테스트
+
+```bash
+pip install pytest httpx
+pytest -q
+```
+
+사용한 주요 문서:
+- https://github.com/yt-dlp/yt-dlp
+- https://github.com/yt-dlp/yt-dlp/wiki/EJS
+- https://ffmpeg.org/documentation.html
+- https://www.youtube.com/t/terms
