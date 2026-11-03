@@ -29,6 +29,7 @@ def sample_info():
         "adaptiveFormats": [
             media("video/mp4; codecs=\"avc1\"", 133, 150000, "240p"),
             media("video/mp4; codecs=\"avc1\"", 136, 1400000, "720p"),
+            media("video/mp4; codecs=\"avc1\"", 137, 2600000, "1080p"),
             media("video/webm; codecs=\"vp9\"", 247, 1100000, "720p"),
             media("audio/mp4; codecs=\"mp4a\"", 140, 120000),
             media("audio/webm; codecs=\"opus\"", 251, 140000)
@@ -52,13 +53,20 @@ def test_metadata_and_quality_selection(monkeypatch):
     monkeypatch.setattr(alternative, "_read_info", lambda _: sample_info())
     info = alternative.inspect(VIDEO_ID)
     assert info["provider"] == "invidious"
-    assert info["qualities"] == [240, 720]
+    assert info["qualities"] == [240, 720, 1080]
+    assert set(info["audio_modes"]) == {"mp3", "m4a", "opus"}
     assert info["duration"] == 30
     video, audio = alternative._choose_sources(sample_info(), "mp4", 720)
     assert video["itag"] == "136"
     assert audio["itag"] == "140"
-    video, audio = alternative._choose_sources(sample_info(), "mp3", 192)
+    video, audio = alternative._choose_sources(sample_info(), "mp4", 1080)
+    assert video["itag"] == "137"
+    video, audio = alternative._choose_sources(sample_info(), "mp3", 320)
+    assert video is None and audio["itag"] == "251"
+    video, audio = alternative._choose_sources(sample_info(), "m4a", 0)
     assert video is None and audio["itag"] == "140"
+    video, audio = alternative._choose_sources(sample_info(), "opus", 0)
+    assert video is None and audio["itag"] == "251"
 
 
 def test_third_party_inspection_requires_user_action(monkeypatch):
@@ -173,3 +181,60 @@ def test_alternate_companion_hosts_are_strictly_limited():
                  "yt-comp1.example.com"]:
         with pytest.raises(alternative.AlternativeError):
             alternative._validate_media_url(f"https://{host}/latest_version")
+
+
+def test_true_original_audio_export_and_codec_copy(tmp_path):
+    """AAC to M4A and Opus to .opus must retain codecs without new lossy encode."""
+    import json
+    from pathlib import Path
+    client_audio = tmp_path / "test_aac.m4a"
+    opus_audio = tmp_path / "test_opus.webm"
+    original_pcm = tmp_path / "original.wav"
+    wav = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                          "-f", "lavfi", "-i", "sine=frequency=440:duration=3",
+                          "-c:a", "pcm_s16le", str(original_pcm)], capture_output=True)
+    assert wav.returncode == 0
+    aac = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                          "-i", str(original_pcm), "-c:a", "aac", "-b:a", "128k",
+                          str(client_audio)], capture_output=True)
+    opus = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                           "-i", str(original_pcm), "-c:a", "libopus", "-b:a", "160k",
+                           str(opus_audio)], capture_output=True)
+    assert aac.returncode == 0 and opus.returncode == 0
+    for mode, source, expected_codec in [
+        ("m4a", client_audio, "aac"), ("opus", opus_audio, "opus")
+    ]:
+        target = tmp_path / f"export.{mode}"
+        job = server.Job(id="test", video_id=VIDEO_ID)
+        server._encode(job, source, target, mode=mode,
+                       start=0.0, end=3, duration=3, bitrate=0)
+        actual = subprocess.run([
+            "ffprobe", "-v", "error", "-show_entries", "stream=codec_name",
+            "-of", "json", str(target)
+        ], capture_output=True, text=True, check=True)
+        codecs = json.loads(actual.stdout)["streams"]
+        assert codecs[0]["codec_name"] == expected_codec
+        assert target.stat().st_size > 1000
+
+
+def test_mp4_full_video_streamcopy_and_high_quality_trim(tmp_path):
+    import json
+    source = tmp_path / "source.mp4"
+    result = subprocess.run([
+        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+        "-f", "lavfi", "-i", "color=c=black:s=320x180:r=10",
+        "-f", "lavfi", "-i", "sine=frequency=440:duration=3",
+        "-t", "3", "-c:v", "libx264", "-preset", "ultrafast",
+        "-c:a", "aac", str(source)], capture_output=True, text=True)
+    assert result.returncode == 0
+    job = server.Job(id="copy", video_id=VIDEO_ID)
+    target = tmp_path / "copy.mp4"
+    server._encode(job, source, target, mode="mp4",
+                   start=0.0, end=3, duration=3, bitrate=192)
+    assert target.is_file() and target.stat().st_size > 1000
+    clip = tmp_path / "clip.mp4"
+    server._encode(job, source, clip, mode="mp4",
+                   start=0.5, end=1.8, duration=3, bitrate=192)
+    assert clip.is_file() and clip.stat().st_size > 1000
+
+
