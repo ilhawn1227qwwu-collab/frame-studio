@@ -217,7 +217,7 @@ def test_true_original_audio_export_and_codec_copy(tmp_path):
         assert target.stat().st_size > 1000
 
 
-def test_mp4_full_video_streamcopy_and_high_quality_trim(tmp_path):
+def test_mp4_full_video_streamcopy_and_high_quality_trim(tmp_path, monkeypatch):
     import json
     source = tmp_path / "source.mp4"
     result = subprocess.run([
@@ -236,5 +236,11 @@ def test_mp4_full_video_streamcopy_and_high_quality_trim(tmp_path):
     server._encode(job, source, clip, mode="mp4",
                    start=0.5, end=1.8, duration=3, bitrate=192)
     assert clip.is_file() and clip.stat().st_size > 1000
+    # The 1080p branch must use streamcopy to avoid Render free-tier OOM.
+    monkeypatch.setattr(server, "_is_hd_video", lambda _path: True)
+    hd_clip = tmp_path / "hd_clip.mp4"
+    server._encode(job, source, hd_clip, mode="mp4",
+                   start=0.2, end=1.8, duration=3, bitrate=192)
+    assert hd_clip.is_file() and hd_clip.stat().st_size > 1000
 
 
