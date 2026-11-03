@@ -12,3 +12,6 @@
 .alt-notice{border:1px solid #526d43;border-radius:7px;background:#202c1e;color:#d3ecb6;
   padding:11px 14px;font-size:11px;line-height:1.8;margin:0 0 14px}
 .fallback-card b{color:#f1ffd8}
+
+.alt-privacy-inline{font-size:11px;color:#9fa9b0;line-height:1.65;margin:9px 0 0;word-break:keep-all}
+#directAltBtn{margin-top:10px}
