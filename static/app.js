@@ -84,25 +84,40 @@ async function request(url, data) {
 }
 function setLoading(button, isLoading) { button.disabled = isLoading; button.classList.toggle('loading', isLoading); }
 function paintFormats() {
+  const sourceFormats = ['mp4', 'mp3', ...(state.info.audio_modes || [])];
   document.querySelectorAll('[data-mode]').forEach((button) => {
-    const selected = button.dataset.mode === state.mode;
+    const mode = button.dataset.mode;
+    const available = sourceFormats.includes(mode);
+    button.classList.toggle('hidden', !available);
+    button.disabled = !available;
+    const selected = available && mode === state.mode;
     button.classList.toggle('selected', selected);
     button.setAttribute('aria-pressed', String(selected));
   });
-  $('qualityTitle').textContent = '';
-  const title = document.createTextNode(state.mode === 'mp4' ? '영상 화질 ' : '오디오 비트레이트 ');
-  const caption = document.createElement('span');
-  caption.textContent = state.mode === 'mp4' ? 'RESOLUTION' : 'BITRATE';
-  $('qualityTitle').append(title, caption);
-  $('qualityNote').textContent = state.mode === 'mp4' ? '가능한 화질만 표시됩니다' : '원본보다 음질이 좋아지지는 않아요';
-  const choices = state.mode === 'mp4' ? state.info.qualities : [128, 192, 320];
-  state.quality = state.mode === 'mp4' ? (choices.includes(720) ? 720 : choices[choices.length - 1]) : 192;
+  const video = state.mode === 'mp4';
+  const originalAudio = ['m4a', 'opus'].includes(state.mode);
+  const title = video ? '영상 화질 ' : originalAudio ? '원본 음성 품질 ' : 'MP3 출력 비트레이트 ';
+  const caption = video ? 'RESOLUTION' : originalAudio ? 'SOURCE QUALITY' : 'OUTPUT BITRATE';
+  $('qualityTitle').replaceChildren(document.createTextNode(title));
+  const badge = document.createElement('span');
+  badge.textContent = caption;
+  $('qualityTitle').append(badge);
+  $('qualityNote').textContent = video
+    ? '원본에서 제공하는 화질만 선택할 수 있어요. 고화질은 파일이 더 큽니다.'
+    : originalAudio
+      ? '원본 음성 비트스트림을 재압축하지 않고 보존해요'
+      : '320k로 출력해도 원본 음질을 초과하지 않아요';
+  const choices = video ? state.info.qualities : originalAudio ? [0] : [128, 192, 320];
+  elements.qualities.classList.toggle('original-quality', originalAudio);
+  state.quality = video
+    ? Math.max(...choices)
+    : originalAudio ? 0 : 320;
   elements.qualities.replaceChildren();
   for (const quality of choices) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'quality-button';
-    const mark = state.mode === 'mp4' ? `${quality}p` : `${quality}k`;
+    const mark = video ? `${quality}p` : originalAudio ? '원본 그대로 저장' : `${quality}k`;
     btn.textContent = mark;
     btn.dataset.value = String(quality);
     btn.addEventListener('click', () => { state.quality = quality; paintSelectedQuality(); });
