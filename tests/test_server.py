@@ -1,7 +1,7 @@
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from server import app, canonical_url, parse_time, _safe_filename, _media_codecs
+from server import app, canonical_url, parse_time, _safe_filename, _media_codecs, _safe_error
 
 @pytest.mark.parametrize('input_url', [
     'https://www.youtube.com/watch?v=AbC123_xY-z',
@@ -161,3 +161,16 @@ assert client.post('/api/inspect', headers=header, json={'url': 'junk'}).status_
                             cwd=str(__import__('pathlib').Path(__file__).resolve().parents[1]),
                             env=env, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+def test_youtube_bot_check_does_not_claim_private_video():
+    """A public Shorts link can fail because a cloud IP is blocked."""
+    message = "ERROR: [youtube] XDbJL-OZW1A: Sign in to confirm you’re not a bot. Use --cookies for authentication."
+    result = _safe_error(RuntimeError(message))
+    assert '서버' in result and '봇' in result
+    assert '접근 권한이 필요한 영상' not in result
+    assert '공개 쇼츠' in result
+
+
+def test_real_private_video_keeps_distinct_message():
+    result = _safe_error(RuntimeError('ERROR: This is a private video. Sign in to watch.'))
+    assert '접근 권한이 필요한 영상' in result
