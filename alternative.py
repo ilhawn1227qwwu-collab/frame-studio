@@ -49,7 +49,7 @@ def _validate_media_url(url: str) -> str:
     parts = urllib.parse.urlsplit(url)
     hostname = (parts.hostname or "").lower()
     trusted_host = (hostname == INVIDIOUS_HOST or
-                    re.fullmatch(r"yt-comp[0-9]+\\.chocolatemoo53\\.com", hostname) is not None)
+                    re.fullmatch(r"yt-comp[0-9]+\.chocolatemoo53\.com", hostname) is not None)
     if (parts.scheme != "https" or not trusted_host
             or parts.port not in (None, 443) or parts.username or parts.password):
         raise AlternativeError("외부 미디어 서버가 신뢰할 수 없는 주소를 반환했어요.")
