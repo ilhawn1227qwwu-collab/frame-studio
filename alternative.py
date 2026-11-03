@@ -52,6 +52,11 @@ def _validate_media_url(url: str) -> str:
                     re.fullmatch(r"yt-comp[0-9]+\.chocolatemoo53\.com", hostname) is not None)
     if (parts.scheme != "https" or not trusted_host
             or parts.port not in (None, 443) or parts.username or parts.password):
+        if os.getenv("FRAME_VERIFY_ALT") == "1":
+            # Diagnostic logs contain hostname only; signed media URLs are never logged.
+            print("FRAME_VERIFY_REDIRECT: " + json.dumps({
+                "hostname": hostname[:110], "scheme": parts.scheme, "port": parts.port
+            }), flush=True)
         raise AlternativeError("외부 미디어 서버가 신뢰할 수 없는 주소를 반환했어요.")
     return url
 
