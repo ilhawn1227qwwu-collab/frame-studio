@@ -18,7 +18,7 @@
         <span class="brand-text">FRAME<span class="brand-period">.</span></span>
         <span class="brand-sub">STUDIO</span>
       </a>
-      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.1</span></div>
+      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.2</span></div>
     </header>
 
     <main>
@@ -43,6 +43,11 @@
             <button id="inspectBtn" type="submit" class="primary-button"><span id="inspectLabel">영상 불러오기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
           </form>
           <div id="errorBox" class="error-box hidden" role="alert"></div>
+          <div id="fallbackSection" class="fallback-card hidden">
+            <strong>다른 경로로 이어서 추출하기</strong>
+            <p>이 서버가 유튜브에 막힌 경우 Cobalt 웹사이트에서 다시 시도할 수 있어요. 클릭하면 링크가 외부 서비스에 전달됩니다. 화질·구간 옵션은 옮겨지지 않으며 성공을 보장하지는 않아요.</p>
+            <button id="fallbackBtn" type="button" class="fallback-button">Cobalt에서 이 영상 열기 ↗</button>
+          </div>
 
           <div id="videoSection" class="video-section hidden" aria-live="polite">
             <div class="panel-rule"></div>
@@ -62,7 +67,7 @@
             <button id="exportBtn" type="button" class="primary-button export-button"><span>파일 추출하기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m-5-5 5 5 5-5M4 17v3h16v-3"/></svg></button>
           </div>
 
-          <div id="progressSection" class="progress-section hidden" aria-live="polite"><div class="panel-rule"></div><div class="progress-head"><span class="step-label">STEP 03 / EXPORTING</span><span id="progressNumber">0%</span></div><div class="progress-track"><div id="progressBar" class="progress-bar"></div></div><p id="progressMessage">작업을 준비 중이에요.</p><a id="downloadLink" class="download-button hidden" href="#" download><span>완성된 파일 저장하기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m-5-5 5 5 5-5M4 17v3h16v-3"/></svg></a><button id="retryBtn" class="retry-button hidden" type="button">다시 시도하기</button></div>
+          <div id="progressSection" class="progress-section hidden" aria-live="polite"><div class="panel-rule"></div><div class="progress-head"><span class="step-label">STEP 03 / EXPORTING</span><span id="progressNumber">0%</span></div><div class="progress-track"><div id="progressBar" class="progress-bar"></div></div><p id="progressMessage">작업을 준비 중이에요.</p><a id="downloadLink" class="download-button hidden" href="#" download><span>완성된 파일 저장하기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m-5-5 5 5 5-5M4 17v3h16v-3"/></svg></a><button id="retryBtn" class="retry-button hidden" type="button">다시 시도하기</button><button id="fallbackJobBtn" class="fallback-button hidden" type="button">다른 서비스에서 시도하기 ↗</button></div>
         </section>
 
         <aside class="side-panel" aria-label="사용 안내"><div class="side-title"><span>HOW IT WORKS</span><span class="mini-star">✳</span></div><h2>단 세 단계로<br>완료하세요.</h2><div class="steps-list"><div class="guide-step"><span class="guide-index">01</span><div><strong>링크 붙여넣기</strong><p>유튜브 영상 주소만 준비하세요.</p></div><span class="guide-check">↗</span></div><div class="guide-step"><span class="guide-index">02</span><div><strong>옵션 선택하기</strong><p>MP4 또는 MP3, 화질과 구간을 선택해요.</p></div><span class="guide-check">↗</span></div><div class="guide-step"><span class="guide-index">03</span><div><strong>파일 저장하기</strong><p>변환이 끝나면 바로 저장할 수 있어요.</p></div><span class="guide-check">↗</span></div></div><div class="side-graphic" aria-hidden="true"><span class="sg-label">PRECISION IS EVERYTHING</span><div class="sg-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="sg-time">00:00:00:00 <span>● REC</span></div></div><div class="disclaimer"><span class="disclaimer-icon">i</span><div><strong>개인용 웹 도구</strong><p>영상은 이 사이트가 실행되는 서버에서 처리돼요. 결과 파일은 일정 시간이 지나면 삭제되며, 권한이 있는 콘텐츠에만 사용해야 해요.</p></div></div></aside>
