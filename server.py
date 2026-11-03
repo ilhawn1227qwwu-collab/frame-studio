@@ -197,14 +197,29 @@ def _clean() -> None:
 
 
 def _safe_error(exc: Exception) -> str:
-    message = str(exc).splitlines()[-1][:300]
+    """Report YouTube bot checks separately from video account restrictions.
+
+    yt-dlp's `Sign in to confirm you're not a bot` error does NOT mean
+    the video is private. In particular, cloud/datacenter IPs can receive
+    this error for fully public Shorts and ordinary videos.
+    """
+    message = str(exc).splitlines()[-1][:500]
     lower = message.lower()
+    if ('not a bot' in lower or 'captcha' in lower or
+            'unusual traffic' in lower or 'automated queries' in lower):
+        return ('유튜브가 이 서버의 접속을 봇으로 판단해 차단했습니다. '
+                '공개 쇼츠에서도 발생할 수 있으며 링크나 영상의 공개 설정 문제가 아닙니다. '
+                '현재 서버에서는 추출할 수 없어요.')
+    if 'requested format is not available' in lower:
+        return '선택한 화질을 제공하지 않아요. 다른 화질을 선택해 주세요.'
     if 'private video' in lower or 'sign in' in lower or 'login' in lower or 'age-restricted' in lower:
         return '접근 권한이 필요한 영상은 지원하지 않습니다. 공개된 영상인지 확인해 주세요.'
     if 'not available' in lower or 'unavailable' in lower:
         return '이 영상을 불러올 수 없어요. 링크 또는 공개 설정을 확인해 주세요.'
-    if 'requested format is not available' in lower:
-        return '선택한 화질을 제공하지 않아요. 다른 화질을 선택해 주세요.'
+    if 'http error 429' in lower or 'too many requests' in lower:
+        return '유튜브의 요청 제한에 도달했습니다. 나중에 다시 시도해 주세요.'
+    if 'http error 403' in lower or 'forbidden' in lower:
+        return '유튜브가 파일 요청을 거부했습니다. 서버의 접근 제한 또는 인증 문제일 수 있어요.'
     if 'max-filesize' in lower or 'larger than max' in lower:
         return '파일 크기 제한을 초과했어요. 낮은 화질로 시도해 주세요.'
     return '영상 처리에 실패했어요. yt-dlp 업데이트 또는 네트워크 상태를 확인해 주세요.'
