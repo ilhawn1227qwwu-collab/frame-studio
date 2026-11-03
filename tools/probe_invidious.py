@@ -1,53 +1,79 @@
-"""One-shot safe diagnostics for public Invidious instances.
-Requests metadata for a known public YouTube video. No cookies or tokens are used.
-We do not scrape sites or bypass access controls.
+"""One-shot probe of media transfer via one documented public Invidious instance.
+Only tests up to 4 KiB per candidate, no cookies, no content saved.
 """
-import concurrent.futures
 import json
 import os
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 VIDEO_ID = os.environ.get("FRAME_PROBE_VIDEO_ID", "XDbJL-OZW1A")
-HOSTS = (
-    "inv.nadeko.net",
-    "invidious.nerdvpn.de",
-    "yt.chocolatemoo53.com",
-    "invidious.tiekoetter.com",
-)
+HOST = "yt.chocolatemoo53.com"
+BASE = "https://" + HOST
 
-def check(host: str):
-    url = f"https://{host}/api/v1/videos/{VIDEO_ID}"
-    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent":"FrameStudio/1.0 (personal diagnostic)"})
-    started = time.monotonic()
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+opener = urllib.request.build_opener(NoRedirect)
+
+def allow_url(url):
+    u=urllib.parse.urlsplit(url)
+    if u.scheme!="https": return False
+    host=(u.hostname or "").lower()
+    return (host == HOST or host == "googlevideo.com" or host.endswith(".googlevideo.com"))
+
+def probe_meta(path):
+    started=time.monotonic()
+    url=BASE+path
     try:
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            status = resp.status
-            body = resp.read(400_000)
-        if status != 200:
-            return {"host": host, "status": status, "result": "http"}
-        data = json.loads(body)
-        if not isinstance(data, dict):
-            return {"host": host, "result": "invalid-json"}
-        formats = data.get("formatStreams") or []
-        adaptive = data.get("adaptiveFormats") or []
-        return {"host":host, "result":"ok", "videoId_matches":data.get("videoId")==VIDEO_ID,
-          "has_title":bool(data.get("title")), "formats":len(formats),
-          "adaptive":len(adaptive), "has_hls":bool(data.get("hlsUrl")),
-          "has_proxy_uri":any(str(f.get("url", "")).startswith("/") for f in formats if isinstance(f, dict)),
-          "seconds":round(time.monotonic()-started,2)}
-    except urllib.error.HTTPError as e:
-        return {"host":host, "result":"http-error","status":e.code}
+        req=urllib.request.Request(url,headers={"Accept":"application/json","User-Agent":"FrameStudio/1.0"})
+        with opener.open(req,timeout=15) as resp:
+            if resp.status!=200: return None
+            data=json.loads(resp.read(500000))
+        print("FRAME_STREAM:",json.dumps({"step":"metadata","variant":path.split('?')[-1] if '?' in path else "regular",
+                "ok":True,"formatStreams":len(data.get("formatStreams") or []),
+                "adaptiveFormats":len(data.get("adaptiveFormats") or [])}),flush=True)
+        return data
     except Exception as e:
-        return {"host":host, "result":"network-error","type":type(e).__name__}
+        print("FRAME_STREAM:",json.dumps({"step":"metadata","variant":path,"error":type(e).__name__,"status":getattr(e,"code",None)}),flush=True)
+        return None
+
+def check_stream(name,raw):
+    if not raw:
+        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"missing"}),flush=True); return
+    url=urllib.parse.urljoin(BASE,raw)
+    parts=urllib.parse.urlsplit(url)
+    if not allow_url(url):
+        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"rejected-host"}),flush=True);return
+    req=urllib.request.Request(url,headers={"Range":"bytes=0-4095","User-Agent":"FrameStudio/1.0","Accept":"*/*"})
+    started=time.monotonic()
+    try:
+        with opener.open(req,timeout=14) as response:
+            data=response.read(4096)
+            status=response.status
+            content_type=response.headers.get("content-type","")[:70]
+        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"response","status":status,
+            "type":content_type,"bytes":len(data),"seconds":round(time.monotonic()-started,2)}),flush=True)
+    except urllib.error.HTTPError as e:
+        redirect=e.headers.get("location","") if e.code in (301,302,303,307,308) else ""
+        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"http-error","status":e.code,
+           "redirect_host":urllib.parse.urlsplit(redirect).hostname}),flush=True)
+    except Exception as e:
+        print("FRAME_STREAM:",json.dumps({"stream":name,"result":"network-error","error":type(e).__name__}),flush=True)
 
 def main():
-    print("FRAME_ALT: begin, publicly listed instances, metadata only", flush=True)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-        for result in pool.map(check,HOSTS):
-            print("FRAME_ALT: "+json.dumps(result, ensure_ascii=False), flush=True)
-    print("FRAME_ALT: finished", flush=True)
+    print("FRAME_STREAM: starting limited 4KB media checks",flush=True)
+    for name,path in (("regular",f"/api/v1/videos/{VIDEO_ID}"),("local",f"/api/v1/videos/{VIDEO_ID}?local=true")):
+        data=probe_meta(path)
+        if data is None:continue
+        fmts=data.get("adaptiveFormats") or []
+        aud=[f for f in fmts if isinstance(f,dict) and "audio/" in str(f.get("type",""))]
+        vid=[f for f in fmts if isinstance(f,dict) and "video/" in str(f.get("type",""))]
+        if aud:check_stream(name+"_audio", aud[0].get("url"))
+        if vid:check_stream(name+"_video", vid[0].get("url"))
+        if data.get("hlsUrl"):check_stream(name+"_hls",data["hlsUrl"])
+    print("FRAME_STREAM: finished",flush=True)
 
-if __name__ == "__main__":
-    main()
+if __name__=="__main__":main()
