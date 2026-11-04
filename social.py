@@ -41,12 +41,27 @@ def normalize_url(raw: str) -> tuple[str, str, str]:
         path = value.path.rstrip("/")
         if host in INSTAGRAM_HOSTS:
             match = re.fullmatch(r"/(p|reel|reels|tv)/([A-Za-z0-9_-]{5,40})", path)
-            if not match:
-                raise ValueError
-            kind, identifier = match.groups()
-            if kind == "reels":
-                kind = "reel"
-            return "instagram", f"https://www.instagram.com/{kind}/{identifier}/", identifier
+            if match:
+                kind, identifier = match.groups()
+                if kind == "reels":
+                    kind = "reel"
+                return "instagram", f"https://www.instagram.com/{kind}/{identifier}/", identifier
+            # Instagram's Copy Link feature can produce short /share/reel/ links,
+            # which redirect to the actual canonical shortcode.
+            share = re.fullmatch(r"/share/(?:(reel|reels|p)/)?([A-Za-z0-9_-]{5,60})", path)
+            if share:
+                kind, token = share.groups()
+                kind = "reel" if kind == "reels" else kind
+                prefix = f"{kind}/" if kind else ""
+                return "instagram", f"https://www.instagram.com/share/{prefix}{token}/", token
+            # Instagram also supports user-qualified post URLs.
+            username = re.fullmatch(
+                r"/([A-Za-z0-9_.]{2,30})/(p|reel|reels|tv)/([A-Za-z0-9_-]{5,40})",
+                path)
+            if username:
+                _, kind, identifier = username.groups()
+                return "instagram", f"https://www.instagram.com/{'reel' if kind == 'reels' else kind}/{identifier}/", identifier
+            raise ValueError
         if host in TIKTOK_HOSTS:
             match = re.fullmatch(r"/@([A-Za-z0-9._-]{2,36})/video/([0-9]{8,24})", path)
             if match:
