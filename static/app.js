@@ -29,6 +29,7 @@ function updatePlatformControls() {
   $('directAltBtn').classList.toggle('hidden', social);
   const note = document.querySelector('.alt-privacy-inline');
   if (note) note.classList.toggle('hidden', social);
+  $('instagramPrivacy').classList.toggle('hidden', platform !== 'instagram');
 }
 elements.url.addEventListener('input', updatePlatformControls);
 function isServerBotBlock(message) {
@@ -45,14 +46,10 @@ function clearError() {
   hide($('socialFallbackSection'));
 }
 function showSocialFallback(platform) {
-  const isInstagram = platform === 'instagram';
-  $('socialFallbackTitle').textContent = isInstagram ? '인스타그램 서버가 로그인 검사를 요구하고 있어요'
-    : '틱톡이 현재 처리 서버의 접속을 거부하고 있어요';
-  $('socialFallbackNote').textContent = isInstagram
-    ? '외부 IGDL 웹사이트에서 공개 게시물의 사진·영상을 시도할 수 있어요. 클릭하면 게시물 링크가 해당 사이트로 전달됩니다.'
-    : 'TikWM 처리 서버로 시도하면 이 영상의 주소를 외부 서비스에 전송하고, 파일은 FRAME STUDIO에서 저장할 수 있어요. 별도 브라우저 서비스도 선택할 수 있습니다.';
-  $('socialExternalBtn').textContent = isInstagram ? 'IGDL에서 사진·영상 열기 ↗' : 'TikWM 웹사이트 열기 ↗';
-  $('socialTikwmBtn').classList.toggle('hidden', isInstagram);
+  if (platform !== 'tiktok') return;
+  $('socialFallbackTitle').textContent = '틱톡이 처리 서버의 직접 연결을 거부하고 있어요';
+  $('socialFallbackNote').textContent = 'TikWM 경로를 선택하면 영상 주소를 외부 서비스에 전송해 FRAME STUDIO에서 파일을 저장할 수 있어요.';
+  $('socialTikwmBtn').classList.remove('hidden');
   show($('socialFallbackSection'));
 }
 $('socialTikwmBtn').addEventListener('click', async () => {
@@ -73,45 +70,6 @@ $('socialTikwmBtn').addEventListener('click', async () => {
     setLoading(button, false);
   }
 });
-$('socialExternalBtn').addEventListener('click', () => {
-  const url = state.url || elements.url.value.trim();
-  const platform = detectPlatform(url);
-  if (platform === 'instagram') {
-    try {
-      const path = new URL(url).pathname;
-      if (!/^\/(p|reel|reels|tv)\/[A-Za-z0-9_-]{5,40}\/?$/.test(path)) throw Error('invalid path');
-      window.open('https://igdl.app' + path, '_blank', 'noopener,noreferrer');
-    } catch (_) { showError('인스타그램 게시물 링크를 다시 확인해 주세요.'); }
-  } else if (platform === 'tiktok') {
-    // No TikTok URL is forwarded until user pastes it into the external site.
-    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(url).catch(() => {});
-    window.open('https://tikwm.com/', '_blank', 'noopener,noreferrer');
-  }
-});
-async function loadAlternativeVideo() {
-  const url = elements.url.value.trim();
-  if (!url || detectPlatform(url) !== 'youtube') return showError('이 보조 서버는 유튜브 링크에서만 사용할 수 있어요.');
-  state.url = url;
-  const buttons = [$('alternateBtn'), $('directAltBtn')];
-  buttons.forEach(button => setLoading(button, true));
-  $('alternateBtn').textContent = '외부 서버 확인 중...';
-  $('directAltBtn').textContent = '외부 서버 확인 중...';
-  clearError();
-  try {
-    const info = await request('/api/inspect-alt', { url: state.url });
-    displayVideo(info);
-    elements.video.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  } catch (error) {
-    showError(error.message);
-    show($('fallbackSection')); // Third-party fallback can be attempted separately.
-  } finally {
-    buttons.forEach(button => setLoading(button, false));
-    $('alternateBtn').textContent = '외부 서버로 불러오기';
-    $('directAltBtn').textContent = '외부 서버로 바로 불러오기';
-  }
-}
-$('alternateBtn').addEventListener('click', loadAlternativeVideo);
-$('directAltBtn').addEventListener('click', loadAlternativeVideo);
 
 function openExternalFallback() {
   // Opt-in browser navigation: only the YouTube URL, never our site password.
@@ -161,7 +119,7 @@ function paintFormats() {
   const originalAudio = ['m4a', 'opus'].includes(state.mode);
   $('qualityHead').classList.toggle('hidden', photo);
   elements.qualities.classList.toggle('hidden', photo);
-  $('trimBox').classList.toggle('hidden', photo);
+  $('trimBox').classList.toggle('hidden', photo || !!state.info.duration_unknown);
   const title = video ? '영상 화질 ' : originalAudio ? '원본 음성 품질 ' : photo ? '사진 원본 ' : 'MP3 출력 비트레이트 ';
   const caption = video ? 'RESOLUTION' : originalAudio ? 'SOURCE QUALITY' : photo ? 'PHOTOS' : 'OUTPUT BITRATE';
   $('qualityTitle').replaceChildren(document.createTextNode(title));
@@ -204,7 +162,7 @@ function displayVideo(info) {
   $('videoThumb').classList.toggle('hidden', photo || !info.thumbnail);
   $('photoPreview').classList.toggle('hidden', !photo);
   if (!photo && info.thumbnail) $('videoThumb').src = info.thumbnail;
-  if (photo) $('photoPreview').textContent = (info.photo_count || 1) + ' PHOTOS · INSTAGRAM';
+  if (photo) $('photoPreview').textContent = (info.photo_count || 1) + (info.gallery_has_video ? ' PHOTO / VIDEO FILES' : ' PHOTOS') + ' · INSTAGRAM';
   $('videoTitle').textContent = info.title;
   const notice = $('altNotice');
   if (info.provider === 'invidious' || info.note) {
@@ -213,8 +171,8 @@ function displayVideo(info) {
   } else hide(notice);
   $('videoChannel').textContent = info.channel || '';
   $('videoId').textContent = info.id;
-  $('videoDuration').textContent = photo ? (info.photo_count || 1) + ' PHOTOS' : timeLabel(info.duration);
-  $('endInput').value = photo ? '' : timeLabel(info.duration);
+  $('videoDuration').textContent = photo ? (info.photo_count || 1) + '개 파일' : info.duration_unknown ? '원본 영상' : timeLabel(info.duration);
+  $('endInput').value = photo || info.duration_unknown ? '' : timeLabel(info.duration);
   $('startInput').value = '00:00';
   $('trimSwitch').checked = false;
   hide($('trimFields'));
