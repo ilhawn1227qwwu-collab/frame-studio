@@ -137,8 +137,9 @@ def test_social_inspect_and_photo_job_end_to_end_mocked(tmp_path,monkeypatch):
     monkeypatch.setattr(server,"download_social_photos",fake_download)
     client=TestClient(server.app)
     photo_url="https://www.instagram.com/p/AbCdE12345/"
-    inspect=client.post("/api/inspect-social",json={"url":photo_url})
-    assert inspect.status_code==200
+    # Legacy direct gallery-dl worker remains supported, but the default
+    # Instagram inspection route now prefers the working vxInstagram provider.
+    assert server.inspect_social(photo_url)["provider"] == "instagram_photo"
     response=client.post("/api/jobs",json={"url":photo_url,"provider":"instagram_photo",
                     "mode":"photos","quality":0})
     assert response.status_code==202,response.text
