@@ -152,9 +152,9 @@ def _video_info(url: str, site: str, post_id: str, duration_limit: int) -> dict:
                        data.get("creator") or "")[:180],
         "thumbnail": thumb,
         "duration": duration,
-        "qualities": qualities,
+        "qualities": [max_height],
         "max_height": max_height,
-        "note": "SNS 원본에서 제공되는 화질만 저장할 수 있어요. 로그인 제한·서버 차단이 있으면 실패할 수 있어요.",
+        "note": "SNS가 제공하는 원본 영상 중 재생 가능한 형식을 자동으로 선택해요. 화질을 인위적으로 높이지 않으며, 로그인·서버 제한이 있으면 실패할 수 있어요.",
     }
 
 
