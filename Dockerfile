@@ -30,6 +30,7 @@ COPY alternative.py .
 COPY social.py .
 COPY social_tikwm.py .
 COPY instagram_vx.py .
+COPY instagram_reel_fallback.py .
 COPY static/ ./static/
 COPY tools/ ./tools/
 RUN useradd -m -u 10001 frameuser
