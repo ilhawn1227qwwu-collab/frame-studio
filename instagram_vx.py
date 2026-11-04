@@ -50,9 +50,61 @@ def _parse_post(raw: str) -> tuple[str, str]:
         site, url, ident = normalize_url(raw)
     except SocialError:
         raise InstagramVXError("공개 인스타그램 게시물 또는 릴스 주소를 입력해 주세요.") from None
-    if site != "instagram" or not re.fullmatch(r"[A-Za-z0-9_-]{5,40}", ident):
+    if site != "instagram":
         raise InstagramVXError("인스타그램 개별 게시물·릴스만 지원해요.")
+    if "/share/" in urllib.parse.urlsplit(url).path:
+        url, ident = _resolve_share_link(url)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{5,40}", ident):
+        raise InstagramVXError("인스타그램 게시물 주소를 확인할 수 없어요.")
     return url, ident
+
+
+def _canonical_from_redirect(candidate: str) -> tuple[str, str] | None:
+    """Strictly follow Instagram post redirects, not user-chosen domains."""
+    try:
+        site, canonical, shortcode = normalize_url(candidate)
+        if site == "instagram" and "/share/" not in urllib.parse.urlsplit(canonical).path:
+            return canonical, shortcode
+    except SocialError:
+        return None
+    return None
+
+
+def _resolve_share_link(share_url: str) -> tuple[str, str]:
+    """Translate Instagram app /share/ links to real /reel/ or /p/ shortcodes."""
+    for candidate in (share_url, share_url.replace("www.instagram.com", HOST, 1)):
+        req = urllib.request.Request(candidate, headers={
+            "User-Agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36",
+            "Accept": "text/html",
+        })
+        try:
+            with OPENER.open(req, timeout=10) as response:
+                if response.status != 200:
+                    continue
+                html = response.read(150001).decode("utf-8", "replace")
+            # The public preview may embed a canonical Instagram path.
+            patterns = (
+                r'https?://(?:www\\.)?instagram\\.com/(?:p|reels?|tv)/[A-Za-z0-9_-]{5,40}',
+                r'https?:\\/\\/(?:www\\.)?instagram\\.com\\/(?:p|reels?|tv)\\/[A-Za-z0-9_-]{5,40}',
+            )
+            for pattern in patterns:
+                for match in re.finditer(pattern, html):
+                    found = match.group().replace("\\/", "/")
+                    resolved = _canonical_from_redirect(found)
+                    if resolved:
+                        return resolved
+        except urllib.error.HTTPError as exc:
+            if exc.code in (301, 302, 303, 307, 308):
+                resolved = _canonical_from_redirect(
+                    urllib.parse.urljoin(candidate, exc.headers.get("location", "")))
+                if resolved:
+                    return resolved
+        except (urllib.error.URLError, TimeoutError, OSError):
+            continue
+    raise InstagramVXError(
+        "인스타그램 공유용 짧은 링크를 해석할 수 없어요. "
+        "릴스를 연 뒤 주소가 /reel/로 시작하는 링크를 복사해 주세요."
+    )
 
 
 def _cdn_allowed(url: str) -> bool:
