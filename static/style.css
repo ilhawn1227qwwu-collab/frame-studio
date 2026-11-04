@@ -20,3 +20,13 @@
 .format-toggle .format-button.hidden{display:none!important}
 .format-toggle .format-button strong{font-size:12px}
 @media(max-width:380px){.format-toggle{grid-template-columns:1fr 1fr;gap:8px}.format-button{padding:9px;gap:7px}.format-button strong{font-size:11px}.format-button small{font-size:9px}}
+
+/* TikTok and Instagram photo/carousel media mode */
+.photo-preview{display:flex;align-items:center;justify-content:center;
+ min-height:170px;width:100%;padding:24px;text-align:center;
+ font-size:12px;font-weight:800;letter-spacing:2px;
+ background:radial-gradient(circle at 25% 15%,#465e54 0,#182629 45%,#121b23 100%);
+ color:#dcead1;}
+.photo-preview.hidden{display:none!important}
+.format-toggle:has([data-mode="photos"]:not(.hidden)){grid-template-columns:1fr}
+.format-toggle .format-button[data-mode="photos"]:not(.hidden){justify-content:center;min-height:76px}
