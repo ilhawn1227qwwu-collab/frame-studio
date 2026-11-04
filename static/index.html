@@ -18,7 +18,7 @@
         <span class="brand-text">FRAME<span class="brand-period">.</span></span>
         <span class="brand-sub">STUDIO</span>
       </a>
-      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.6.1</span></div>
+      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.6.2</span></div>
     </header>
 
     <main>
@@ -26,8 +26,8 @@
         <div class="hero-copy">
           <div class="kicker"><span class="kicker-square"></span> THE MEDIA WORKSPACE <span class="kicker-line"></span> 001</div>
           <h1>영상의 필요한 순간을<br><span class="headline-accent">꺼내 쓰는 가장 쉬운 방법.</span></h1>
-          <p class="hero-desc">유튜브 링크 하나면 충분해요. 원하는 화질, 파일 형식, 구간까지<br class="desktop-break"> 직접 선택하고 깔끔하게 저장하세요.</p>
-          <div class="hero-tags"><span><i class="tag-icon">↗</i> MP4 VIDEO</span><span><i class="tag-icon">♫</i> MP3 AUDIO</span><span><i class="tag-icon">⌁</i> PRECISION TRIM</span></div>
+          <p class="hero-desc">유튜브·틱톡·인스타그램 링크로 영상과 사진을. 화질·파일 형식·구간을<br class="desktop-break"> 직접 선택하고 깔끔하게 저장하세요.</p>
+          <div class="hero-tags"><span><i class="tag-icon">↗</i> MP4 VIDEO</span><span><i class="tag-icon">♫</i> MP3 AUDIO</span><span><i class="tag-icon">⌁</i> PHOTOS / ZIP</span></div>
         </div>
         <div class="hero-art" aria-hidden="true"><div class="art-circle art-circle-1"></div><div class="art-circle art-circle-2"></div><div class="art-circle art-circle-3"></div><div class="art-cross art-cross-one">+</div><div class="art-cross art-cross-two">+</div><div class="art-content"><span class="art-corner tl"></span><span class="art-corner tr"></span><span class="art-corner bl"></span><span class="art-corner br"></span><div class="art-play">▶</div><span class="art-filename">FRAME_001.MP4</span></div></div>
       </section>
@@ -37,11 +37,11 @@
         <section class="main-panel" aria-label="영상 추출 작업 공간">
           <div class="panel-heading"><div class="step-label">STEP 01 <span>/</span> SOURCE</div><h2>링크 불러오기</h2><p>유튜브·틱톡·인스타그램 게시물 링크를 붙여 넣어주세요.</p></div>
           <form id="inspectForm" autocomplete="off">
-            <label class="input-caption" for="urlInput">YOUTUBE VIDEO URL</label>
+            <label class="input-caption" for="urlInput">MEDIA POST URL · YOUTUBE / TIKTOK / INSTAGRAM</label>
             <div class="url-field" id="urlField"><span class="url-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M10 13.5a5 5 0 0 0 7.1 0l2-2a5 5 0 1 0-7.1-7.1l-1.1 1.1"/><path d="M14 10.5a5 5 0 0 0-7.1 0l-2 2a5 5 0 1 0 7.1 7.1l1.1-1.1"/></svg></span><input id="urlInput" type="url" spellcheck="false" placeholder="YouTube / TikTok / Instagram 게시물 링크" aria-describedby="urlHelp" required><button id="pasteBtn" type="button" class="paste-button" title="클립보드에서 붙여넣기">붙여넣기</button></div>
             <div class="field-bottom"><span id="urlHelp">YouTube 영상 · TikTok 영상 · Instagram 릴스·사진 지원</span><span class="limit-mark">MAX 2 HOURS</span></div>
             <button id="inspectBtn" type="submit" class="primary-button"><span id="inspectLabel">영상 불러오기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-            <button id="directAltBtn" type="button" class="fallback-button">외부 서버로 바로 불러오기</button><p class="alt-privacy-inline">유튜브 직접 연결이 막히면 이용해요. 선택 시 영상 ID가 외부 공개 서버에 전송됩니다. 일반 영상·쇼츠 모두 가능하며 무료 서버의 파일 크기 제한이 적용됩니다.</p>
+            <button id="directAltBtn" type="button" class="fallback-button">외부 서버로 바로 불러오기</button><p class="alt-privacy-inline">유튜브 전용 예비 경로입니다. 선택 시 영상 ID가 외부 공개 서버에 전송됩니다. 일반 영상·쇼츠 모두 가능하며 무료 서버의 파일 크기 제한이 적용됩니다.</p>
           </form>
           <div id="errorBox" class="error-box hidden" role="alert"></div>
           <div id="socialFallbackSection" class="fallback-card hidden">
