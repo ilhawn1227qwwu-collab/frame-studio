@@ -50,7 +50,7 @@ class BytesResponse(io.BytesIO):
     def __init__(self,data,content_type="application/json"):
         super().__init__(data)
         self.status=200
-        self.headers={"Content-Type":content_type,"Content-Length":str(len(data))}
+        self.headers={"content-type":content_type,"content-length":str(len(data))}
 
 
 def test_tikwm_metadata_only_sends_clean_tiktok_url(monkeypatch):
