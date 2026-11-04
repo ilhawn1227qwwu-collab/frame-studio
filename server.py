@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 from alternative import AlternativeError, inspect as inspect_alternative, obtain_source as obtain_alternative_source
 from social import SocialError, normalize_url as normalize_social_url, inspect as inspect_social, download_photos as download_social_photos
 from social_tikwm import TikWMError, inspect as inspect_tikwm, obtain_source as obtain_tikwm_source
+from instagram_vx import InstagramVXError, inspect as inspect_instagram_vx, download as download_instagram_vx
 
 try:
     import yt_dlp
@@ -395,7 +396,37 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
     try:
         folder.mkdir(parents=True, exist_ok=False)
         _update(job, state='running', stage='downloading', message='원본 파일을 가져오는 중...', progress=2)
-        if provider == 'instagram_photo':
+        if provider == 'instagram_vx':
+            _update(job, progress=5, message='인스타그램 공개 원본을 불러오는 중...')
+            source, file_name, is_video = download_instagram_vx(
+                url, folder, MAX_FILE_BYTES,
+                lambda progress, message: _update(job, progress=progress, message=message))
+            if mode == 'photos':
+                if is_video:
+                    raise InstagramVXError('게시물은 영상이에요. MP4를 선택해 주세요.')
+                with _lock:
+                    job.output = source
+                    job.filename = file_name
+                    job.state = 'ready'
+                    job.stage = 'ready'
+                    job.message = '인스타그램 사진 파일이 준비됐어요.'
+                    job.progress = 100
+                    job.finished = time.time()
+                return
+            if not is_video:
+                raise InstagramVXError('이 게시물은 사진 묶음이에요. 사진 저장을 선택해 주세요.')
+            try:
+                probe = subprocess.run([
+                    'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                    '-of', 'default=nw=1:nk=1', str(source)
+                ], capture_output=True, text=True, timeout=16, check=True)
+                duration = float(probe.stdout.strip())
+            except (OSError, ValueError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                raise InstagramVXError('인스타그램 영상의 재생 길이를 확인하지 못했어요.') from None
+            if not 0 < duration <= MAX_DURATION:
+                raise InstagramVXError('영상 재생 길이가 서버 제한을 초과했어요.')
+            start, end = 0.0, duration
+        elif provider == 'instagram_photo':
             _update(job, progress=15, message='인스타그램 사진을 가져오는 중...')
             output, filename = download_social_photos(url, folder, MAX_FILE_BYTES)
             shutil.rmtree(folder / 'gallery', ignore_errors=True)
@@ -408,7 +439,7 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
                 job.progress = 100
                 job.finished = time.time()
             return
-        if provider == 'tikwm':
+        elif provider == 'tikwm':
             source = obtain_tikwm_source(url, folder, MAX_FILE_BYTES,
                 lambda progress, message: _update(job, progress=progress, message=message))
         elif provider == 'invidious':
@@ -467,7 +498,7 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
             job.message = '준비가 끝났어요. 파일을 저장할 수 있어요.'
             job.progress = 100
             job.finished = time.time()
-    except (AlternativeError, SocialError, TikWMError) as exc:
+    except (AlternativeError, SocialError, TikWMError, InstagramVXError) as exc:
         _update(job, state='error', stage='error', error=str(exc),
                 message='외부 서버 처리에 실패했어요.', finished=time.time())
         shutil.rmtree(folder, ignore_errors=True)
@@ -519,8 +550,9 @@ def inspect_social_post(payload: InspectRequest) -> dict[str, Any]:
     """Detect TikTok videos or Instagram video/photo posts without login."""
     _clean()
     try:
-        return inspect_social(payload.url, MAX_DURATION)
-    except SocialError as exc:
+        site, _, _ = normalize_social_url(payload.url)
+        return inspect_instagram_vx(payload.url) if site == 'instagram' else inspect_social(payload.url, MAX_DURATION)
+    except (SocialError, InstagramVXError) as exc:
         raise HTTPException(422, str(exc)) from None
 
 
@@ -537,19 +569,21 @@ def inspect_tikwm_post(payload: InspectRequest) -> dict[str, Any]:
 @app.post('/api/jobs', status_code=202)
 def create_job(payload: ExtractRequest) -> dict[str, Any]:
     _clean()
-    providers = ('youtube', 'invidious', 'tiktok', 'instagram', 'instagram_photo', 'tikwm')
+    providers = ('youtube', 'invidious', 'tiktok', 'instagram', 'instagram_photo', 'instagram_vx', 'tikwm')
     if payload.provider not in providers:
         raise HTTPException(400, '지원하지 않는 추출 방식이에요.')
-    if payload.provider in ('tiktok', 'instagram', 'instagram_photo', 'tikwm'):
+    if payload.provider in ('tiktok', 'instagram', 'instagram_photo', 'instagram_vx', 'tikwm'):
         try:
             site, url, video_id = normalize_social_url(payload.url)
             expected_site = 'instagram' if payload.provider.startswith('instagram') else 'tiktok'
             if site != expected_site:
                 raise SocialError('영상 링크의 플랫폼이 선택한 추출 방식과 달라요.')
-            info = inspect_tikwm(url) if payload.provider == 'tikwm' else inspect_social(url, MAX_DURATION)
+            info = (inspect_tikwm(url) if payload.provider == 'tikwm' else
+                    inspect_instagram_vx(url) if payload.provider == 'instagram_vx' else
+                    inspect_social(url, MAX_DURATION))
             if info['provider'] != payload.provider:
                 raise SocialError('게시물에서 선택한 파일 종류를 찾을 수 없어요.')
-        except (SocialError, TikWMError) as exc:
+        except (SocialError, TikWMError, InstagramVXError) as exc:
             raise HTTPException(422, str(exc)) from None
     else:
         video_id, url = canonical_url(payload.url)
@@ -560,7 +594,7 @@ def create_job(payload: ExtractRequest) -> dict[str, Any]:
                 raise HTTPException(422, str(exc)) from None
         else:
             info = _inspect_video(video_id, url)
-    supported_modes = ('photos',) if payload.provider == 'instagram_photo' else ('mp4', 'mp3', 'm4a', 'opus')
+    supported_modes = ('photos',) if info.get('content_type') == 'photo' else ('mp4', 'mp3', 'm4a', 'opus')
     if payload.mode not in supported_modes:
         raise HTTPException(400, '선택한 콘텐츠에서 지원하지 않는 파일 형식이에요.')
     if payload.mode in ('m4a', 'opus') and (payload.provider != 'invidious' or
@@ -570,7 +604,9 @@ def create_job(payload: ExtractRequest) -> dict[str, Any]:
         raise HTTPException(400, '선택한 화질을 이 영상에서 사용할 수 없어요.')
     if payload.mode == 'mp3' and payload.quality not in BITRATES:
         raise HTTPException(400, '지원하지 않는 오디오 품질이에요.')
-    if payload.mode == 'photos':
+    if payload.mode == 'photos' or payload.provider == 'instagram_vx':
+        if payload.provider == 'instagram_vx' and any(x.strip() not in ('', '0', '00:00', '00:00:00') for x in (payload.start, payload.end)):
+            raise HTTPException(400, '인스타그램 공개 미리보기 경로에서는 구간 자르기를 지원하지 않아요.')
         start, end = 0.0, 0.0
     else:
         start = parse_time(payload.start, default=0.0)
