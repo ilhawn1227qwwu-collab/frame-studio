@@ -34,7 +34,33 @@ function showError(message) {
 function clearError() {
   hide(elements.error); elements.error.textContent = '';
   hide($('fallbackSection')); hide($('fallbackJobBtn'));
+  hide($('socialFallbackSection'));
 }
+function showSocialFallback(platform) {
+  const isInstagram = platform === 'instagram';
+  $('socialFallbackTitle').textContent = isInstagram ? '인스타그램 서버가 로그인 검사를 요구하고 있어요'
+    : '틱톡이 현재 처리 서버의 접속을 거부하고 있어요';
+  $('socialFallbackNote').textContent = isInstagram
+    ? '외부 IGDL 웹사이트에서 공개 게시물의 사진·영상을 시도할 수 있어요. 클릭하면 게시물 링크가 해당 사이트로 전달됩니다.'
+    : '외부 TikWM 웹사이트에서 영상 다운로드를 시도할 수 있어요. 클릭하면 해당 사이트를 열고 영상 링크를 클립보드에 복사합니다.';
+  $('socialExternalBtn').textContent = isInstagram ? 'IGDL에서 사진·영상 열기 ↗' : 'TikWM 웹사이트 열기 ↗';
+  show($('socialFallbackSection'));
+}
+$('socialExternalBtn').addEventListener('click', () => {
+  const url = state.url || elements.url.value.trim();
+  const platform = detectPlatform(url);
+  if (platform === 'instagram') {
+    try {
+      const path = new URL(url).pathname;
+      if (!/^\/(p|reel|reels|tv)\/[A-Za-z0-9_-]{5,40}\/?$/.test(path)) throw Error('invalid path');
+      window.open('https://igdl.app' + path, '_blank', 'noopener,noreferrer');
+    } catch (_) { showError('인스타그램 게시물 링크를 다시 확인해 주세요.'); }
+  } else if (platform === 'tiktok') {
+    // No TikTok URL is forwarded until user pastes it into the external site.
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(url).catch(() => {});
+    window.open('https://tikwm.com/', '_blank', 'noopener,noreferrer');
+  }
+});
 async function loadAlternativeVideo() {
   const url = elements.url.value.trim();
   if (!url || detectPlatform(url) !== 'youtube') return showError('이 보조 서버는 유튜브 링크에서만 사용할 수 있어요.');
@@ -185,7 +211,7 @@ elements.form.addEventListener('submit', async (event) => {
     const endpoint = platform === 'youtube' ? '/api/inspect' : '/api/inspect-social';
     const info = await request(endpoint, { url });
     displayVideo(info);
-  } catch (error) { showError(error.message); }
+  } catch (error) { showError(error.message); const p = detectPlatform(url); if (p === 'tiktok' || p === 'instagram') showSocialFallback(p); }
   finally { setLoading(elements.inspect, false); elements.inspectLabel.textContent = '영상 불러오기'; }
 });
 $('pasteBtn').addEventListener('click', async () => {
@@ -231,6 +257,7 @@ async function pollJob(jobId) {
     }
     if (data.state === 'error') {
       show($('retryBtn'));
+      if (state.info?.site === 'instagram' || state.info?.site === 'tiktok') showSocialFallback(state.info.site);
       if (isServerBotBlock(data.error) || state.info?.provider === 'invidious') show($('fallbackJobBtn'));
       else hide($('fallbackJobBtn'));
       setLoading(elements.export, false);
