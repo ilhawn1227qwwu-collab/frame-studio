@@ -44,6 +44,11 @@
             <button id="directAltBtn" type="button" class="fallback-button">외부 서버로 바로 불러오기</button><p class="alt-privacy-inline">유튜브 직접 연결이 막히면 이용해요. 선택 시 영상 ID가 외부 공개 서버에 전송됩니다. 일반 영상·쇼츠 모두 가능하며 무료 서버의 파일 크기 제한이 적용됩니다.</p>
           </form>
           <div id="errorBox" class="error-box hidden" role="alert"></div>
+          <div id="socialFallbackSection" class="fallback-card hidden">
+            <strong id="socialFallbackTitle">SNS 사이트에서 접근을 제한하고 있어요</strong>
+            <p id="socialFallbackNote">현재 무료 서버에서 로그인 검사가 발생할 수 있어요. 아래 버튼은 명시적으로 선택할 때만 다른 웹사이트를 열며, 영상 링크가 해당 서비스로 전달됩니다.</p>
+            <button id="socialExternalBtn" class="fallback-button" type="button">외부 브라우저 서비스에서 열기 ↗</button>
+          </div>
           <div id="fallbackSection" class="fallback-card hidden">
             <strong>이 영상은 다른 서버로 불러올 수 있어요</strong>
             <p>유튜브 직접 연결이 차단됐습니다. 아래 버튼을 누르면 외부 Invidious 공개 서버에 <b>영상 ID만 전달</b>해 정보를 불러옵니다. 이후 영상/음성을 해당 서버를 통해 받아 MP4·MP3로 변환해요. 외부 서버의 가용성과 정책에 따라 실패할 수 있습니다.</p>
