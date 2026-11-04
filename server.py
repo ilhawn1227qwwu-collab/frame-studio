@@ -27,6 +27,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from alternative import AlternativeError, inspect as inspect_alternative, obtain_source as obtain_alternative_source
 from social import SocialError, normalize_url as normalize_social_url, inspect as inspect_social, download_photos as download_social_photos
+from social_tikwm import TikWMError, inspect as inspect_tikwm, obtain_source as obtain_tikwm_source
 
 try:
     import yt_dlp
@@ -71,9 +72,9 @@ async def access_control(request: Request, call_next):
         if not secrets.compare_digest(header, expected):
             return JSONResponse({'detail': '사이트 암호를 입력해 주세요.'}, status_code=401,
                                 headers={'WWW-Authenticate': 'Basic realm="FRAME STUDIO", charset="UTF-8"'})
-    if PUBLIC_MODE and request.method == 'POST' and request.url.path in ('/api/inspect', '/api/inspect-alt', '/api/inspect-social', '/api/jobs'):
+    if PUBLIC_MODE and request.method == 'POST' and request.url.path in ('/api/inspect', '/api/inspect-alt', '/api/inspect-social', '/api/inspect-tikwm', '/api/jobs'):
         key = request.url.path
-        limit, window = (10, 600) if key in ('/api/inspect-alt', '/api/inspect-social') else (30, 600) if key == '/api/inspect' else (10, 3600)
+        limit, window = (10, 600) if key in ('/api/inspect-alt', '/api/inspect-social', '/api/inspect-tikwm') else (30, 600) if key == '/api/inspect' else (10, 3600)
         now = time.monotonic()
         with _lock:
             recent = [t for t in _rate.get(key, []) if now - t < window]
@@ -407,7 +408,10 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
                 job.progress = 100
                 job.finished = time.time()
             return
-        if provider == 'invidious':
+        if provider == 'tikwm':
+            source = obtain_tikwm_source(url, folder, MAX_FILE_BYTES,
+                lambda progress, message: _update(job, progress=progress, message=message))
+        elif provider == 'invidious':
             source = obtain_alternative_source(
                 job.video_id, mode, quality, folder,
                 lambda progress, message: _update(job, progress=progress, message=message))
@@ -463,7 +467,7 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
             job.message = '준비가 끝났어요. 파일을 저장할 수 있어요.'
             job.progress = 100
             job.finished = time.time()
-    except (AlternativeError, SocialError) as exc:
+    except (AlternativeError, SocialError, TikWMError) as exc:
         _update(job, state='error', stage='error', error=str(exc),
                 message='외부 서버 처리에 실패했어요.', finished=time.time())
         shutil.rmtree(folder, ignore_errors=True)
@@ -520,21 +524,32 @@ def inspect_social_post(payload: InspectRequest) -> dict[str, Any]:
         raise HTTPException(422, str(exc)) from None
 
 
+@app.post('/api/inspect-tikwm')
+def inspect_tikwm_post(payload: InspectRequest) -> dict[str, Any]:
+    """Opt-in TikWM resolver; sends only validated TikTok video URL."""
+    _clean()
+    try:
+        return inspect_tikwm(payload.url)
+    except (SocialError, TikWMError) as exc:
+        raise HTTPException(422, str(exc)) from None
+
+
 @app.post('/api/jobs', status_code=202)
 def create_job(payload: ExtractRequest) -> dict[str, Any]:
     _clean()
-    providers = ('youtube', 'invidious', 'tiktok', 'instagram', 'instagram_photo')
+    providers = ('youtube', 'invidious', 'tiktok', 'instagram', 'instagram_photo', 'tikwm')
     if payload.provider not in providers:
         raise HTTPException(400, '지원하지 않는 추출 방식이에요.')
-    if payload.provider in ('tiktok', 'instagram', 'instagram_photo'):
+    if payload.provider in ('tiktok', 'instagram', 'instagram_photo', 'tikwm'):
         try:
             site, url, video_id = normalize_social_url(payload.url)
-            if (site != 'instagram' if payload.provider.startswith('instagram') else site != 'tiktok'):
+            expected_site = 'instagram' if payload.provider.startswith('instagram') else 'tiktok'
+            if site != expected_site:
                 raise SocialError('영상 링크의 플랫폼이 선택한 추출 방식과 달라요.')
-            info = inspect_social(url, MAX_DURATION)
+            info = inspect_tikwm(url) if payload.provider == 'tikwm' else inspect_social(url, MAX_DURATION)
             if info['provider'] != payload.provider:
                 raise SocialError('게시물에서 선택한 파일 종류를 찾을 수 없어요.')
-        except SocialError as exc:
+        except (SocialError, TikWMError) as exc:
             raise HTTPException(422, str(exc)) from None
     else:
         video_id, url = canonical_url(payload.url)
