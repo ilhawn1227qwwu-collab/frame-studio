@@ -336,6 +336,8 @@ def _encode(job: Job, source: Path, output: Path, *, mode: str,
         command += ['-i', str(source)]
 
     if mode == 'mp3':
+        if not _media_codecs(source)[1]:
+            raise RuntimeError('이 영상에는 음성 트랙이 없어서 MP3로 저장할 수 없어요.')
         command += ['-map', '0:a:0', '-vn', '-c:a', 'libmp3lame', '-b:a', f'{bitrate}k']
     elif mode in ('m4a', 'opus'):
         _, acodec = _media_codecs(source)
@@ -346,7 +348,7 @@ def _encode(job: Job, source: Path, output: Path, *, mode: str,
         command += ['-map', '0:a:0', '-vn', '-c:a', 'copy']
     else:
         vcodec, acodec = _media_codecs(source)
-        command += ['-map', '0:v:0', '-map', '0:a:0']
+        command += ['-map', '0:v:0', '-map', '0:a:0?']
         if (not clipped or is_hd_copy) and vcodec in ('h264', 'hevc'):
             # Copy 1080p bitstreams instead of allocating an x264 encoder.
             command += ['-c:v', 'copy']
@@ -355,7 +357,9 @@ def _encode(job: Job, source: Path, output: Path, *, mode: str,
             # CRF 18 reduces generation loss compared with the old CRF 23.
             command += ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18',
                         '-pix_fmt', 'yuv420p']
-        if acodec == 'aac':
+        if not acodec:
+            command += ['-an']
+        elif acodec == 'aac':
             command += ['-c:a', 'copy']
         else:
             command += ['-c:a', 'aac', '-b:a', '192k']
