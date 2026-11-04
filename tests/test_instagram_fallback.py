@@ -151,3 +151,25 @@ def test_fallback_downloads_reel_through_app(tmp_path,monkeypatch):
     assert file.status_code==200 and len(file.content)>1000
     shutil.rmtree(server.WORKDIR/job_id,ignore_errors=True)
     with server._lock:server._jobs.pop(job_id,None)
+
+
+def test_silent_instagram_reel_exports_mp4_without_audio(tmp_path):
+    import json
+    path=tmp_path/"silent.mp4"
+    subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+        "-f","lavfi","-i","color=c=black:s=320x180:r=10:d=2",
+        "-t","2","-c:v","libx264","-preset","ultrafast",str(path)
+    ],check=True,capture_output=True)
+    job=server.Job(id="silent",video_id="DZdOSuOyu2E")
+    output=tmp_path/"silent-export.mp4"
+    server._encode(job,path,output,mode="mp4",
+                   start=0.0,end=2.0,duration=2.0,bitrate=192)
+    assert output.is_file() and output.stat().st_size>1000
+    result=subprocess.run(["ffprobe","-v","error",
+        "-show_entries","stream=codec_type","-of","json",str(output)],
+        capture_output=True,text=True,check=True)
+    kinds=[x["codec_type"] for x in json.loads(result.stdout)["streams"]]
+    assert kinds==["video"]
+    with pytest.raises(RuntimeError,match="음성 트랙"):
+        server._encode(job,path,tmp_path/"silent.mp3",mode="mp3",
+                       start=0.0,end=2.0,duration=2.0,bitrate=192)
