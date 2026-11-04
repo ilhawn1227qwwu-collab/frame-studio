@@ -14,6 +14,15 @@ function timeLabel(seconds) {
   const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = Math.floor(seconds % 60);
   return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
+function detectPlatform(raw) {
+  try {
+    const host = new URL(raw).hostname.toLowerCase();
+    if (['youtube.com','www.youtube.com','m.youtube.com','music.youtube.com','youtu.be','www.youtu.be'].includes(host)) return 'youtube';
+    if (['tiktok.com','www.tiktok.com','m.tiktok.com','vm.tiktok.com','vt.tiktok.com'].includes(host)) return 'tiktok';
+    if (['instagram.com','www.instagram.com','m.instagram.com','instagr.am','www.instagr.am'].includes(host)) return 'instagram';
+  } catch (_) { /* invalid URL */ }
+  return '';
+}
 function isServerBotBlock(message) {
   return /유튜브가 이 서버의 접속|봇으로 판단|서버의 접근 제한/.test(message || '');
 }
@@ -28,7 +37,7 @@ function clearError() {
 }
 async function loadAlternativeVideo() {
   const url = elements.url.value.trim();
-  if (!url) return showError('먼저 유튜브 주소를 입력해 주세요.');
+  if (!url || detectPlatform(url) !== 'youtube') return showError('이 보조 서버는 유튜브 링크에서만 사용할 수 있어요.');
   state.url = url;
   const buttons = [$('alternateBtn'), $('directAltBtn')];
   buttons.forEach(button => setLoading(button, true));
@@ -84,7 +93,8 @@ async function request(url, data) {
 }
 function setLoading(button, isLoading) { button.disabled = isLoading; button.classList.toggle('loading', isLoading); }
 function paintFormats() {
-  const sourceFormats = ['mp4', 'mp3', ...(state.info.audio_modes || [])];
+  const photo = state.info.content_type === 'photo';
+  const sourceFormats = photo ? ['photos'] : ['mp4', 'mp3', ...(state.info.audio_modes || [])];
   document.querySelectorAll('[data-mode]').forEach((button) => {
     const mode = button.dataset.mode;
     const available = sourceFormats.includes(mode);
@@ -96,33 +106,33 @@ function paintFormats() {
   });
   const video = state.mode === 'mp4';
   const originalAudio = ['m4a', 'opus'].includes(state.mode);
-  const title = video ? '영상 화질 ' : originalAudio ? '원본 음성 품질 ' : 'MP3 출력 비트레이트 ';
-  const caption = video ? 'RESOLUTION' : originalAudio ? 'SOURCE QUALITY' : 'OUTPUT BITRATE';
+  $('qualityHead').classList.toggle('hidden', photo);
+  elements.qualities.classList.toggle('hidden', photo);
+  $('trimBox').classList.toggle('hidden', photo);
+  const title = video ? '영상 화질 ' : originalAudio ? '원본 음성 품질 ' : photo ? '사진 원본 ' : 'MP3 출력 비트레이트 ';
+  const caption = video ? 'RESOLUTION' : originalAudio ? 'SOURCE QUALITY' : photo ? 'PHOTOS' : 'OUTPUT BITRATE';
   $('qualityTitle').replaceChildren(document.createTextNode(title));
   const badge = document.createElement('span');
   badge.textContent = caption;
   $('qualityTitle').append(badge);
-  $('qualityNote').textContent = video
-    ? '원본에서 제공하는 화질만 선택할 수 있어요. 고화질은 파일이 더 큽니다.'
-    : originalAudio
-      ? '원본 음성 비트스트림을 재압축하지 않고 보존해요'
-      : '320k로 출력해도 원본 음질을 초과하지 않아요';
-  const choices = video ? state.info.qualities : originalAudio ? [0] : [128, 192, 320];
-  elements.qualities.classList.toggle('original-quality', originalAudio);
-  state.quality = video
-    ? Math.max(...choices)
-    : originalAudio ? 0 : 320;
+  $('qualityNote').textContent = video ? '원본에서 제공하는 화질만 선택할 수 있어요'
+    : originalAudio ? '원본 음성을 재압축하지 않고 보존해요'
+    : photo ? '사진 원본을 저장해요'
+    : '출력 비트레이트를 높여도 원본 음질을 초과하지 않아요';
+  const choices = video ? state.info.qualities : originalAudio || photo ? [0] : [128, 192, 320];
+  elements.qualities.classList.toggle('original-quality', originalAudio || photo);
+  state.quality = video ? Math.max(...choices) : originalAudio || photo ? 0 : 320;
   elements.qualities.replaceChildren();
   for (const quality of choices) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'quality-button';
-    const mark = video ? `${quality}p` : originalAudio ? '원본 그대로 저장' : `${quality}k`;
-    btn.textContent = mark;
+    btn.textContent = video ? quality + 'p' : photo ? '사진 원본' : originalAudio ? '원본 그대로 저장' : quality + 'k';
     btn.dataset.value = String(quality);
     btn.addEventListener('click', () => { state.quality = quality; paintSelectedQuality(); });
     elements.qualities.append(btn);
   }
+  $('exportBtn').querySelector('span').textContent = photo ? '사진 저장 준비하기' : '파일 추출하기';
   paintSelectedQuality();
 }
 function paintSelectedQuality() {
@@ -134,24 +144,28 @@ function paintSelectedQuality() {
 }
 function displayVideo(info) {
   state.info = info;
-  $('videoThumb').src = info.thumbnail;
+  const photo = info.content_type === 'photo';
+  const site = info.site || info.provider || 'youtube';
+  $('contentTypeLabel').textContent = String(site).replace('_photo','').toUpperCase() + ' / ' + (photo ? 'PHOTOS' : 'VIDEO');
+  $('videoThumb').classList.toggle('hidden', photo || !info.thumbnail);
+  $('photoPreview').classList.toggle('hidden', !photo);
+  if (!photo && info.thumbnail) $('videoThumb').src = info.thumbnail;
+  if (photo) $('photoPreview').textContent = (info.photo_count || 1) + ' PHOTOS · INSTAGRAM';
   $('videoTitle').textContent = info.title;
-  const altNotice = $('altNotice');
-  if (info.provider === 'invidious') {
-    altNotice.textContent = info.notice || '외부 공개 서버에서 전달한 영상 정보를 사용하고 있어요.';
-    show(altNotice);
-  } else {
-    hide(altNotice);
-  }
-  $('videoChannel').textContent = info.channel;
+  const notice = $('altNotice');
+  if (info.provider === 'invidious' || info.note) {
+    notice.textContent = info.notice || info.note || '외부 서버에서 영상 정보를 가져왔어요.';
+    show(notice);
+  } else hide(notice);
+  $('videoChannel').textContent = info.channel || '';
   $('videoId').textContent = info.id;
-  $('videoDuration').textContent = timeLabel(info.duration);
-  $('endInput').value = timeLabel(info.duration);
+  $('videoDuration').textContent = photo ? (info.photo_count || 1) + ' PHOTOS' : timeLabel(info.duration);
+  $('endInput').value = photo ? '' : timeLabel(info.duration);
   $('startInput').value = '00:00';
   $('trimSwitch').checked = false;
   hide($('trimFields'));
   $('rightsCheck').checked = false;
-  state.mode = 'mp4';
+  state.mode = photo ? 'photos' : 'mp4';
   paintFormats();
   show(elements.video); show(elements.options); hide(elements.progress);
 }
@@ -166,7 +180,10 @@ elements.form.addEventListener('submit', async (event) => {
   setLoading(elements.inspect, true);
   elements.inspectLabel.textContent = '영상 확인 중...';
   try {
-    const info = await request('/api/inspect', { url });
+    const platform = detectPlatform(url);
+    if (!platform) throw new Error('유튜브, 틱톡 영상 또는 인스타그램 게시물 주소를 입력해 주세요.');
+    const endpoint = platform === 'youtube' ? '/api/inspect' : '/api/inspect-social';
+    const info = await request(endpoint, { url });
     displayVideo(info);
   } catch (error) { showError(error.message); }
   finally { setLoading(elements.inspect, false); elements.inspectLabel.textContent = '영상 불러오기'; }
