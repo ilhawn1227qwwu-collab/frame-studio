@@ -42,10 +42,29 @@ function showSocialFallback(platform) {
     : '틱톡이 현재 처리 서버의 접속을 거부하고 있어요';
   $('socialFallbackNote').textContent = isInstagram
     ? '외부 IGDL 웹사이트에서 공개 게시물의 사진·영상을 시도할 수 있어요. 클릭하면 게시물 링크가 해당 사이트로 전달됩니다.'
-    : '외부 TikWM 웹사이트에서 영상 다운로드를 시도할 수 있어요. 클릭하면 해당 사이트를 열고 영상 링크를 클립보드에 복사합니다.';
+    : 'TikWM 처리 서버로 시도하면 이 영상의 주소를 외부 서비스에 전송하고, 파일은 FRAME STUDIO에서 저장할 수 있어요. 별도 브라우저 서비스도 선택할 수 있습니다.';
   $('socialExternalBtn').textContent = isInstagram ? 'IGDL에서 사진·영상 열기 ↗' : 'TikWM 웹사이트 열기 ↗';
+  $('socialTikwmBtn').classList.toggle('hidden', isInstagram);
   show($('socialFallbackSection'));
 }
+$('socialTikwmBtn').addEventListener('click', async () => {
+  const url = elements.url.value.trim();
+  if (detectPlatform(url) !== 'tiktok') return showError('틱톡 공개 영상 링크를 입력해 주세요.');
+  state.url = url;
+  const button = $('socialTikwmBtn');
+  setLoading(button, true);
+  clearError();
+  try {
+    const info = await request('/api/inspect-tikwm', { url });
+    displayVideo(info);
+    elements.video.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (error) {
+    showError(error.message);
+    showSocialFallback('tiktok');
+  } finally {
+    setLoading(button, false);
+  }
+});
 $('socialExternalBtn').addEventListener('click', () => {
   const url = state.url || elements.url.value.trim();
   const platform = detectPlatform(url);
@@ -153,7 +172,7 @@ function paintFormats() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'quality-button';
-    btn.textContent = video ? quality + 'p' : photo ? '사진 원본' : originalAudio ? '원본 그대로 저장' : quality + 'k';
+    btn.textContent = video ? (quality === 0 ? '최고 원본' : quality + 'p') : photo ? '사진 원본' : originalAudio ? '원본 그대로 저장' : quality + 'k';
     btn.dataset.value = String(quality);
     btn.addEventListener('click', () => { state.quality = quality; paintSelectedQuality(); });
     elements.qualities.append(btn);
