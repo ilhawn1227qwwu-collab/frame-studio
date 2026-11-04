@@ -29,6 +29,7 @@ COPY server.py .
 COPY alternative.py .
 COPY social.py .
 COPY social_tikwm.py .
+COPY instagram_vx.py .
 COPY static/ ./static/
 COPY tools/ ./tools/
 RUN useradd -m -u 10001 frameuser
