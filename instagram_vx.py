@@ -84,8 +84,8 @@ def _resolve_share_link(share_url: str) -> tuple[str, str]:
                 html = response.read(150001).decode("utf-8", "replace")
             # The public preview may embed a canonical Instagram path.
             patterns = (
-                r'https?://(?:www\\.)?instagram\\.com/(?:p|reels?|tv)/[A-Za-z0-9_-]{5,40}',
-                r'https?:\\/\\/(?:www\\.)?instagram\\.com\\/(?:p|reels?|tv)\\/[A-Za-z0-9_-]{5,40}',
+                r'https?://(?:www\.)?instagram\.com/(?:p|reels?|tv)/[A-Za-z0-9_-]{5,40}',
+                r'https?:\/\/(?:www\.)?instagram\.com\/(?:p|reels?|tv)\/[A-Za-z0-9_-]{5,40}',
             )
             for pattern in patterns:
                 for match in re.finditer(pattern, html):
