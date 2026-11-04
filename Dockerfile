@@ -28,6 +28,7 @@ RUN pip install --no-cache-dir -r requirements.txt && node --version && ffmpeg -
 COPY server.py .
 COPY alternative.py .
 COPY social.py .
+COPY social_tikwm.py .
 COPY static/ ./static/
 COPY tools/ ./tools/
 RUN useradd -m -u 10001 frameuser
