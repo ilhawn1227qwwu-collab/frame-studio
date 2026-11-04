@@ -23,6 +23,14 @@ function detectPlatform(raw) {
   } catch (_) { /* invalid URL */ }
   return '';
 }
+function updatePlatformControls() {
+  const platform = detectPlatform(elements.url.value.trim());
+  const social = platform === 'tiktok' || platform === 'instagram';
+  $('directAltBtn').classList.toggle('hidden', social);
+  const note = document.querySelector('.alt-privacy-inline');
+  if (note) note.classList.toggle('hidden', social);
+}
+elements.url.addEventListener('input', updatePlatformControls);
 function isServerBotBlock(message) {
   return /유튜브가 이 서버의 접속|봇으로 판단|서버의 접근 제한/.test(message || '');
 }
@@ -172,7 +180,8 @@ function paintFormats() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'quality-button';
-    btn.textContent = video ? (quality === 0 ? '최고 원본' : quality + 'p') : photo ? '사진 원본' : originalAudio ? '원본 그대로 저장' : quality + 'k';
+    const socialBest = ['tiktok','instagram','tikwm'].includes(state.info.provider);
+    btn.textContent = video ? (socialBest || quality === 0 ? '최고 원본' : quality + 'p') : photo ? '사진 원본' : originalAudio ? '원본 그대로 저장' : quality + 'k';
     btn.dataset.value = String(quality);
     btn.addEventListener('click', () => { state.quality = quality; paintSelectedQuality(); });
     elements.qualities.append(btn);
@@ -236,7 +245,7 @@ elements.form.addEventListener('submit', async (event) => {
 $('pasteBtn').addEventListener('click', async () => {
   try {
     const text = await navigator.clipboard.readText();
-    elements.url.value = text.trim(); elements.url.focus();
+    elements.url.value = text.trim(); elements.url.focus(); updatePlatformControls();
   } catch (_) { elements.url.focus(); showError('클립보드 접근이 차단됐어요. 주소를 직접 붙여 넣어주세요.'); }
 });
 document.querySelectorAll('[data-mode]').forEach((button) => button.addEventListener('click', () => {
@@ -332,3 +341,4 @@ async function checkRuntime() {
   } catch (_) { /* backend unavailable; requests will show a precise error */ }
 }
 checkRuntime();
+updatePlatformControls();
