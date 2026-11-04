@@ -26,6 +26,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from alternative import AlternativeError, inspect as inspect_alternative, obtain_source as obtain_alternative_source
+from social import SocialError, normalize_url as normalize_social_url, inspect as inspect_social, download_photos as download_social_photos
 
 try:
     import yt_dlp
@@ -70,9 +71,9 @@ async def access_control(request: Request, call_next):
         if not secrets.compare_digest(header, expected):
             return JSONResponse({'detail': '사이트 암호를 입력해 주세요.'}, status_code=401,
                                 headers={'WWW-Authenticate': 'Basic realm="FRAME STUDIO", charset="UTF-8"'})
-    if PUBLIC_MODE and request.method == 'POST' and request.url.path in ('/api/inspect', '/api/inspect-alt', '/api/jobs'):
+    if PUBLIC_MODE and request.method == 'POST' and request.url.path in ('/api/inspect', '/api/inspect-alt', '/api/inspect-social', '/api/jobs'):
         key = request.url.path
-        limit, window = (10, 600) if key == '/api/inspect-alt' else (30, 600) if key == '/api/inspect' else (10, 3600)
+        limit, window = (10, 600) if key in ('/api/inspect-alt', '/api/inspect-social') else (30, 600) if key == '/api/inspect' else (10, 3600)
         now = time.monotonic()
         with _lock:
             recent = [t for t in _rate.get(key, []) if now - t < window]
@@ -393,6 +394,19 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
     try:
         folder.mkdir(parents=True, exist_ok=False)
         _update(job, state='running', stage='downloading', message='원본 파일을 가져오는 중...', progress=2)
+        if provider == 'instagram_photo':
+            _update(job, progress=15, message='인스타그램 사진을 가져오는 중...')
+            output, filename = download_social_photos(url, folder, MAX_FILE_BYTES)
+            shutil.rmtree(folder / 'gallery', ignore_errors=True)
+            with _lock:
+                job.output = output
+                job.filename = filename
+                job.state = 'ready'
+                job.stage = 'ready'
+                job.message = '사진 저장 파일이 준비됐어요.'
+                job.progress = 100
+                job.finished = time.time()
+            return
         if provider == 'invidious':
             source = obtain_alternative_source(
                 job.video_id, mode, quality, folder,
@@ -410,6 +424,8 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
 
             opts: dict[str, Any] = {
                 'format': ('bestaudio/best' if mode == 'mp3' else
+                           'best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best'
+                           if provider in ('tiktok', 'instagram') else
                            f'bv*[height<={quality}]+ba/b[height<={quality}]'),
                 'outtmpl': str(folder / 'source.%(ext)s'),
                 'merge_output_format': 'mkv',
@@ -447,7 +463,7 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
             job.message = '준비가 끝났어요. 파일을 저장할 수 있어요.'
             job.progress = 100
             job.finished = time.time()
-    except AlternativeError as exc:
+    except (AlternativeError, SocialError) as exc:
         _update(job, state='error', stage='error', error=str(exc),
                 message='외부 서버 처리에 실패했어요.', finished=time.time())
         shutil.rmtree(folder, ignore_errors=True)
@@ -494,21 +510,44 @@ def inspect_alt(payload: InspectRequest) -> dict[str, Any]:
         raise HTTPException(422, str(exc)) from None
 
 
+@app.post('/api/inspect-social')
+def inspect_social_post(payload: InspectRequest) -> dict[str, Any]:
+    """Detect TikTok videos or Instagram video/photo posts without login."""
+    _clean()
+    try:
+        return inspect_social(payload.url, MAX_DURATION)
+    except SocialError as exc:
+        raise HTTPException(422, str(exc)) from None
+
+
 @app.post('/api/jobs', status_code=202)
 def create_job(payload: ExtractRequest) -> dict[str, Any]:
     _clean()
-    video_id, url = canonical_url(payload.url)
-    if payload.mode not in ('mp4', 'mp3', 'm4a', 'opus'):
-        raise HTTPException(400, '지원하지 않는 파일 형식이에요.')
-    if payload.provider not in ('youtube', 'invidious'):
+    providers = ('youtube', 'invidious', 'tiktok', 'instagram', 'instagram_photo')
+    if payload.provider not in providers:
         raise HTTPException(400, '지원하지 않는 추출 방식이에요.')
-    if payload.provider == 'invidious':
+    if payload.provider in ('tiktok', 'instagram', 'instagram_photo'):
         try:
-            info = inspect_alternative(video_id)
-        except AlternativeError as exc:
+            site, url, video_id = normalize_social_url(payload.url)
+            if (site != 'instagram' if payload.provider.startswith('instagram') else site != 'tiktok'):
+                raise SocialError('영상 링크의 플랫폼이 선택한 추출 방식과 달라요.')
+            info = inspect_social(url, MAX_DURATION)
+            if info['provider'] != payload.provider:
+                raise SocialError('게시물에서 선택한 파일 종류를 찾을 수 없어요.')
+        except SocialError as exc:
             raise HTTPException(422, str(exc)) from None
     else:
-        info = _inspect_video(video_id, url)
+        video_id, url = canonical_url(payload.url)
+        if payload.provider == 'invidious':
+            try:
+                info = inspect_alternative(video_id)
+            except AlternativeError as exc:
+                raise HTTPException(422, str(exc)) from None
+        else:
+            info = _inspect_video(video_id, url)
+    supported_modes = ('photos',) if payload.provider == 'instagram_photo' else ('mp4', 'mp3', 'm4a', 'opus')
+    if payload.mode not in supported_modes:
+        raise HTTPException(400, '선택한 콘텐츠에서 지원하지 않는 파일 형식이에요.')
     if payload.mode in ('m4a', 'opus') and (payload.provider != 'invidious' or
                                              payload.mode not in info.get('audio_modes', [])):
         raise HTTPException(400, '이 영상에서는 해당 원본 오디오 형식을 제공하지 않아요.')
@@ -516,10 +555,13 @@ def create_job(payload: ExtractRequest) -> dict[str, Any]:
         raise HTTPException(400, '선택한 화질을 이 영상에서 사용할 수 없어요.')
     if payload.mode == 'mp3' and payload.quality not in BITRATES:
         raise HTTPException(400, '지원하지 않는 오디오 품질이에요.')
-    start = parse_time(payload.start, default=0.0)
-    end = parse_time(payload.end, default=float(info['duration']))
-    if start >= end or end > info['duration'] + 1:
-        raise HTTPException(400, '시작 시간은 종료 시간보다 빨라야 하며 영상 길이를 넘을 수 없어요.')
+    if payload.mode == 'photos':
+        start, end = 0.0, 0.0
+    else:
+        start = parse_time(payload.start, default=0.0)
+        end = parse_time(payload.end, default=float(info['duration']))
+        if start >= end or end > info['duration'] + 1:
+            raise HTTPException(400, '시작 시간은 종료 시간보다 빨라야 하며 영상 길이를 넘을 수 없어요.')
     _ensure_deps()
     if not _slots.acquire(blocking=False):
         raise HTTPException(429, '현재 다른 작업을 처리 중이에요. 완료 후 다시 시도해 주세요.')
