@@ -25,6 +25,8 @@ TIKTOK_HOSTS = frozenset({"tiktok.com", "www.tiktok.com", "m.tiktok.com",
                           "vm.tiktok.com", "vt.tiktok.com"})
 INSTAGRAM_HOSTS = frozenset({"instagram.com", "www.instagram.com",
                              "m.instagram.com", "instagr.am", "www.instagr.am"})
+TWITTER_HOSTS = frozenset({"x.com", "www.x.com", "mobile.x.com", "twitter.com",
+                           "www.twitter.com", "mobile.twitter.com", "m.twitter.com"})
 
 
 class SocialError(Exception):
@@ -62,6 +64,12 @@ def normalize_url(raw: str) -> tuple[str, str, str]:
                 _, kind, identifier = username.groups()
                 return "instagram", f"https://www.instagram.com/{'reel' if kind == 'reels' else kind}/{identifier}/", identifier
             raise ValueError
+        if host in TWITTER_HOSTS:
+            tweet = re.fullmatch(r"/(?:([A-Za-z0-9_]{1,15})|i|i/web)/status/([0-9]{2,20})(?:/(?:video|photo)/[1-4])?", path)
+            if tweet:
+                identifier = tweet.group(2)
+                return "twitter", f"https://x.com/i/status/{identifier}", identifier
+            raise ValueError
         if host in TIKTOK_HOSTS:
             match = re.fullmatch(r"/@([A-Za-z0-9._-]{2,36})/video/([0-9]{8,24})", path)
             if match:
@@ -76,7 +84,7 @@ def normalize_url(raw: str) -> tuple[str, str, str]:
             raise ValueError
     except (ValueError, TypeError):
         pass
-    raise SocialError("지원하는 링크는 틱톡 개별 영상 또는 인스타그램 게시물·릴스 주소예요.")
+    raise SocialError("유튜브·틱톡·인스타그램 또는 X(트위터)의 개별 게시물 링크를 입력해 주세요.")
 
 
 def _gallery_base_args() -> list[str]:
@@ -117,7 +125,7 @@ def _video_info(url: str, site: str, post_id: str, duration_limit: int) -> dict:
             data = ydl.extract_info(url, download=False)
     except Exception:
         raise SocialError(
-            f"{'틱톡' if site == 'tiktok' else '인스타그램'}이 서버 접근을 제한했거나 영상이 공개되지 않았어요. "
+            f"{'틱톡' if site == 'tiktok' else 'X(트위터)' if site == 'twitter' else '인스타그램'}이 서버 접근을 제한했거나 영상이 공개되지 않았어요. "
             "로그인이 필요한 영상은 지원하지 않아요."
         ) from None
     if not isinstance(data, dict):
