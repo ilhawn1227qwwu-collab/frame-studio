@@ -25,3 +25,5 @@ jobs:
           python -m pip install -r requirements.txt pytest httpx
       - name: Test backend and alternate extraction
         run: python -m pytest -q
+      - name: Check mobile JavaScript syntax
+        run: node --check static/app.js
