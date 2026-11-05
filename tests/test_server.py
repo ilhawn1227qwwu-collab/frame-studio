@@ -174,3 +174,18 @@ def test_youtube_bot_check_does_not_claim_private_video():
 def test_real_private_video_keeps_distinct_message():
     result = _safe_error(RuntimeError('ERROR: This is a private video. Sign in to watch.'))
     assert '접근 권한이 필요한 영상' in result
+
+
+def test_mobile_frontend_cache_busting_and_twitter_platform():
+    """Old Android browser cache must not hide new supported platforms."""
+    from fastapi.testclient import TestClient
+    client = TestClient(app)
+    homepage = client.get('/?v=1.8.1')
+    assert homepage.status_code == 200
+    assert homepage.headers.get('cache-control') == 'no-store, no-cache, must-revalidate'
+    assert '/static/app.js?v=1.8.1' in homepage.text
+    assert 'X(트위터)' in homepage.text
+    script = client.get('/static/app.js?v=1.8.1')
+    assert script.status_code == 200
+    assert script.headers.get('cache-control') == 'no-store, no-cache, must-revalidate'
+    assert "'x.com'" in script.text and "return 'twitter'" in script.text
