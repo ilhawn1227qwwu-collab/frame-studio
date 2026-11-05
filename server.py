@@ -30,6 +30,7 @@ from social import SocialError, normalize_url as normalize_social_url, inspect a
 from social_tikwm import TikWMError, inspect as inspect_tikwm, obtain_source as obtain_tikwm_source
 from instagram_vx import InstagramVXError, inspect as inspect_instagram_vx, download as download_instagram_vx
 from instagram_reel_fallback import ReelFallbackError, inspect as inspect_reel_fallback, obtain_source as obtain_reel_fallback
+from twitter_x import TwitterError, inspect as inspect_twitter, obtain_source as obtain_twitter_source
 
 try:
     import yt_dlp
@@ -459,6 +460,22 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
                 job.progress = 100
                 job.finished = time.time()
             return
+        elif provider == 'twitter_fx':
+            _update(job, progress=5, message='X 공개 영상을 불러오는 중...')
+            source = obtain_twitter_source(url, folder, MAX_FILE_BYTES,
+                lambda progress, message: _update(job, progress=progress, message=message))
+            if not duration:
+                try:
+                    probe = subprocess.run([
+                        'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                        '-of', 'default=nw=1:nk=1', str(source)
+                    ], capture_output=True, text=True, timeout=16, check=True)
+                    duration = float(probe.stdout.strip())
+                except (OSError, ValueError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                    raise TwitterError('X 영상 재생 길이를 확인하지 못했어요.') from None
+                if not 0 < duration <= MAX_DURATION:
+                    raise TwitterError('X 영상의 재생 길이가 서버 제한을 초과했어요.')
+                start, end = 0.0, duration
         elif provider == 'tikwm':
             source = obtain_tikwm_source(url, folder, MAX_FILE_BYTES,
                 lambda progress, message: _update(job, progress=progress, message=message))
@@ -480,7 +497,7 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
             opts: dict[str, Any] = {
                 'format': ('bestaudio/best' if mode == 'mp3' else
                            'best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best'
-                           if provider in ('tiktok', 'instagram') else
+                           if provider in ('tiktok', 'instagram', 'twitter') else
                            f'bv*[height<={quality}]+ba/b[height<={quality}]'),
                 'outtmpl': str(folder / 'source.%(ext)s'),
                 'merge_output_format': 'mkv',
@@ -518,7 +535,7 @@ def _process(job: Job, url: str, mode: str, quality: int, start: float,
             job.message = '준비가 끝났어요. 파일을 저장할 수 있어요.'
             job.progress = 100
             job.finished = time.time()
-    except (AlternativeError, SocialError, TikWMError, InstagramVXError, ReelFallbackError) as exc:
+    except (AlternativeError, SocialError, TikWMError, InstagramVXError, ReelFallbackError, TwitterError) as exc:
         _update(job, state='error', stage='error', error=str(exc),
                 message='외부 서버 처리에 실패했어요.', finished=time.time())
         shutil.rmtree(folder, ignore_errors=True)
@@ -567,7 +584,7 @@ def inspect_alt(payload: InspectRequest) -> dict[str, Any]:
 
 @app.post('/api/inspect-social')
 def inspect_social_post(payload: InspectRequest) -> dict[str, Any]:
-    """Detect TikTok videos or Instagram video/photo posts without login."""
+    """Detect public TikTok, Instagram, or X/Twitter posts without login."""
     _clean()
     try:
         site, _, _ = normalize_social_url(payload.url)
@@ -576,8 +593,17 @@ def inspect_social_post(payload: InspectRequest) -> dict[str, Any]:
                 return inspect_instagram_vx(payload.url)
             except InstagramVXError:
                 return inspect_reel_fallback(payload.url)
+        if site == 'twitter':
+            try:
+                return inspect_twitter(payload.url, MAX_DURATION)
+            except TwitterError as primary:
+                # Direct X extraction can sometimes work when the public embed API is unavailable.
+                try:
+                    return inspect_social(payload.url, MAX_DURATION)
+                except SocialError:
+                    raise primary
         return inspect_social(payload.url, MAX_DURATION)
-    except (SocialError, InstagramVXError, ReelFallbackError) as exc:
+    except (SocialError, InstagramVXError, ReelFallbackError, TwitterError) as exc:
         raise HTTPException(422, str(exc)) from None
 
 
@@ -594,22 +620,24 @@ def inspect_tikwm_post(payload: InspectRequest) -> dict[str, Any]:
 @app.post('/api/jobs', status_code=202)
 def create_job(payload: ExtractRequest) -> dict[str, Any]:
     _clean()
-    providers = ('youtube', 'invidious', 'tiktok', 'instagram', 'instagram_photo', 'instagram_vx', 'instagram_mirror', 'tikwm')
+    providers = ('youtube', 'invidious', 'tiktok', 'instagram', 'instagram_photo', 'instagram_vx', 'instagram_mirror', 'tikwm', 'twitter', 'twitter_fx')
     if payload.provider not in providers:
         raise HTTPException(400, '지원하지 않는 추출 방식이에요.')
-    if payload.provider in ('tiktok', 'instagram', 'instagram_photo', 'instagram_vx', 'instagram_mirror', 'tikwm'):
+    if payload.provider in ('tiktok', 'instagram', 'instagram_photo', 'instagram_vx', 'instagram_mirror', 'tikwm', 'twitter', 'twitter_fx'):
         try:
             site, url, video_id = normalize_social_url(payload.url)
-            expected_site = 'instagram' if payload.provider.startswith('instagram') else 'tiktok'
+            expected_site = ('instagram' if payload.provider.startswith('instagram') else
+                             'twitter' if payload.provider.startswith('twitter') else 'tiktok')
             if site != expected_site:
                 raise SocialError('영상 링크의 플랫폼이 선택한 추출 방식과 달라요.')
-            info = (inspect_tikwm(url) if payload.provider == 'tikwm' else
+            info = (inspect_twitter(url, MAX_DURATION) if payload.provider == 'twitter_fx' else
+                    inspect_tikwm(url) if payload.provider == 'tikwm' else
                     inspect_instagram_vx(url) if payload.provider == 'instagram_vx' else
                     inspect_reel_fallback(url) if payload.provider == 'instagram_mirror' else
                     inspect_social(url, MAX_DURATION))
             if info['provider'] != payload.provider:
                 raise SocialError('게시물에서 선택한 파일 종류를 찾을 수 없어요.')
-        except (SocialError, TikWMError, InstagramVXError, ReelFallbackError) as exc:
+        except (SocialError, TikWMError, InstagramVXError, ReelFallbackError, TwitterError) as exc:
             raise HTTPException(422, str(exc)) from None
     else:
         video_id, url = canonical_url(payload.url)
@@ -630,9 +658,11 @@ def create_job(payload: ExtractRequest) -> dict[str, Any]:
         raise HTTPException(400, '선택한 화질을 이 영상에서 사용할 수 없어요.')
     if payload.mode == 'mp3' and payload.quality not in BITRATES:
         raise HTTPException(400, '지원하지 않는 오디오 품질이에요.')
-    if payload.mode == 'photos' or payload.provider in ('instagram_vx', 'instagram_mirror'):
+    if payload.mode == 'photos' or payload.provider in ('instagram_vx', 'instagram_mirror') or (payload.provider == 'twitter_fx' and info.get('duration_unknown')):
         if payload.provider in ('instagram_vx', 'instagram_mirror') and any(x.strip() not in ('', '0', '00:00', '00:00:00') for x in (payload.start, payload.end)):
             raise HTTPException(400, '인스타그램 공개 미리보기 경로에서는 구간 자르기를 지원하지 않아요.')
+        if payload.provider == 'twitter_fx' and any(x.strip() not in ('', '0', '00:00', '00:00:00') for x in (payload.start, payload.end)):
+            raise HTTPException(400, '길이를 알 수 없는 X 영상에서는 구간 자르기를 지원하지 않아요.')
         start, end = 0.0, 0.0
     else:
         start = parse_time(payload.start, default=0.0)
