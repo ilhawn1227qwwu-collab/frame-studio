@@ -28,6 +28,7 @@ RUN pip install --no-cache-dir -r requirements.txt && node --version && ffmpeg -
 COPY server.py .
 COPY alternative.py .
 COPY social.py .
+COPY twitter_x.py .
 COPY social_tikwm.py .
 COPY instagram_vx.py .
 COPY instagram_reel_fallback.py .
