@@ -20,16 +20,18 @@ function detectPlatform(raw) {
     if (['youtube.com','www.youtube.com','m.youtube.com','music.youtube.com','youtu.be','www.youtu.be'].includes(host)) return 'youtube';
     if (['tiktok.com','www.tiktok.com','m.tiktok.com','vm.tiktok.com','vt.tiktok.com'].includes(host)) return 'tiktok';
     if (['instagram.com','www.instagram.com','m.instagram.com','instagr.am','www.instagr.am'].includes(host)) return 'instagram';
+    if (['x.com','www.x.com','mobile.x.com','twitter.com','www.twitter.com','mobile.twitter.com','m.twitter.com'].includes(host)) return 'twitter';
   } catch (_) { /* invalid URL */ }
   return '';
 }
 function updatePlatformControls() {
   const platform = detectPlatform(elements.url.value.trim());
-  const social = platform === 'tiktok' || platform === 'instagram';
+  const social = platform === 'tiktok' || platform === 'instagram' || platform === 'twitter';
   $('directAltBtn').classList.toggle('hidden', social);
   const note = document.querySelector('.alt-privacy-inline');
   if (note) note.classList.toggle('hidden', social);
   $('instagramPrivacy').classList.toggle('hidden', platform !== 'instagram');
+  $('twitterPrivacy').classList.toggle('hidden', platform !== 'twitter');
 }
 elements.url.addEventListener('input', updatePlatformControls);
 function isServerBotBlock(message) {
@@ -138,7 +140,7 @@ function paintFormats() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'quality-button';
-    const socialBest = ['tiktok','instagram','tikwm'].includes(state.info.provider);
+    const socialBest = ['tiktok','instagram','tikwm','twitter','twitter_fx'].includes(state.info.provider);
     btn.textContent = video ? (socialBest || quality === 0 ? '최고 원본' : quality + 'p') : photo ? '사진 원본' : originalAudio ? '원본 그대로 저장' : quality + 'k';
     btn.dataset.value = String(quality);
     btn.addEventListener('click', () => { state.quality = quality; paintSelectedQuality(); });
@@ -193,7 +195,7 @@ elements.form.addEventListener('submit', async (event) => {
   elements.inspectLabel.textContent = '영상 확인 중...';
   try {
     const platform = detectPlatform(url);
-    if (!platform) throw new Error('유튜브, 틱톡 영상 또는 인스타그램 게시물 주소를 입력해 주세요.');
+    if (!platform) throw new Error('유튜브·틱톡·인스타그램·X(트위터) 게시물 주소를 입력해 주세요.');
     const endpoint = platform === 'youtube' ? '/api/inspect' : '/api/inspect-social';
     const info = await request(endpoint, { url });
     displayVideo(info);
