@@ -189,3 +189,12 @@ def test_mobile_frontend_cache_busting_and_twitter_platform():
     assert script.status_code == 200
     assert script.headers.get('cache-control') == 'no-store, no-cache, must-revalidate'
     assert "'x.com'" in script.text and "return 'twitter'" in script.text
+
+def test_no_persistent_usage_logging_in_app_config():
+    """Job artifacts are ephemeral and individual HTTP requests are not logged."""
+    from pathlib import Path
+    docker = (Path(__file__).resolve().parents[1] / 'Dockerfile').read_text()
+    source = (Path(__file__).resolve().parents[1] / 'server.py').read_text()
+    assert '--no-access-log' in docker
+    assert 'access_log=False' in source
+    assert 'shutil.rmtree(WORKDIR, ignore_errors=True)' in source
