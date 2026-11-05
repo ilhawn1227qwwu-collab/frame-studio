@@ -31,7 +31,8 @@ function updatePlatformControls() {
   const note = document.querySelector('.alt-privacy-inline');
   if (note) note.classList.toggle('hidden', social);
   $('instagramPrivacy').classList.toggle('hidden', platform !== 'instagram');
-  $('twitterPrivacy').classList.toggle('hidden', platform !== 'twitter');
+  const xPrivacy = $('twitterPrivacy');
+  if (xPrivacy) xPrivacy.classList.toggle('hidden', platform !== 'twitter');
 }
 elements.url.addEventListener('input', updatePlatformControls);
 function isServerBotBlock(message) {
