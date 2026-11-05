@@ -86,7 +86,13 @@ async def access_control(request: Request, call_next):
                 return JSONResponse({'detail': '요청이 너무 많아요. 잠시 후 다시 시도해 주세요.'}, status_code=429)
             recent.append(now)
             _rate[key] = recent
-    return await call_next(request)
+    response = await call_next(request)
+    # Mobile browsers may keep v1.7 JavaScript while HTML has been updated to v1.8.
+    # Prevent old platform checks from surviving future deployments.
+    if request.url.path == '/' or request.url.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+    return response
 
 
 class InspectRequest(BaseModel):
