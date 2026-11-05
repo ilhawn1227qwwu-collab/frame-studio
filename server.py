@@ -40,6 +40,9 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / 'static'
 WORKDIR = Path(tempfile.gettempdir()) / 'frame-studio-jobs'
+# No persistent job history. Purge any previous temporary media artifacts on
+# startup/redeploy; job progress is kept in RAM only and resets with the process.
+shutil.rmtree(WORKDIR, ignore_errors=True)
 WORKDIR.mkdir(parents=True, exist_ok=True)
 
 PUBLIC_MODE = os.getenv('FRAME_PUBLIC_MODE', '').lower() in ('1', 'true', 'yes')
@@ -716,4 +719,4 @@ def job_file(job_id: str) -> FileResponse:
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host='0.0.0.0' if PUBLIC_MODE else '127.0.0.1',
-                port=int(os.environ.get('PORT', '8000')))
+                port=int(os.environ.get('PORT', '8000')), access_log=False)
