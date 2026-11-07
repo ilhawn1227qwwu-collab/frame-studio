@@ -12,11 +12,11 @@ const seedLogs=[
 const steps=[
  ['게이트웨이 확인','먼저 연결된 네트워크의 출구가 정상인지 확인해야겠죠?','ping 192.0.2.1','네트워크 지도에서 공유기의 상태도 확인해 보세요.'],
  ['웹 장애 확인','웹 서버가 응답하는지 HTTP 상태 코드를 확인해 봐요.','curl -I http://training.lab','503은 서버가 일시적으로 요청을 처리하지 못한다는 뜻이에요.'],
- ['인증 로그 조사','반복된 로그인 실패가 있는지, 출처와 시간을 확인해 봅시다.','grep "Failed password" /var/log/auth.log','실패 기록만으로 침입 성공을 단정할 수는 없어요.'],
- ['서비스 복구','원인을 살폈으니 가상 웹 서비스를 재시작해 보죠.','sudo service lab-web restart','이 명령은 오직 가상 서버 내부의 서비스 상태만 변경해요.'],
+ ['SSH 로그인과 로그 조사','ssh trainee@192.0.2.20으로 학습용 웹 서버에 접속해 인증 실패 기록을 조사해 봅시다.','grep "Failed password" /var/log/auth.log','먼저 SSH로 접속하세요. 내장된 교육용 키로 가상 로그인이 진행돼요.'],
+ ['원격 서버 서비스 복구','웹 서버에 SSH로 접속했다면 lab-web 서비스를 다시 실행해 보세요.','sudo systemctl restart lab-web','서비스는 원격 서버에서 실행되어요. sudo 없이 재시작하면 권한 오류가 발생해요.'],
  ['브라우저에서 재확인','웹 서비스가 복구됐다면 브라우저에서도 직접 확인해야겠죠?','Firefox SIM에서 http://training.lab 열기','데스크톱의 Firefox SIM 아이콘을 사용해 보세요.'],
  ['웹 설정 보안 점검','서비스는 복구됐지만 보안 설정이 충분한지 점검해야 해요.','web-audit demo.lab','지금은 진단한 상태이지 아직 모두 고친 것은 아니에요.'],
- ['취약 설정 개선','보안 헤더, 관리자 접근 통제, HTML 출력 처리 세 항목을 모두 수정해 봅시다.','web-fix headers\nweb-fix access\nweb-fix output','세 설정이 모두 적용되어야 검증할 수 있어요.'],
+ ['서버 설정 개선','SSH 접속 후 웹 서버의 보안 헤더·접근 권한·출력 처리를 수정해 보세요.','web-fix headers\nweb-fix access\nweb-fix output','web-fix는 가상 원격 서버 안의 교육용 관리 도구예요. 세 설정 모두 적용하세요.'],
  ['최종 보고와 검증','정상 작동과 보안 개선을 확인한 다음, 조사한 근거를 보고서로 남겨 볼까요?','incident-report','보고서에는 관찰한 증거와 조치 결과가 함께 기록돼요.']
 ];
 const init=()=>({version:2,web:{hostOnline:true,running:true,headers:false,access:false,output:false},shell:{host:'kali',user:'kali',cwd:'/home/kali'},
@@ -84,7 +84,7 @@ function request(raw,{head=false,browser=false}={}){
  const p=urlParts(raw);
  if(!p)return {ok:false,status:0,heading:'주소를 확인하세요',message:'가상 브라우저는 training.lab, demo.lab, 192.0.2.20만 지원합니다. 외부 인터넷 요청은 하지 않습니다.',headers:[],body:[]};
  if(!link())return {ok:false,status:0,heading:'연결할 수 없습니다',message:'가상 네트워크 연결이 없습니다. 공유기 전원과 클라이언트 상태를 확인하세요.',headers:[],body:[]};
- if(!hostOnline())return {ok:false,status:0,heading:'서버에 연결할 수 없습니다',message:'가상 웹 서버 전원이 꺼져 TCP 연결을 맺을 수 없어요.',headers:[],body:[]};
+ if(!hostOnline())return {ok:false,reason:'host',status:0,heading:'서버에 연결할 수 없습니다',message:'가상 웹 서버 전원이 꺼져 TCP 연결을 맺을 수 없어요.',headers:[],body:[]};
  if(!state.web.running){
   if(head&&p.hostname==='training.lab')flag('outage');
   return {ok:true,status:503,heading:'503 Service Unavailable',message:'가상 lab-web 서비스가 중지되어 있습니다.',headers:['HTTP/1.1 503 Service Unavailable','Server: training-lab (SIM)','Retry-After: 30'],body:['현재 웹 서비스를 사용할 수 없습니다.','서버의 서비스 상태를 확인하세요.']}
@@ -198,7 +198,8 @@ function command(raw){
  if(cmd==='ip route')return {ok:true,lines:[link()?'default via 192.0.2.1 dev wlan0\n192.0.2.0/24 dev wlan0 scope link':'(현재 가상 LAN 기본 경로 없음)']};
  if(/^ping 192\.0\.2\.(1|20|30)$/.test(cmd)){
   const ip=cmd.split(' ')[1],on=link()&&((ip==='192.0.2.1')?!!net()?.ap.online:!!net()?.ap.online);
-  if(!on)return {ok:false,lines:['Destination Host Unreachable (SIM). Network Manager에서 가상 연결을 확인하세요.']};
+  if(!on)return fail('network','Destination Host Unreachable (SIM).','NetworkManager에서 가상 연결을 확인하세요.');
+  if(ip==='192.0.2.20'&&!hostOnline())return fail('host','Destination Host Unreachable: 웹 서버 전원이 꺼졌어요.','Network Map에서 서버 전원을 켜세요.');
   if(ip==='192.0.2.1')flag('gateway');
   return {ok:true,lines:['PING '+ip+' (SIM)','3 packets transmitted, 3 received, 0% packet loss','ICMP 도달성과 웹 서비스의 정상 작동은 별개입니다.']};
  }
@@ -252,7 +253,20 @@ document.addEventListener('kali-sim:network-changed',event=>{
  state.logs=state.logs.slice(-100);
  changed('network-log','가상 네트워크 상태 변경을 사건 기록에 추가했어요: '+d.kind);
 });
-window.KaliLAN={snapshot,devices,steps,progress,command,request,missionStart,resetMission,setHostPower,webFix,issues,logText,link,
+function explainFailure(r,cmd){
+ if(!r||r.ok)return '';
+ if(r.reason==='permission')return '관리자 권한이 부족해요. 현재 접속한 계정과 sudo 사용 가능 명령을 확인해 보세요.';
+ if(r.reason==='location')return '명령을 실행할 위치가 잘못됐어요. Kali PC와 웹 서버는 다른 컴퓨터입니다.';
+ if(r.reason==='network')return '통신 경로 문제예요. NetworkManager에서 Kali PC 연결과 게이트웨이를 먼저 확인해 보세요.';
+ if(r.reason==='host')return '서버 전원이 꺼진 상태예요. Network Map에서 웹 서버 전원을 확인하세요.';
+ if(r.reason==='syntax')return '명령어 형식이 잘못됐어요. 안내된 사용법과 공백·대상 주소를 확인해 보세요.';
+ if(r.reason==='target')return '이 실습에서 허가된 주소는 192.0.2.20이에요.';
+ if(/curl/i.test(cmd))return 'HTTP와 네트워크는 서로 달라요. ping, 서비스 상태, DNS를 각각 점검해 보세요.';
+ return '도움말(help)과 현재 연결 상태를 확인해 보세요.';
+}
+const SHARED=/^(?:ssh(?:\s|$)|exit$|whoami$|hostname$|ip a$|ip route$|ping\s|nslookup\s|ss -tln$|(?:sudo )?(?:systemctl|service)\s|(?:cat|grep)\s.+\/var\/log\/auth\.log|web-fix\s|web-audit\s|incident-status$|incident-report$|nmcli dev wifi connect LAB-TRAINING password )/i;
+function common(cmd){return SHARED.test(String(cmd||'').trim())?command(cmd):null;}
+window.KaliLAN={snapshot,devices,steps,progress,command,common,explainFailure,request,missionStart,resetMission,setHostPower,webFix,issues,logText,link,
  get shell(){return {...state.shell}},get hostOnline(){return hostOnline()},
  get report(){return state.mission.report},get web(){return {...state.web}},get mission(){return snapshot().mission}};
 persist();
