@@ -186,13 +186,16 @@ function startTrack(id){
 function resetCurrent(){
  if(data.active==='wireless'||data.active==='sandbox')return;
  if(data.active==='incident'){
-  if(confirm('INCIDENT-001을 가상 서버 초기 상태부터 다시 시작할까요?')){
+  if(confirm('INCIDENT-001을 처음부터 시작할까요? 종합 임무 기록과 공유 가상 웹 서버 상태가 초기화되어 웹 보안·자유 실습에도 반영됩니다.')){
    window.KaliLAN?.missionStart();
    renderCoach();window.KaliLANUI?.render();
   }
   return
  }
- if(!confirm('선택한 과목의 진행을 초기화할까요?'))return;
+ const resetQuestion=data.active==='web'?
+ '웹 보안 과목의 진행 단계만 초기화할까요? 가상 웹 서버 설정은 종합 임무·자유 실습과 공유하므로 유지됩니다.':
+ '선택한 과목의 진행을 초기화할까요?';
+ if(!confirm(resetQuestion))return;
  data.progress[data.active]=0;
  if(data.active==='linux')data.fs=initial().fs;
  if(data.active==='web')data.web=initial().web;
