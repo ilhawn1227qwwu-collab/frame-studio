@@ -4,8 +4,8 @@ const assert=require('node:assert/strict');
 const sequences={
  linux:['pwd','ls','mkdir training','cd training','touch notes.txt','ls -l'],
  network:['ip a','ip route','ping 192.0.2.1','nslookup training.lab','curl -I http://training.lab'],
- web:['curl http://demo.lab','curl -I http://demo.lab','web-audit demo.lab','web-fix headers','web-fix access','web-fix output','web-verify demo.lab'],
- forensics:['ls /var/log','cat /var/log/auth.log','grep "Failed password" /var/log/auth.log','sha256sum /cases/evidence.txt','forensic-report']
+ web:['curl http://demo.lab','curl -I http://demo.lab','web-audit demo.lab','ssh trainee@192.0.2.20','web-fix headers','web-fix access','web-fix output','exit','web-verify demo.lab'],
+ forensics:['ssh trainee@192.0.2.20','ls /var/log','cat /var/log/auth.log','grep "Failed password" /var/log/auth.log','exit','sha256sum /cases/evidence.txt','forensic-report']
 };
 const names={linux:'리눅스 기초',network:'네트워크 기초',web:'웹 보안',forensics:'로그·디지털 포렌식'};
 const configs=[['desktop',1366,768],['mobile',390,844]];
@@ -58,8 +58,8 @@ async function test(browser,[label,width,height]){
   await page.locator('#power-start').click();
   await page.locator('#onboard-root').waitFor({state:'visible',timeout:12000});
   await page.locator('#ob-skip').click();
-  assert.equal(await page.evaluate(()=>window.KaliCurriculum.snapshot().progress.web),7,'web progress should persist');
-  assert.equal(await page.evaluate(()=>window.KaliCurriculum.snapshot().progress.forensics),5,'forensics progress should persist');
+  assert.equal(await page.evaluate(()=>window.KaliCurriculum.snapshot().progress.web),9,'web progress should persist');
+  assert.equal(await page.evaluate(()=>window.KaliCurriculum.snapshot().progress.forensics),7,'forensics progress should persist');
   assert.deepEqual(errors,[]);
   console.log('PASS '+label+' curriculum 23/23, network state, SHA-256, persistence');
  }catch(e){
