@@ -36,8 +36,10 @@ async function run(browser,[name,width,height]){
   assert.equal(await v(()=>window.KaliLAN.web.running),false);
   assert.equal((await v(()=>window.KaliLAN.command('ping 192.0.2.1'))).ok,true);
   assert.equal((await v(()=>window.KaliLAN.command('curl -I http://training.lab'))).status,503);
+  assert.equal((await v(()=>window.KaliLAN.command('grep "Failed password" /var/log/auth.log'))).ok,false);
+  assert.equal((await v(()=>window.KaliLAN.command('ssh trainee@192.0.2.20'))).ok,true);
   assert.equal((await v(()=>window.KaliLAN.command('grep "Failed password" /var/log/auth.log'))).ok,true);
-  assert.equal((await v(()=>window.KaliLAN.command('sudo service lab-web restart'))).ok,true);
+  assert.equal((await v(()=>window.KaliLAN.command('sudo systemctl restart lab-web'))).ok,true);
   assert.equal((await v(()=>window.KaliLAN.request('http://training.lab',{browser:true}))).status,200);
   assert.equal((await v(()=>window.KaliLAN.command('web-audit demo.lab'))).ok,true);
   for(const field of ['headers','access','output'])assert.equal((await v(key=>window.KaliLAN.command('web-fix '+key),field)).ok,true);
