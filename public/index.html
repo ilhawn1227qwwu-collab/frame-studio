@@ -173,11 +173,19 @@ function renderQuick(){
  if(course&&course!=='wireless')return;
  const el=$('quick');el.replaceChildren();let list=['help','status','whoami','ls'];const next=nextStage();if(next){list.unshift(next.cmd);if(next.id==='verify'&&!state.hardened)list.unshift('open router')}for(const cmd of [...new Set(list)].slice(0,6)){const b=document.createElement('button');b.textContent=cmd;b.type='button';b.addEventListener('click',()=>execute(cmd));el.append(b)}}
 function renderNets(){
- const el=$('nets'),info=$('net-info');
+ const el=$('nets');
+ // The same persistent card must survive every list refresh.
+ let info=$('net-info');
+ if(!info){
+  info=document.createElement('div');info.id='net-info';info.className='info';
+ }
+ info.setAttribute('role','status');
+ info.setAttribute('aria-live','polite');
  // The information card follows the selected network, not the bottom of a
  // long scroll area. The tutorial can therefore spotlight the actual result.
  info.remove();
  el.replaceChildren();
+ el.append(info);
  info.hidden=true;
  for(const n of NET.networks()){
   const row=document.createElement('div');
