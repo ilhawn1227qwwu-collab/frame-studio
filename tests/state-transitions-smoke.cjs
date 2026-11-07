@@ -1,0 +1,91 @@
+
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const viewports=[['desktop',1366,768],['mobile',390,844],['small',320,640]];
+async function run(browser,[name,width,height]){
+ const ctx=await browser.newContext({viewport:{width,height},isMobile:name!=='desktop',hasTouch:name!=='desktop'});
+ const page=await ctx.newPage(),errors=[],external=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ page.on('request',r=>{if(/(?:google\.com|training\.lab|demo\.lab)/.test(r.url()))external.push(r.url())});
+ const v=async fn=>page.evaluate(fn);
+ try{
+  await page.goto('http://127.0.0.1:8000');
+  await page.locator('#power-start').click();
+  await page.locator('#onboard-root').waitFor({state:'visible',timeout:13000});
+  await page.locator('#ob-skip').click();
+  assert.equal(await v(()=>window.KaliLAN.link()),true,'fresh workstation should be connected');
+  await v(()=>window.KaliNetwork.monitorStart());
+  assert.equal(await v(()=>window.KaliNetwork.station.connected),false,'monitor mode must disconnect station');
+  assert.equal(await v(()=>window.KaliLAN.link()),false,'no LAN while in monitor mode');
+  assert.equal(await v(()=>window.KaliNetwork.client.connected),true,'external training client should stay independent');
+  await v(()=>window.KaliNetwork.reconnect());
+  assert.equal(await v(()=>window.KaliLAN.link()),false,'training-client reconnect must not reconnect Kali');
+  await v(()=>window.KaliNetwork.monitorStop());
+  assert.equal(await v(()=>window.KaliLAN.link()),false,'leaving monitor mode must not silently reconnect Kali PC');
+  assert.equal((await v(()=>window.KaliLAN.command('ping 192.0.2.1'))).ok,false);
+  assert.equal((await v(()=>window.KaliLAN.command('web-fix headers'))).ok,false,'offline web setting changes should fail');
+  assert.equal(await v(()=>window.KaliLAN.web.headers),false);
+  assert.equal((await v(()=>window.KaliNetwork.connect('not-the-password'))).ok,false);
+  assert.equal((await v(()=>window.KaliNetwork.connect('coffee2026'))).ok,true);
+  assert.equal(await v(()=>window.KaliLAN.link()),true);
+  await v(()=>window.KaliNetwork.setClientPresent(false));
+  assert.equal(await v(()=>window.KaliLAN.link()),true,'training-client removal should not disconnect Kali');
+  assert.equal((await v(()=>window.KaliNetwork.reconnect())).ok,false,'absent training client cannot auth');
+  await v(()=>window.KaliNetwork.setClientPresent(true));
+  await v(()=>window.KaliLAN.missionStart());
+  assert.equal(await v(()=>window.KaliLAN.web.running),false);
+  assert.equal((await v(()=>window.KaliLAN.command('ping 192.0.2.1'))).ok,true);
+  assert.equal((await v(()=>window.KaliLAN.command('curl -I http://training.lab'))).status,503);
+  assert.equal((await v(()=>window.KaliLAN.command('grep "Failed password" /var/log/auth.log'))).ok,true);
+  assert.equal((await v(()=>window.KaliLAN.command('sudo service lab-web restart'))).ok,true);
+  assert.equal((await v(()=>window.KaliLAN.request('http://training.lab',{browser:true}))).status,200);
+  assert.equal((await v(()=>window.KaliLAN.command('web-audit demo.lab'))).ok,true);
+  for(const field of ['headers','access','output'])assert.equal((await v(key=>window.KaliLAN.command('web-fix '+key),field)).ok,true);
+  assert.equal(await v(()=>window.KaliLAN.progress().count),7);
+  await v(()=>window.KaliNetwork.setOnline(false));
+  assert.equal(await v(()=>window.KaliLAN.link()),false);
+  assert.equal((await v(()=>window.KaliLAN.command('incident-report'))).ok,false,'disconnected mission must not sign off');
+  assert.equal(await v(()=>window.KaliLAN.progress().count),7);
+  await v(()=>window.KaliNetwork.setOnline(true));
+  assert.equal(await v(()=>window.KaliLAN.link()),false,'AP power-up should not silently reconnect Kali');
+  assert.equal((await v(()=>window.KaliLAN.command('nmcli dev wifi connect LAB-TRAINING password coffee2026 ifname wlan0'))).ok,true);
+  assert.equal(await v(()=>window.KaliLAN.link()),true);
+  assert.equal((await v(()=>window.KaliLAN.command('incident-report'))).ok,true);
+  assert.equal(await v(()=>window.KaliLAN.progress().count),8);
+  assert.equal((await v(()=>window.KaliLAN.request('https://google.com',{browser:true}))).ok,false);
+  assert.equal((await v(()=>window.KaliLAN.command('nmcli dev wifi connect EVIL-AP password coffee2026 ifname wlan0'))).ok,false);
+  // Strong new WPA3 password must require an independent workstation reconnect.
+  await v(()=>window.KaliNetwork.harden('River-Maple-Sky-Cloud-84'));
+  assert.equal(await v(()=>window.KaliLAN.link()),false);
+  assert.equal((await v(()=>window.KaliLAN.command('nmcli dev wifi connect LAB-TRAINING password coffee2026 ifname wlan0'))).ok,false);
+  await page.locator('.panel-left [data-open="wifi"]').click();
+  await page.locator('#wifi').waitFor({state:'visible'});
+  await page.locator('#sim-station-pass').fill('River-Maple-Sky-Cloud-84');
+  await page.locator('#sim-station-connect').click();
+  assert.equal(await v(()=>window.KaliLAN.link()),true);
+  assert.equal(await v(()=>window.KaliNetwork.station.connected),true);
+  const evidence=await v(()=>window.KaliLAN.logText());
+  assert.match(evidence,/가상 공유기가 꺼졌어요/,'network AP changes must appear in log evidence');
+  assert.match(evidence,/가상 wlan0|Kali PC/,'station events must appear in shared evidence');
+  const saved=await v(()=>({station:window.KaliNetwork.station.connected,finished:window.KaliLAN.progress().complete}));
+  await page.reload();
+  await page.locator('#power-start').click();
+  await page.locator('#onboard-root').waitFor({state:'visible',timeout:13000});
+  await page.locator('#ob-skip').click();
+  assert.equal(await v(()=>window.KaliLAN.progress().complete),saved.finished,'mission lost on reload');
+  assert.equal(await v(()=>window.KaliNetwork.station.connected),saved.station,'station lost on reload');
+  assert.equal(await v(()=>window.KaliLAN.link()),true,'network link lost across reload');
+  await page.evaluate(()=>window.KaliLANUI.openBrowser('http://google.com'));
+  await page.locator('#lan-browser').waitFor({state:'visible'});
+  assert.match(await page.locator('#lan-browser-page').innerText(),/주소를 확인하세요|지원하지/);
+  assert.deepEqual(external,[],'external simulated requests leaked into real network');
+  assert.deepEqual(errors,[],'browser JavaScript runtime errors');
+  console.log('PASS '+name+' workstation/client independence, offline denials, network recovery, WPA3 reconnection, evidence and reload');
+ }catch(e){
+  await page.screenshot({path:'/tmp/state-audit-'+name+'.png',fullPage:true});
+  throw new Error(name+': '+e.message);
+ }finally{await ctx.close()}
+}
+(async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+try{for(const cfg of viewports)await run(browser,cfg)}finally{await browser.close()}
+})().catch(e=>{console.error(e.stack);process.exit(1)});
