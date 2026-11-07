@@ -86,7 +86,7 @@ function launchButton(label,cls,parent,mode){
 const shortcuts=document.querySelector('.desktop-shortcuts');
 const shortcut=launchButton('학습센터','shortcut course-shortcut',shortcuts);
 shortcut.innerHTML='<span class="shortcut-icon"><svg class="ico big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h8l2 3h8v12H3z"/><path d="M7 12h10M7 16h8"/></svg></span>Learning Center';
-const dock=document.querySelector('.taskbar'),dockB=launchButton('▤','desktop-task',dock);dockB.title='Learning Center · 학습센터';
+const dock=document.querySelector('.taskbar'),dockB=launchButton('▤','desktop-task',dock);dockB.id='course-dock';dockB.title='Learning Center · 학습센터';
 dockB.setAttribute('aria-label','학습센터 열기');
 const cat=document.querySelector('.menu-apps');
 const menuEntry=document.createElement('button');menuEntry.type='button';menuEntry.dataset.groups='favorites recon settings';
