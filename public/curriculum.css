@@ -1,0 +1,73 @@
+
+/* Kali XFCE Learning Center & additional hands-on tracks. */
+#courses{position:absolute;left:13%;top:12%;width:min(810px,75vw);height:min(675px,79dvh);z-index:45;background:#222a3a}
+#courses .course-layout{display:grid;grid-template-columns:minmax(190px,32%) 1fr;min-height:0;flex:1}
+#courses .course-list{display:flex;flex-direction:column;gap:4px;padding:11px;background:#1e2837;border-right:1px solid #526077;overflow-y:auto}
+#courses .course-list button{border:1px solid transparent;background:#2b3546;color:#dfebf8;text-align:left;padding:10px 11px;border-radius:3px;display:flex;align-items:center;gap:10px;cursor:pointer}
+#courses .course-list button:hover{background:#364e6b}
+#courses .course-list button.selected{border-color:#70b3e6;background:#244f77}
+#courses .course-list .course-label{flex:1;min-width:0;font-size:12px;font-weight:700}
+#courses .course-list .course-count{font:10px ui-monospace,monospace;color:#a4cbe7;white-space:nowrap}
+#courses .course-main{padding:20px 22px;min-width:0;overflow-y:auto}
+#courses .course-overline{font:700 10px ui-monospace,monospace;color:#86c9f2;letter-spacing:.09em}
+#courses .course-main h2{font-size:20px;color:#f2f7ff;margin:9px 0}
+#courses .course-desc{font-size:12px;line-height:1.75;color:#bbcadc}
+#courses .course-score{display:flex;justify-content:space-between;font-size:11px;color:#c7d8e8;margin:17px 0 8px}
+#courses .course-progress{height:7px;background:#141e2e;border:1px solid #48637b;border-radius:2px;overflow:hidden}
+#courses .course-progress div{height:100%;background:#53aae2;transition:width .2s}
+#courses .course-stages{margin:18px 0 16px;padding:0;display:grid;gap:7px;list-style:none}
+#courses .course-stages li{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.4;color:#c2d0e1}
+#courses .course-stages .num{display:grid;place-items:center;flex:none;border:1px solid #64738a;border-radius:3px;background:#334056;font:11px ui-monospace,monospace;width:22px;height:22px}
+#courses .course-stages li.done .num{background:#245b4f;color:#a6f2c4;border-color:#387963}
+#courses .course-stages li.next{color:#e6f6ff;font-weight:700}
+#courses .course-stages li.next .num{background:#285d83;border-color:#6cb7e2}
+#courses .course-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+#courses .course-actions button{border:1px solid #729ec2;background:#286b9f;color:#f5faff;border-radius:3px;font-size:12px;padding:10px 15px;font-weight:700;cursor:pointer}
+#courses .course-actions button:hover{background:#378ac3}
+#courses .course-actions button.course-reset{background:#303e51;color:#c5d6e5;border-color:#667890;font-weight:500}
+#courses .course-disclaimer{font-size:10px;color:#9cb5c9;margin-top:17px;line-height:1.6}
+.course-coach{display:none;position:absolute;top:64px;right:20px;width:313px;max-height:calc(100dvh - 137px);overflow-y:auto;z-index:5;border:1px solid #657c96;border-radius:4px;background:#222e40f5;color:#e3edf9;box-shadow:0 15px 40px #0009}
+.course-coach .cc-head{display:flex;justify-content:space-between;align-items:center;gap:5px;border-bottom:1px solid #5b6b81;background:#2b4058;padding:11px 12px;font:700 11px ui-monospace,monospace;color:#abdfff}
+.course-coach .cc-body{padding:13px}
+.course-coach .cc-body h3{font-size:15px;color:#fff;margin:3px 0 9px;line-height:1.45}
+.course-coach .cc-body p{font-size:12px;color:#c9d7e7;line-height:1.75;white-space:pre-line;margin:7px 0}
+.course-coach .cc-task{border-left:3px solid #61b8e9;background:#1b3047;padding:9px;margin-top:12px;font-size:11px;line-height:1.65}
+.course-coach .cc-task code{display:block;margin:7px 0 2px;font:11px/1.6 "DejaVu Sans Mono",monospace;color:#b0eacc;overflow-wrap:anywhere}
+.course-coach .cc-note{color:#9cb6c9!important;font-size:10px!important}
+.course-coach .cc-foot{display:flex;gap:8px;margin-top:12px}
+.course-coach .cc-foot button{border:1px solid #6c8aa8;background:#35516e;color:#e8f5ff;border-radius:3px;padding:7px 9px;font-size:11px;cursor:pointer}
+.course-coach .cc-foot button:hover{background:#4478a7}
+.cc-mobile{display:none;flex:none;background:#1c2b3d;color:#dfeefa;border-bottom:1px solid #536c82}
+.cc-mobile .cc-mobile-toggle{background:transparent;color:inherit;width:100%;border:0;min-height:39px;display:flex;align-items:center;gap:9px;text-align:left;padding:8px 12px;font:11px Cantarell,system-ui,sans-serif}
+.cc-mobile .cc-num{color:#86d0fa;font:700 10px ui-monospace,monospace;white-space:nowrap}
+.cc-mobile .cc-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cc-mobile .cc-detail{padding:8px 11px 11px;border-top:1px solid #50637c;font-size:11px;line-height:1.6;max-height:29dvh;overflow:auto}
+.cc-mobile .cc-detail p{margin:4px 0;color:#cad9e7}
+.cc-mobile .cc-detail code{display:block;color:#b4eccf;white-space:pre-wrap;overflow-wrap:anywhere}
+.desktop.course-other #mission{display:none!important}
+.desktop.course-other #lab-guide,.desktop.course-other #lab-mobile-guide{display:none!important}
+.desktop.course-other #course-coach{display:block}
+.desktop:not(.course-other) #course-coach{display:none}
+.desktop.course-other #course-mobile{display:none}
+.desktop.course-other #terminal{width:min(790px,calc(100vw - 410px))}
+.desktop.course-other #course-coach[hidden],.desktop.course-other #course-mobile[hidden]{display:none!important}
+.desktop.tour-running #course-coach,.desktop.tour-running #course-mobile{display:none!important}
+.course-shortcut .shortcut-icon .ico{color:#89c9f0}
+@media(max-width:1080px){#courses{left:8%;width:min(730px,79vw)}.course-coach{right:10px;width:290px}}
+@media(max-width:760px){
+ #courses{left:5px!important;top:44px!important;width:calc(100% - 10px)!important;height:calc(100dvh - 103px)!important;right:5px!important;bottom:59px!important}
+ #courses .course-layout{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+ #courses .course-list{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid #506079;padding:6px;gap:5px}
+ #courses .course-list button{flex:0 0 auto;padding:9px;font-size:11px}
+ #courses .course-list .course-label{font-size:10px}
+ #courses .course-list .course-count{font-size:9px}
+ #courses .course-main{padding:12px 14px}
+ #courses .course-main h2{font-size:17px}
+ #courses .course-stages{margin:12px 0}
+ #courses .course-stages li{font-size:11px}
+ #courses .course-actions button{padding:8px 10px}
+ .desktop.course-other #terminal{width:calc(100% - 10px)!important}
+ .desktop.course-other #course-coach{display:none}
+ .desktop.course-other #course-mobile{display:block}
+ .desktop.course-other.tour-running #course-mobile{display:none}
+}
