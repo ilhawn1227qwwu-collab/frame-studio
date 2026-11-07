@@ -68,7 +68,7 @@
 .session-indicator{display:flex;gap:5px;align-items:center}
 @media(min-width:761px){.mission-titlebar button{display:none}}
 @media(max-width:760px){.mission.hide-on-desktop{display:none}}
-</style><link rel="stylesheet" href="./kali-tour.css?v=1"><style>#onboard-card .ob-action[hidden]{display:none!important}</style><link rel="stylesheet" href="./lab-guide.css?v=1"><style>.mission.lab-guide-ready #next-hint{display:none}</style><link rel="stylesheet" href="./curriculum.css?v=1"><link rel="stylesheet" href="./network-controls.css?v=1"><link rel="stylesheet" href="./virtual-lan.css?v=2"></head>
+</style><link rel="stylesheet" href="./kali-tour.css?v=1"><style>#onboard-card .ob-action[hidden]{display:none!important}</style><link rel="stylesheet" href="./lab-guide.css?v=1"><style>.mission.lab-guide-ready #next-hint{display:none}</style><link rel="stylesheet" href="./curriculum.css?v=1"><link rel="stylesheet" href="./network-controls.css?v=2"><link rel="stylesheet" href="./virtual-lan.css?v=2"></head>
 <body><main class="desktop" id="desktop" aria-label="Kali Linux 스타일 가상 보안 실습실">
 <div class="backdrop-mark" aria-hidden="true"><svg viewBox="0 0 220 220"><path d="M35 134 Q48 51 104 58 Q143 57 177 92 Q145 89 120 74 Q156 102 157 125 Q146 151 101 167 Q127 146 117 132 Q86 140 53 175 Q61 143 91 116 Q63 122 35 134Z"/><path d="M103 62 Q92 38 113 18 M157 125 Q180 132 185 160 M64 172 Q72 194 96 199"/><circle cx="130" cy="98" r="3" fill="#7ccfff65"/></svg></div>
 <header class="top-panel"><div class="panel-left"><button class="panel-item app-menu" id="menu-btn" type="button" aria-expanded="false"><span class="kali-logo" aria-hidden="true">K</span> Kali ▾</button><button class="panel-item" data-open="terminal">⌘ Terminal</button><button class="panel-item" data-open="wifi">◉ Network</button></div><div class="panel-right"><span class="fake-status">● XFCE · LOCAL SIMULATION</span><button class="panel-item os-power-btn" id="shutdown-btn" type="button" aria-label="가상 컴퓨터 종료" title="컴퓨터 종료">⏻</button><button class="panel-item" id="full-btn" aria-label="전체화면 켜기">⛶ <span id="full-label">전체화면</span></button><span class="clock" id="clock"></span></div></header>
@@ -133,7 +133,7 @@
 </section>
 
 </main>
-<script src="./network-world.js?v=2"></script>
+<script src="./network-world.js?v=3"></script>
 <script>
 (()=>{'use strict';
 const STORAGE='kali-sim-wireless-lab-v2';
@@ -355,4 +355,4 @@ document.addEventListener('kali-sim:network-changed',e=>{
 document.addEventListener('kali-sim:course-switched',()=>render());
 render();welcome();if(total()===9)log('저장된 기록: 모든 실습을 완료한 상태입니다.','ok');
 })();
-</script><script src="./kali-xfce.js?v=4"></script><script src="./kali-tour.js?v=2"></script><script src="./lab-guide.js?v=2"></script><script src="./network-controls.js?v=1"></script><script src="./virtual-lan.js?v=1"></script><script src="./curriculum.js?v=3"></script><script src="./virtual-lan-ui.js?v=1"></script></body></html>
+</script><script src="./kali-xfce.js?v=4"></script><script src="./kali-tour.js?v=2"></script><script src="./lab-guide.js?v=2"></script><script src="./network-controls.js?v=2"></script><script src="./virtual-lan.js?v=2"></script><script src="./curriculum.js?v=4"></script><script src="./virtual-lan-ui.js?v=1"></script></body></html>
