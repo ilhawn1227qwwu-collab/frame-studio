@@ -226,7 +226,8 @@ function success(out,task){
 async function executeTrack(raw){
  const cmd=String(raw).trim().replace(/\s+/g,' ');
  if(!cmd||data.active==='wireless')return;
- $('shell-input').value='';print('┌──(kali㉿kali)-[~]\n└─$ '+cmd,'prompt');
+ $('shell-input').value='';const promptPath=data.fs.cwd.startsWith('/home/kali')?'~'+data.fs.cwd.slice('/home/kali'.length):data.fs.cwd;
+ print('┌──(kali㉿kali)-['+promptPath+']\n└─$ '+cmd,'prompt');
  const id=data.active,t=tracks[id],progress=data.progress[id],step=t.steps[progress];
  if(cmd==='help'){
   print('교육용 '+t.title+' 모드입니다. 현재 목표: '+(step?.[0]||'과목 완료'),'sys');
@@ -268,11 +269,12 @@ async function executeTrack(raw){
   );
  } else if(id==='network'){
   const net=window.KaliNetwork,ap=net?.ap||{online:true,channel:6,security:'WPA2-PSK'};
-  if(cmd==='ip a')result={ok:true,lines:['1: lo    inet 127.0.0.1/8\n2: wlan0  [SIM] state '+(ap.online?'UP':'DOWN')]};
-  else if(cmd==='ip route')result={ok:true,lines:[ap.online?'default via 192.0.2.1 dev wlan0\n192.0.2.0/24 dev wlan0 scope link':'192.0.2.0/24 dev wlan0 linkdown\n(기본 게이트웨이 연결 없음)']};
-  else if(cmd==='ping 192.0.2.1')result=ap.online?{ok:true,lines:['PING 192.0.2.1: 3 packets transmitted, 3 received (SIM)']}:{ok:false,lines:['Destination Host Unreachable: 가상 AP 전원이 꺼져 있어요.']};
-  else if(cmd==='nslookup training.lab')result={ok:true,lines:['Server: 192.0.2.1 [SIM]\nName: training.lab\nAddress: 192.0.2.20']};
-  else if(cmd==='curl -I http://training.lab')result=ap.online?{ok:true,lines:['HTTP/1.1 200 OK [SIM]\nServer: training-lab\nContent-Type: text/html; charset=utf-8']}:{ok:false,lines:['curl: Could not connect. 가상 AP가 꺼져 있어요.']};
+  const link=!!(ap.online&&net?.client?.present&&net?.client?.connected);
+  if(cmd==='ip a')result={ok:true,lines:['1: lo    inet 127.0.0.1/8\n2: wlan0  [SIM] state '+(link?'CONNECTED':ap.online?'DISCONNECTED':'DOWN')]};
+  else if(cmd==='ip route')result={ok:true,lines:[link?'default via 192.0.2.1 dev wlan0\n192.0.2.0/24 dev wlan0 scope link':'(연결된 가상 인터페이스가 없어 기본 경로가 없습니다.)']};
+  else if(cmd==='ping 192.0.2.1')result=link?{ok:true,lines:['PING 192.0.2.1: 3 packets transmitted, 3 received (SIM)']}:{ok:false,lines:['Destination Host Unreachable: AP 전원 또는 클라이언트 연결 상태를 Network에서 확인하세요.']};
+  else if(cmd==='nslookup training.lab')result=link?{ok:true,lines:['Server: 192.0.2.1 [SIM]\nName: training.lab\nAddress: 192.0.2.20']}:{ok:false,lines:['DNS lookup failed: 가상 네트워크가 연결되지 않았어요.']};
+  else if(cmd==='curl -I http://training.lab')result=link?{ok:true,lines:['HTTP/1.1 200 OK [SIM]\nServer: training-lab\nContent-Type: text/html; charset=utf-8']}:{ok:false,lines:['curl: Could not connect. 가상 AP와 클라이언트 연결을 확인하세요.']};
   completed=result.ok&&cmd===step?.[2];
  }else if(id==='web'){
   if(cmd==='curl http://demo.lab')result={ok:true,lines:['HTTP/1.1 200 OK [SIM]\n<html><body><h1>Demo Lab</h1><p>'+webPreview()+'</p></body></html>']};
