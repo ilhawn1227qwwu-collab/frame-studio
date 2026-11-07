@@ -217,11 +217,17 @@ function command(raw){
   if(!link())return fail('network','연결이 끊겼어요.');
   flag('logs');return {ok:true,lines:[state.logs.filter(v=>v.includes('Failed password')).join('\n')]};
  }
- if(/^sudo service lab-web restart$|^service lab-web restart$/.test(cmd)){
-  if(!link())return {ok:false,lines:['네트워크가 연결되어 있지 않아요.']};
-  state.web.running=true;changed('restart','관리 승인된 가상 lab-web 서비스 재시작');
-  flag('restart');return {ok:true,lines:['[ OK ] lab-web.service restart completed (SIM)','HTTP server: listening on 192.0.2.20:80']};
+ if(/^(sudo )?(systemctl|service) (restart|status) lab-web$/.test(cmd)){
+  if(!isRemote())return localHint();
+  if(!hostOnline())return fail('host','원격 서버 전원이 꺼져 있어 서비스를 제어할 수 없어요.');
+  const match=cmd.match(/^(sudo )?(systemctl|service) (restart|status) lab-web$/);
+  const sudo=!!match[1],action=match[3];
+  if(action==='status')return {ok:true,lines:['lab-web.service [SIM]','Host: web01 ONLINE','Active: '+(state.web.running?'active (running)':'inactive (dead)')]};
+  if(!sudo)return fail('permission','Permission denied: lab-web 재시작에는 sudo 권한이 필요합니다.','trainee는 sudo systemctl restart lab-web만 허용돼요.');
+  state.web.running=true;changed('restart','trainee가 가상 웹 서버에서 lab-web 서비스를 재시작');
+  flag('restart');return {ok:true,lines:['[ OK ] lab-web.service restarted on web01 (SIM)','Web host: ONLINE / HTTP: RUNNING']};
  }
+ if(/^sudo\s+/.test(cmd)&&isRemote())return fail('permission','trainee 계정은 제한된 관리자 권한만 가지고 있어요.','sudo systemctl restart lab-web 명령만 허용됩니다.');
  if(cmd==='web-audit demo.lab'||cmd==='web-audit training.lab'){
   if(!link())return {ok:false,lines:['가상 네트워크에 연결되어 있지 않아요.']};
   if(!state.web.running)return {ok:false,lines:['웹 서버가 중단되어 있어 보안 설정을 점검할 수 없어요.']};
@@ -246,7 +252,8 @@ document.addEventListener('kali-sim:network-changed',event=>{
  state.logs=state.logs.slice(-100);
  changed('network-log','가상 네트워크 상태 변경을 사건 기록에 추가했어요: '+d.kind);
 });
-window.KaliLAN={snapshot,devices,steps,progress,command,request,missionStart,resetMission,webFix,issues,logText,link,
+window.KaliLAN={snapshot,devices,steps,progress,command,request,missionStart,resetMission,setHostPower,webFix,issues,logText,link,
+ get shell(){return {...state.shell}},get hostOnline(){return hostOnline()},
  get report(){return state.mission.report},get web(){return {...state.web}},get mission(){return snapshot().mission}};
 persist();
 })();
