@@ -152,7 +152,8 @@ function renderCoach(){
 }
 function selectTrack(id,saveSelection=true){
  if(!tracks[id])return;
- data.active=id;if(saveSelection)save();else save();
+ data.active=id;save();
+ document.dispatchEvent(new Event('kali-sim:course-switched'));
  renderCoach();
 }
 function openHub(){
