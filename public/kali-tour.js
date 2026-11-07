@@ -192,8 +192,12 @@ document.addEventListener('click',e=>{
  const target=e.target.closest(step.target);if(!target)return;
  setTimeout(()=>{
   if(!active||stages[index]!==step)return;
-  if(step.target==='#course-close'&&originalCourse&&window.KaliCurriculum?.snapshot()?.active!==originalCourse)
-   window.KaliCurriculum.selectTrack(originalCourse);
+  if(step.target==='#course-close'){
+   if(originalCourse&&window.KaliCurriculum?.snapshot()?.active!==originalCourse)
+    window.KaliCurriculum.selectTrack(originalCourse);
+   // New tour chapter starts from a clean desktop; avoid terminal occluding shortcuts on mobile.
+   $('terminal').classList.add('hidden');
+  }
   proceed();
  },100);
 },true);
