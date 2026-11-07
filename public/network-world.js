@@ -8,6 +8,7 @@ const defaults=()=>({
  guest:{ssid:'CAMPUS-GUEST',bssid:'02:1A:11:20:26:02',channel:1,security:'WPA2-PSK',signal:58},
  secure:{ssid:'LAB-SECURE',bssid:'02:1A:11:20:26:03',channel:11,security:'WPA3-SAE',signal:88},
  client:{present:true,connected:true,attempts:0,lastEvent:0},
+ station:{connected:true},
  radio:{monitor:false,observationSince:0,handshakeConsumed:0},
  capture:null,
  events:[], version:1
@@ -15,7 +16,7 @@ const defaults=()=>({
 function load(){
  let data=defaults();
  try{const o=JSON.parse(localStorage.getItem(KEY)||'null');if(o&&o.version===1&&o.ap&&o.client&&o.radio){
- data={...data,...o,ap:{...data.ap,...o.ap},client:{...data.client,...o.client},radio:{...data.radio,...o.radio}};
+ data={...data,...o,ap:{...data.ap,...o.ap},client:{...data.client,...o.client},station:{connected:o.station?.connected??!!o.client.connected},radio:{...data.radio,...o.radio}};
  }}catch(_){}
  return data;
 }
@@ -25,7 +26,7 @@ function emit(kind,message){world.events.unshift({kind,message,time:Date.now()})
 function copy(){return JSON.parse(JSON.stringify(world))}
 function isValidChannel(v){return [1,6,11].includes(Number(v))}
 const api={
- snapshot:copy, get ap(){return {...world.ap}},get client(){return {...world.client}},get radio(){return {...world.radio}},
+ snapshot:copy, get ap(){return {...world.ap}},get client(){return {...world.client}},get station(){return {...world.station}},get radio(){return {...world.radio}},
  get capture(){return world.capture?{...world.capture}:null},
  networks(){
   return [world.ap.online?{...world.ap,note:'허가된 가상 실습 대상'}:null,
@@ -36,7 +37,7 @@ const api={
   const allowed=['coffee2026','password123','summer2026','not-in-dictionary'];
   if(!allowed.includes(password))return {ok:false,message:'허용된 교육용 시나리오 암호를 선택하세요.'};
   if(world.ap.security!=='WPA2-PSK')return {ok:false,message:'WPA3-SAE에서는 이 약한 암호 시나리오를 변경할 수 없어요.'};
-  world.ap.psk=password;world.capture=null;world.client.connected=false;
+  world.ap.psk=password;world.capture=null;world.client.connected=false;world.station.connected=false;
   emit('password','학습용 Wi-Fi 암호가 변경됐어요. 이전 캡처와 접속 상태가 무효화됐습니다.');
   return {ok:true,message:'가상 암호 변경 완료. 초기 네트워크 연결부터 다시 살펴보세요.'};
  },
@@ -48,7 +49,7 @@ const api={
  },
  setOnline(on){
   world.ap.online=!!on;
-  if(!on){world.client.connected=false;world.capture=null;}
+  if(!on){world.client.connected=false;world.station.connected=false;world.capture=null;}
   emit('ap',world.ap.online?'가상 공유기가 켜졌어요.':'가상 공유기가 꺼졌어요. 네트워크 목록에서 사라져요.');
   return {ok:true};
  },
@@ -57,7 +58,7 @@ const api={
   if(!present)world.client.connected=false;
   emit('client',present?'연습용 클라이언트가 준비됐어요.':'연습용 클라이언트를 분리했어요.');
  },
- monitorStart(){world.radio.monitor=true;world.radio.observationSince=world.client.lastEvent;world.capture=null;emit('radio','가상 wlan0mon 관찰 모드를 시작했어요.');},
+ monitorStart(){world.radio.monitor=true;world.station.connected=false;world.radio.observationSince=world.client.lastEvent;world.capture=null;emit('radio','가상 wlan0mon 관찰 모드를 시작했어요.');},
  monitorStop(){world.radio.monitor=false;emit('radio','관리 모드로 돌아왔어요. 기존 가상 캡처 파일은 유지돼요.');},
  reconnect(){
   if(!world.ap.online)return {ok:false,message:'공유기가 꺼져 있어 클라이언트를 연결할 수 없어요.'};
@@ -93,7 +94,7 @@ const api={
   if(world.radio.monitor)return {ok:false,message:'관찰 모드에서는 일반 연결을 사용할 수 없어요.'};
   if(!world.ap.online)return {ok:false,message:'공유기가 꺼져 있어 연결할 수 없어요.'};
   if(String(password)!==world.ap.psk)return {ok:false,message:'인증 실패: 가상 Wi-Fi 암호가 현재 공유기 설정과 달라요.'};
-  world.client.connected=true;emit('connect','가상 wlan0가 LAB-TRAINING에 연결됐어요.');
+  world.station.connected=true;emit('connect','가상 Kali PC의 wlan0가 LAB-TRAINING에 연결됐어요.');
   return {ok:true,message:'가상 연결 성공 (실제 네트워크 접속 없음)'};
  },
  harden(password){
@@ -101,6 +102,7 @@ const api={
   world.ap.psk=String(password);
   world.ap.security='WPA3-SAE';
   world.client.connected=false;
+  world.station.connected=false;
   world.capture=null;
   emit('harden','WPA3-SAE 전환: 이전 캡처는 유효하지 않으며 클라이언트 연결이 해제됐어요.');
   return {ok:true,message:'가상 공유기 보안 설정이 갱신됐어요.'};
@@ -118,7 +120,7 @@ const api={
    if(world.ap.psk==='coffee2026')world.ap.psk='River-Maple-Sky-Cloud-84';
   }
   if(monitor)world.radio.monitor=true;
-  if(connected)world.client.connected=true;
+  if(connected)world.station.connected=true;
   store();
  }
 };
