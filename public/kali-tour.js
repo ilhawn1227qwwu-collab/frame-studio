@@ -46,6 +46,8 @@ root.innerHTML='<div id="onboard-spot" aria-hidden="true"></div>'+
 '<button id="ob-next" class="ob-next" type="button">다음</button></div></section>';
 $('desktop').append(root);
 const card=$('onboard-card'),spot=$('onboard-spot'),next=$('ob-next');
+// Tour card clicks must not be treated as outside-clicks by the XFCE launcher.
+card.addEventListener('pointerdown',event=>event.stopPropagation());
 const panel=document.querySelector('.panel-right');
 const restart=document.createElement('button');restart.id='onboard-restart';restart.type='button';restart.className='panel-item';
 restart.title='Kali 데스크톱 튜토리얼 다시 시작';
