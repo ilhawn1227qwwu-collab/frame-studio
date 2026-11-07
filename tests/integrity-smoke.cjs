@@ -8,6 +8,7 @@ async function boot(page){
  assert.match(await page.locator('#ob-number').innerText(),/^01 \/ 28/);
  await page.locator('#ob-skip').click();
  await page.locator('#terminal').waitFor({state:'visible',timeout:4000});
+ if(await page.locator('#typing-btn').getAttribute('aria-pressed')==='true')await page.locator('#typing-btn').click();
 }
 async function cmd(page,value){
  await page.locator('#shell-input').fill(value);
@@ -66,6 +67,7 @@ async function networkTest(browser,label,width,height){
   await page.locator('#power-start').click();
   await page.locator('#onboard-root').waitFor({state:'visible',timeout:13000});
   await page.locator('#ob-skip').click();
+  if(await page.locator('#typing-btn').getAttribute('aria-pressed')==='true')await page.locator('#typing-btn').click();
   assert.equal(await page.evaluate(()=>window.KaliNetwork.ap.channel),11,'channel overwritten by legacy migration');
   assert.equal(await page.evaluate(()=>window.KaliNetwork.ap.psk),'summer2026','password overwritten by legacy migration');
   await cmd(page,'ip a');await done(page,1);
@@ -103,6 +105,7 @@ async function networkTest(browser,label,width,height){
   await page.locator('#power-start').click();
   await page.locator('#onboard-root').waitFor({state:'visible',timeout:13000});
   await page.locator('#ob-skip').click();
+  if(await page.locator('#typing-btn').getAttribute('aria-pressed')==='true')await page.locator('#typing-btn').click();
   assert.equal(await page.evaluate(()=>window.KaliNetwork.ap.security),'WPA3-SAE');
   assert.equal(await page.evaluate(()=>window.KaliNetwork.ap.psk),'River-Maple-Sky-Cloud-84','legacy migration destroyed strong passphrase');
   await page.locator('.panel-left [data-open="wifi"]').click();
