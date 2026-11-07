@@ -43,6 +43,7 @@ async function check(browser,config){
   // Web course resets progress only, not the server state shared with other courses.
   await evalPage(()=>window.KaliNetwork.connect('coffee2026'));
   await evalPage(()=>window.KaliCurriculum.selectTrack('web'));
+  await evalPage(()=>window.KaliLAN.command('ssh trainee@192.0.2.20'));
   const pass=await evalPage(()=>window.KaliLAN.webFix('headers'));
   assert.equal(pass.ok,true);
   await page.locator('#shell-input').fill('curl http://demo.lab');
