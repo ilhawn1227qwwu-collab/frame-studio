@@ -118,6 +118,38 @@ async function networkTest(browser,label,width,height){
   console.log('PASS '+label+' Wi-Fi: persistence, event-gated capture, variable audit, auth, WPA3, dependency invalidation');
  }finally{await ctx.close()}
 }
+
+async function noMatchTest(browser){
+ const ctx=await browser.newContext({viewport:{width:1366,height:768}}),page=await ctx.newPage();
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ try{
+  await boot(page);
+  await page.evaluate(()=>window.KaliNetwork.setDemoPassword('not-in-dictionary'));
+  await cmd(page,'ip a');await done(page,1);
+  await cmd(page,'nmcli dev wifi list');await done(page,2);
+  await cmd(page,'sudo airmon-ng start wlan0');await done(page,3);
+  await cmd(page,'sudo airodump-ng wlan0mon');await done(page,4);
+  await page.locator('.panel-left [data-open="wifi"]').click();
+  await page.locator('#sim-reconnect').click();
+  await page.locator('#wifi [data-close="wifi"]').click();
+  await cmd(page,'sudo airodump-ng --bssid 02:1A:11:20:26:01 -c 6 -w labcap wlan0mon');await done(page,5);
+  await cmd(page,'aircrack-ng -w /usr/share/wordlists/lab-demo.txt labcap-01.cap');await done(page,6);
+  const log=await page.locator('#log').innerText();
+  assert.match(log,/NO MATCH:.*일치하는 비밀번호가 없어요/);
+  assert.doesNotMatch(log,/KEY FOUND!/,'false dictionary success');
+  await cmd(page,'sudo airmon-ng stop wlan0mon');await done(page,7);
+  await cmd(page,'nmcli dev wifi connect LAB-TRAINING password not-in-dictionary ifname wlan0');await done(page,8);
+  await cmd(page,'open router');
+  await page.locator('#router').waitFor({state:'visible'});
+  await page.locator('#admin-pass').fill('lab-admin-2026');
+  await page.locator('#security').selectOption('WPA3-SAE');
+  await page.locator('#secret').fill('River-Maple-Sky-Cloud-84');
+  await page.locator('#router-form button[type="submit"]').click();
+  await cmd(page,'lab-verify LAB-TRAINING');await done(page,9);
+  assert.deepEqual(errors,[]);
+  console.log('PASS desktop no-match dictionary branch permits legitimate owner-known connection and remediation');
+ }finally{await ctx.close()}
+}
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  try{
@@ -125,5 +157,6 @@ async function networkTest(browser,label,width,height){
   await networkTest(browser,'desktop',1366,768);
   await fsTest(browser,'mobile',390,844);
   await networkTest(browser,'mobile',390,844);
+  await noMatchTest(browser);
  }finally{await browser.close()}
 })().catch(e=>{console.error(e.stack);process.exit(1)});
