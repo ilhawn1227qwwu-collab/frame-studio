@@ -183,9 +183,36 @@ function center(){
  card.style.left=Math.round(Math.max(8,(innerWidth-ww)/2))+'px';
  card.style.top=Math.round(Math.max(8,(innerHeight-hh)/2))+'px';
 }
+function displayedTarget(s){
+ if(s.target==='#wifi .net.target button'&&!document.querySelector(s.target)
+   &&window.KaliNetwork&&!window.KaliNetwork.ap.online)
+  return '#sim-ap-power';
+ return s.target;
+}
+function prepareWifiTour(s){
+ if(!s.target||!s.target.startsWith('#wifi')&&!['#net-info','#sim-radio','#sim-reconnect','#sim-station-connect','#nets'].includes(s.target))return;
+ const advanced=$('sim-radio');
+ if(advanced){
+  // Keep the long control form out of the way of the AP list and its Info button.
+  if(s.target==='#wifi .net.target button'||s.target==='#net-info')
+   advanced.open=!!(window.KaliNetwork&&!window.KaliNetwork.ap.online);
+  if(['#sim-radio','#sim-reconnect','#sim-station-connect'].includes(s.target))
+   advanced.open=true;
+ }
+}
+function scrollTourTarget(target){
+ if(!target)return;
+ const area=target.closest('#wifi .window-body');
+ if(!area)return;
+ const a=area.getBoundingClientRect(),r=target.getBoundingClientRect();
+ if(r.top<a.top+5||r.bottom>a.bottom-5){
+  target.scrollIntoView({block:'nearest',inline:'nearest'});
+ }
+}
 function place(){
  if(!active)return;
- const s=stages[index],target=s.target?document.querySelector(s.target):null;
+ const s=stages[index],selector=displayedTarget(s),target=selector?document.querySelector(selector):null;
+ scrollTourTarget(target);
  if(!target||!target.getClientRects().length||getComputedStyle(target).visibility==='hidden'){
   root.classList.add('is-center');center();return;
  }
@@ -209,6 +236,7 @@ function schedule(){if(frame)cancelAnimationFrame(frame);frame=requestAnimationF
 function show(){
  if(!active)return;
  const s=stages[index],action=['click','command','change'].includes(s.mode);
+ prepareWifiTour(s);
  const chap=chapterOf(index);
  if(index>0)setCheckpoint(chap);
  $('ob-resume').hidden=!(index===0&&checkpoint()>0);
@@ -218,6 +246,11 @@ function show(){
  $('ob-progress').style.width=(100*(index+1)/stages.length)+'%';
  $('ob-learn').hidden=!s.tip;$('ob-learn').textContent=s.tip||'';
  $('ob-action').hidden=!action;$('ob-action-text').textContent=s.hint||'직접 눌러 보세요.';
+ if(s.target==='#wifi .net.target button'&&window.KaliNetwork&&!window.KaliNetwork.ap.online){
+  $('ob-title').textContent='Wi-Fi 공유기가 꺼져 있어요';
+  $('ob-body').textContent='LAB-TRAINING 공유기가 꺼져 정보 보기 버튼이 보이지 않네요. 가상 네트워크 제어판에서 전원을 켜면 버튼이 다시 나타나요.';
+  $('ob-action-text').textContent='전원을 켠 다음 LAB-TRAINING 정보 보기를 눌러주세요.';
+ }
  next.hidden=action;next.textContent=s.next||'다음';
  if(s.target==='#mission'&&innerWidth<=760)$('mission').classList.add('show');
  requestAnimationFrame(()=>requestAnimationFrame(place));
@@ -227,7 +260,10 @@ $('ob-skip').addEventListener('click',()=>end(true));
 document.addEventListener('click',e=>{
  if(!active)return;
  const step=stages[index];if(step.mode!=='click')return;
- const target=e.target.closest(step.target);if(!target)return;
+ const selector=displayedTarget(step);
+ const target=selector?e.target.closest(selector):null;if(!target)return;
+ // Turning on the offline practice AP is a prerequisite, not completion of the Info step.
+ if(step.target==='#wifi .net.target button'&&selector==='#sim-ap-power')return;
  setTimeout(()=>{
   if(!active||stages[index]!==step)return;
   if(step.target==='#course-close'){
@@ -249,6 +285,9 @@ document.addEventListener('change',e=>{
  if(!active||stages[index].mode!=='change'||e.target.id!=='wallpaper-choice'||e.target.value==='default')return;
  const step=stages[index];setTimeout(()=>{if(active&&stages[index]===step)proceed()},120);
 },true);
+document.addEventListener('kali-sim:network-changed',()=>{
+ if(active&&stages[index]?.target==='#wifi .net.target button')setTimeout(()=>{if(active)show()},0);
+});
 document.addEventListener('kali-sim:booted',()=>{
  // Every power-on starts the desktop tour, even if it was completed previously.
  // The nine-stage lab coach takes over only when the tour finishes or is skipped.
