@@ -283,13 +283,28 @@ function virtualFs(cmd){
 async function executeTrack(raw){
  const cmd=String(raw).trim().replace(/\s+/g,' ');
  if(!cmd||data.active==='wireless'||data.active==='incident'||data.active==='sandbox')return;
- $('shell-input').value='';const promptPath=data.fs.cwd.startsWith('/home/kali')?'~'+data.fs.cwd.slice('/home/kali'.length):data.fs.cwd;
- print('┌──(kali㉿kali)-['+promptPath+']\n└─$ '+cmd,'prompt');
+ $('shell-input').value='';const shell=window.KaliLAN?.shell||{host:'kali',user:'kali'};
+ const promptPath=shell.host==='web01'?'~':data.fs.cwd.startsWith('/home/kali')?'~'+data.fs.cwd.slice('/home/kali'.length):data.fs.cwd;
+ print('┌──('+shell.user+'㉿'+shell.host+')-['+promptPath+']\n└─$ '+cmd,'prompt');
  const id=data.active,t=tracks[id],progress=data.progress[id],step=t.steps[progress];
  if(cmd==='help'){
   print('교육용 '+t.title+' 모드입니다. 현재 목표: '+(step?.[0]||'과목 완료'),'sys');
   print('추천 명령: '+(step?.[2]||'Learning Center에서 다른 과목을 선택하세요.'));
   print('가상 명령만 구현되어 있어요. 실제 시스템이나 외부 서버에는 접근하지 않습니다.','warn');return;
+ }
+
+ const shared=window.KaliLAN?.common(cmd);
+ if(shared){
+  if(shared.ok&&/^web-fix\s/.test(cmd)){const k=cmd.split(' ')[1];data.web[k]=true;save()}
+  for(const line of shared.lines||[])print(line,shared.ok?'':'warn');
+  if(!shared.ok)print(window.KaliLAN.explainFailure(shared,cmd),'warn');
+  const isExpected=shared.ok&&cmd===step?.[2]&&
+    (!(id==='network'&&cmd.startsWith('curl'))||shared.status===200);
+  if(isExpected)success([],true);
+  return;
+ }
+ if(window.KaliLAN?.shell.host==='web01'&&LOCAL_FS.test(cmd)){
+  print('원격 서버에서는 이 가상 파일 명령을 사용할 수 없어요. exit로 Kali PC에 돌아가세요.','warn');return
  }
  let result={ok:false,lines:['지원되지 않는 가상 명령입니다. 현재 과목의 안내를 확인하세요.']};
  let completed=false;
