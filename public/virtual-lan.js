@@ -107,6 +107,8 @@ function missionStart(){
 function resetMission(){state=init();changed('mission-reset','INCIDENT-001 및 가상 서버 상태 초기화');}
 function webFix(key){
  if(!['headers','access','output'].includes(key))return {ok:false,lines:['수정할 설정은 headers, access, output입니다.']};
+ if(!link())return {ok:false,lines:['가상 네트워크에 연결되어 있지 않아 서버 설정을 바꿀 수 없어요.']};
+ if(!state.web.running)return {ok:false,lines:['lab-web 서비스가 중단된 상태입니다. 먼저 서비스를 복구하세요.']};
  state.web[key]=true;
  changed('web-fix','가상 웹 보안 설정 개선: '+key);
  if(issues().length===0&&state.mission.flags.audit)flag('secured');
@@ -117,7 +119,7 @@ function report(){
  if(!state.mission.started)return {ok:false,lines:['먼저 Learning Center에서 INCIDENT-001을 시작하세요.']};
  const needed=['gateway','outage','logs','restart','browser','audit','secured'];
  const missing=needed.filter(k=>!state.mission.flags[k]);
- if(missing.length||!state.web.running||issues().length)return {ok:false,lines:['아직 완료하지 않은 임무가 있습니다: '+missing.join(', ')+' / 서비스·보안 설정을 확인하세요.']};
+ if(missing.length||!state.web.running||issues().length||!link())return {ok:false,lines:['최종 검증 실패: '+(missing.length?'미완료 '+missing.join(', ')+' / ':'')+(!link()?'현재 가상 네트워크가 연결되지 않았습니다. / ':'')+'서버와 보안 설정을 확인하세요.']};
  state.mission.report='INCIDENT-001 — Virtual Network Incident Report\n'+
  '환경: 192.0.2.0/24 (완전한 로컬 시뮬레이션)\n'+
  '초기 관찰: HTTP 503 서비스 장애, 192.0.2.77의 인증 실패 3회\n'+
@@ -184,6 +186,17 @@ function command(raw){
  }
  return {ok:false,lines:['지원하지 않는 로컬 시뮬레이션 명령입니다. help를 입력해 보세요.']};
 }
+// Network events are copied into the same synthetic evidence stream read by
+// both the incident terminal and the forensics training track.
+document.addEventListener('kali-sim:network-changed',event=>{
+ const d=event.detail||{};
+ if(!['auth','connect','ap','channel','password','client'].includes(d.kind))return;
+ const stamp=new Date().toISOString().slice(0,19).replace('T',' ');
+ const message=String(d.message||d.kind).slice(0,170).replace(/\r|\n/g,' ');
+ state.logs.push(stamp+' virtual-lan network[SIM]: '+message);
+ state.logs=state.logs.slice(-100);
+ changed('network-log','가상 네트워크 상태 변경을 사건 기록에 추가했어요: '+d.kind);
+});
 window.KaliLAN={snapshot,devices,steps,progress,command,request,missionStart,resetMission,webFix,issues,logText,link,
  get report(){return state.mission.report},get web(){return {...state.web}},get mission(){return snapshot().mission}};
 persist();
