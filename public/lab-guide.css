@@ -1,0 +1,37 @@
+
+/* Non-modal, progress-aware study companion */
+.lab-guide{border:1px solid #597997;background:linear-gradient(135deg,#1a3047,#19273a);border-radius:4px;margin:15px 0 10px;color:#e2edfb;overflow:hidden}
+.lab-guide .lg-heading{background:#283f56;border-bottom:1px solid #5b768d;padding:9px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lab-guide .lg-kicker{font:700 10px/1.4 ui-monospace,monospace;color:#a4ddff;letter-spacing:.045em}
+.lab-guide .lg-number{font:10px ui-monospace,monospace;color:#bdcce0;white-space:nowrap}
+.lab-guide .lg-content{padding:11px}
+.lab-guide .lg-title{font-size:13px;font-weight:750;line-height:1.45;margin:0 0 7px;color:#fff}
+.lab-guide .lg-message{font-size:12px;line-height:1.75;white-space:pre-line;color:#cad9e8;margin:0}
+.lab-guide .lg-do{border-left:3px solid #5bb6ee;background:#16283b;margin:11px 0 0;padding:9px;font-size:11px;line-height:1.65;color:#d4eafb}
+.lab-guide .lg-do strong{color:#9bd7ff}
+.lab-guide .lg-command{display:block;font:11px/1.6 "DejaVu Sans Mono",ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px;color:#c8f1d9}
+.lab-guide .lg-safety{font-size:10px;line-height:1.6;margin:9px 0 0;color:#99b0c9}
+.lab-guide .lg-footer{display:flex;gap:8px;align-items:center;margin-top:9px}
+.lab-guide .lg-footer button{border-radius:3px;background:#2c536e;border:1px solid #627f97;color:#e4f2ff;padding:5px 8px;font-size:11px;cursor:pointer}
+.lab-guide .lg-footer button:hover{background:#376f97}
+.lab-guide .lg-footer button:focus-visible,.lab-mobile-guide button:focus-visible{outline:2px solid #83d7ff;outline-offset:1px}
+.lab-guide .lg-counter{margin-left:auto;color:#9fb3c7;font-size:10px}
+.lab-mobile-guide{display:none}
+.lab-mobile-guide[hidden],.lab-guide[hidden]{display:none!important}
+@media(max-width:760px){
+ .lab-guide-mission{margin:9px 0}
+ .lab-mobile-guide{display:flex;flex:none;flex-direction:column;background:#1b2b3e;border-bottom:1px solid #53718a;color:#dbeafa}
+ .lab-mobile-guide .lg-mobile-toggle{display:flex;gap:8px;align-items:center;text-align:left;border:0;background:transparent;color:inherit;padding:9px 11px;font-size:11px;min-height:39px;width:100%}
+ .lab-mobile-guide .lg-mobile-index{color:#8cd5ff;font:700 10px ui-monospace,monospace;white-space:nowrap}
+ .lab-mobile-guide .lg-mobile-title{font-size:11px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .lab-mobile-guide .lg-mobile-arrow{color:#a2d2f2;font-size:11px}
+ .lab-mobile-guide .lg-mobile-body{padding:0 11px 10px;border-top:1px solid #41536b;max-height:32dvh;overflow-y:auto;font-size:11px;line-height:1.65}
+ .lab-mobile-guide .lg-mobile-body p{margin:8px 0;color:#cad9ea}
+ .lab-mobile-guide .lg-mobile-body code{display:block;margin-top:6px;font-size:10px;white-space:pre-wrap;overflow-wrap:anywhere;color:#a4f0bd}
+ .lab-mobile-guide .lg-mobile-body small{color:#8eacc5}
+ .lab-mobile-guide .lg-mobile-body button{margin-top:8px;background:#314d69;border:1px solid #6489a9;color:#e8f4ff;padding:6px 10px;font-size:10px}
+}
+@media(max-width:355px){
+ .lab-mobile-guide .lg-mobile-toggle{padding:7px;min-height:36px}
+ .lab-mobile-guide .lg-mobile-title{font-size:10px}
+}
