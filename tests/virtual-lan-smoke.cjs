@@ -36,9 +36,10 @@ async function launch(browser,[name,width,height]){
   assert.match(await page.locator('#lan-browser-page').innerText(),/503 Service Unavailable/);
   assert.equal(await page.evaluate(()=>window.KaliLAN.progress().count),2,'browser error response must not clear mission');
   await page.locator('#lan-browser .lan-close').click();
+  await cmd('ssh trainee@192.0.2.20');
   await cmd('grep "Failed password" /var/log/auth.log');await count(3);
   assert.match(await page.locator('#log').innerText(),/192\.0\.2\.77/);
-  await cmd('sudo service lab-web restart');await count(4);
+  await cmd('sudo systemctl restart lab-web');await count(4);
   await page.evaluate(()=>window.KaliLANUI.openBrowser('http://training.lab/'));
   await count(5);
   assert.match(await page.locator('#lan-browser-page').innerText(),/200|Virtual Training Portal/);
