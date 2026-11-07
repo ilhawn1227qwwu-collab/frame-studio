@@ -102,7 +102,7 @@ function renderMap(){
  }
  const node=snapshot.devices.find(d=>d.id===selectedDevice)||snapshot.devices[0];
  $('lan-device-detail').textContent=node.name+' · '+node.ip+'\n'+node.detail+
-  (node.id==='web'?'\nHTTP: '+(LAN.web.running?'RUNNING':'STOPPED')+' · 설정 문제 '+LAN.issues().length+'개':'');
+  (node.id==='web'?'\nHost: '+(LAN.hostOnline?'ONLINE':'OFFLINE')+' · HTTP: '+(LAN.hostOnline?(LAN.web.running?'RUNNING':'STOPPED'):'UNAVAILABLE')+' · 설정 문제 '+LAN.issues().length+'개':'');
  const actions=$('lan-map-actions');actions.replaceChildren();
  actions.append(button('Firefox 열기','',()=>openBrowser('http://training.lab')));
  actions.append(button('터미널 열기','',openTerminal));
@@ -110,7 +110,18 @@ function renderMap(){
   if(!confirm('가상 INCIDENT-001을 초기화하고 시작할까요? 기존 가상 웹 서버 상태가 변경됩니다.'))return;
   LAN.missionStart();window.KaliCurriculum.selectTrack('incident');openTerminal();
  }));
- actions.append(button('가상 웹 서비스 복구','',()=>run('sudo service lab-web restart')));
+ actions.append(button('웹 서버 전원 '+(LAN.hostOnline?'끄기':'켜기'),'',()=>{
+  const willPowerOn=!LAN.hostOnline;
+  if(!confirm('가상 웹 서버 전원을 '+(willPowerOn?'켜':'꺼')+'겠어요? SSH 연결과 실습 상태에 영향을 줄 수 있어요.'))return;
+  LAN.setHostPower(willPowerOn);renderMap();
+ }));
+ actions.append(button('SSH 접속 안내','',()=>{
+  openTerminal();$('shell-input').value='ssh trainee@192.0.2.20';$('shell-input').focus();
+ }));
+ actions.append(button('가상 웹 서비스 복구','',()=>{
+  openTerminal();$('shell-input').value='sudo systemctl restart lab-web';
+  $('shell-input').focus(); // The user must run this from the remote shell.
+ }));
  actions.append(button('네트워크 연결 보기','',()=>document.querySelector('.panel-left [data-open="wifi"]')?.click()));
  $('lan-events').textContent=snapshot.events.slice(0,10).map(e=>'['+e.when+'] '+e.message).join('\n');
 }
@@ -124,9 +135,10 @@ function run(raw){
  if(!input)return;
  $('shell-input').value='';
  if(input==='clear'){$('log').replaceChildren();return}
- print('┌──(kali㉿kali)-[Virtual LAN]\n└─$ '+input,'prompt');
+ const sh=LAN.shell;print('┌──('+sh.user+'㉿'+(sh.host==='web01'?'web01':'kali')+')-[Virtual LAN]\n└─$ '+input,'prompt');
  const r=LAN.command(input);
  for(const line of r.lines||[])print(line,r.ok?'':'warn');
+ if(!r.ok)print(LAN.explainFailure(r,input),'warn');
  if(r.ok)renderMap();
  return r;
 }
