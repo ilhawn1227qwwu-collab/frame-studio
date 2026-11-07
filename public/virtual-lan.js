@@ -184,6 +184,16 @@ function command(raw){
   state.shell={host:'kali',user:'kali',cwd:'/home/kali'};persist();
   return fail('network','가상 서버 연결이 끊겼어요. Kali PC로 돌아왔습니다.');
  }
+ if(cmd==='pwd'&&isRemote())return {ok:true,lines:[state.shell.cwd]};
+ if(cmd==='ls'&&isRemote())return {ok:true,lines:[state.shell.cwd==='/var/log'?'auth.log':'README.txt  notes/']};
+ if(cmd==='ls /var/log')return isRemote()?{ok:true,lines:['auth.log']}:localHint();
+ if(/^cd(?:\s|$)/.test(cmd)&&isRemote()){
+  const p=cmd==='cd'||cmd==='cd ~'?'/home/trainee':cmd.slice(3);
+  if(!['/home/trainee','/var/log'].includes(p))return fail('path','이 가상 원격 서버에서 허용된 폴더가 아니에요.','/home/trainee 또는 /var/log를 사용하세요.');
+  state.shell.cwd=p;persist();return {ok:true,lines:['작업 위치: '+p]};
+ }
+ if(isRemote()&&/^(?:mkdir |touch |sha256sum )/.test(cmd))
+  return fail('location','이 학습용 가상 웹 서버에서는 해당 파일 명령을 지원하지 않아요.','exit로 Kali에 돌아와 로컬 파일 실습을 해보세요.');
  if(cmd==='incident-status'){
   const p=progress();return {ok:true,lines:['INCIDENT-001 '+p.count+'/'+p.total+' · '+(p.started?'진행 중':'미시작'),...p.steps.map((s,i)=>(s.done?'[✓] ':'[ ] ')+(i+1)+'. '+s.title)]};
  }
@@ -265,7 +275,7 @@ function explainFailure(r,cmd){
  return '도움말(help)과 현재 연결 상태를 확인해 보세요.';
 }
 const SHARED=/^(?:ssh(?:\s|$)|exit$|whoami$|hostname$|ip a$|ip route$|ping\s|nslookup\s|ss -tln$|(?:sudo )?(?:systemctl|service)\s|(?:cat|grep)\s.+\/var\/log\/auth\.log|web-fix\s|web-audit\s|incident-status$|incident-report$|nmcli dev wifi connect LAB-TRAINING password )/i;
-function common(cmd){return SHARED.test(String(cmd||'').trim())?command(cmd):null;}
+function common(cmd){const c=String(cmd||'').trim();return (SHARED.test(c)||(isRemote()&&/^(?:pwd$|ls(?:\s|$)|cd(?:\s|$)|mkdir\s|touch\s|sha256sum\s)/.test(c)))?command(c):null;}
 window.KaliLAN={snapshot,devices,steps,progress,command,common,explainFailure,request,missionStart,resetMission,setHostPower,webFix,issues,logText,link,
  get shell(){return {...state.shell}},get hostOnline(){return hostOnline()},
  get report(){return state.mission.report},get web(){return {...state.web}},get mission(){return snapshot().mission}};
