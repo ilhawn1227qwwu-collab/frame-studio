@@ -20,3 +20,5 @@ jobs:
         run: node tests/tour-smoke.cjs
       - name: Run guided security lab coaching
         run: node tests/lab-guide-smoke.cjs
+      - name: Test Kali multi-course Learning Center
+        run: node tests/curriculum-smoke.cjs
