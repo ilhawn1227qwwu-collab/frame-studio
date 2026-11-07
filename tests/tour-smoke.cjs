@@ -53,16 +53,17 @@ async function testTour(browser,config){
   // Returning with a saved completion record must STILL start the tour after boot.
   await page.locator('#onboard-root').waitFor({state:'visible',timeout:5000});
   assert.equal(await page.locator('#ob-number').innerText(),'01 / 28','tour should restart every boot');
-  assert.equal(await page.locator('#lab-guide').isVisible(),false,'lab coach should wait for tour');
+  const coach=page.locator(config.name==='desktop'?'#lab-guide':'#lab-mobile-guide');
+  assert.equal(await coach.isVisible(),false,'lab coach should wait for tour');
   await page.locator('#ob-skip').click();
   assert.equal(await page.locator('#onboard-root').isVisible(),false,'skip did not close tour');
-  await page.locator('#lab-guide').waitFor({state:'visible',timeout:5000});
+  await coach.waitFor({state:'visible',timeout:5000});
   await page.locator('#terminal').waitFor({state:'visible',timeout:5000});
   await page.locator('#onboard-restart').click();
   await page.locator('#onboard-root').waitFor({state:'visible'});
-  assert.equal(await page.locator('#lab-guide').isVisible(),false,'coach should hide on replay');
+  assert.equal(await coach.isVisible(),false,'coach should hide on replay');
   await page.locator('#ob-skip').click();
-  await page.locator('#lab-guide').waitFor({state:'visible'});
+  await coach.waitFor({state:'visible'});
   assert.deepEqual(errors,[],'page errors');
   console.log('PASS '+config.name+' 28 steps, automatic replay on every boot, guided lab handoff');
  }finally{await context.close()}
