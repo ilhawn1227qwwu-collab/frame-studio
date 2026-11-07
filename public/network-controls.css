@@ -1,0 +1,19 @@
+
+/* Fictional Wi-Fi AP + client state controller (local simulation only) */
+#wifi .window-body{overflow-y:auto;min-height:0}
+.sim-radio{border:1px solid #6c849d;background:#1a3046;border-radius:4px;margin:14px 0;padding:0;color:#d6eaff}
+.sim-radio summary{cursor:pointer;font-size:12px;padding:11px 13px;font-weight:700;background:#29435d}
+.sim-radio[open] summary{border-bottom:1px solid #54718b}
+.sim-radio .sim-radio-body{padding:12px 13px;display:grid;gap:11px}
+.sim-radio .sim-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sim-radio label{display:flex;align-items:center;gap:7px;font-size:11px;color:#c7def1;flex-wrap:wrap}
+.sim-radio label.sim-stack{display:grid;gap:6px}
+.sim-radio input[type=checkbox]{accent-color:#3d9bd4;width:16px;height:16px}
+.sim-radio select{min-width:0;max-width:100%;font-size:11px;background:#151f2d;color:#eaf4ff;border:1px solid #5e7992;border-radius:3px;padding:7px}
+.sim-radio .sim-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.sim-radio button{font-size:11px;background:#295c85;color:#f0faff;border:1px solid #6698bf;border-radius:3px;padding:8px 11px;cursor:pointer}
+.sim-radio button:hover{background:#367dab}
+.sim-radio .sim-state{white-space:pre-line;font:11px/1.6 ui-monospace,monospace;color:#a9d9ef;background:#122437;padding:8px}
+.sim-radio #sim-feedback{min-height:26px;font-size:11px;color:#c5d8ea;line-height:1.5}
+.sim-radio .sim-disclaimer{color:#9ab4cd;font-size:10px;line-height:1.55}
+@media(max-width:760px){.sim-radio .sim-radio-body{padding:9px}.sim-radio .sim-fields{grid-template-columns:1fr 1fr}.sim-radio label{font-size:10px}.sim-radio select{font-size:10px}}
