@@ -91,7 +91,7 @@ function renderMap(){
  const snapshot=LAN.snapshot(),nodes=$('lan-topology');nodes.replaceChildren();
  const icons={kali:'⌘',router:'⌁',web:'▣',log:'▤'};
  for(const d of snapshot.devices){
-  const b=button('','lan-device'+(d.online?'':' off'),()=>{selectedDevice=d.id;renderMap()});
+  const b=button('','lan-device'+(d.online?'':' off'),()=>{selectedDevice=d.id;renderMap()});b.dataset.device=d.id;
   const ic=document.createElement('div');ic.className='lan-device-icon';ic.textContent=icons[d.id];
   const name=document.createElement('strong');name.textContent=d.name;
   const addr=document.createElement('span');addr.textContent=d.ip+' · '+(d.online?'ONLINE':'OFFLINE');
@@ -167,8 +167,8 @@ function shortcut(label,icon,handler){
  document.querySelector('.desktop-shortcuts').append(b);
  return b;
 }
-shortcut('Firefox SIM','▣',()=>openBrowser());
-shortcut('Network Map','◉',openMap);
+shortcut('Firefox SIM','▣',()=>openBrowser()).classList.add('lan-browser-shortcut');
+shortcut('Network Map','◉',openMap).classList.add('lan-map-shortcut');
 function dock(label,icon,handler){
  const b=button(icon,'desktop-task',handler);b.title=label;b.setAttribute('aria-label',label);
  const taskbar=document.querySelector('.taskbar');const caption=taskbar.querySelector('.task-caption');taskbar.insertBefore(b,caption||null);
