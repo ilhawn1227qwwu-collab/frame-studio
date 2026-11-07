@@ -167,6 +167,9 @@ html,body{background:#080d17;overscroll-behavior:none}button,input,select{font-f
  .menu-panel .menu-apps button{min-height:74px;padding:8px 3px;font-size:10px}
  .menu-head{padding:9px}.menu-head-logo{font-size:12px}
  .taskbar{left:0;right:0;bottom:0;transform:none;max-width:none;width:100%;height:53px;min-width:0;background:#1d2534fa;border:0;border-top:1px solid #60728b;border-radius:0;padding:5px 8px;justify-content:space-evenly}
+ .taskbar .desktop-task{display:inline-flex!important;align-items:center;justify-content:center;flex:1 1 0;min-width:29px;max-width:46px;padding:5px}
+ .taskbar .desktop-task .ico{width:20px;height:20px}
+ .taskbar .mobile-icons{display:none!important}
  .task-caption{display:none}.mobile-icons button{font-size:15px}
  .file-layout{grid-template-columns:91px 1fr}.file-sidebar{padding:6px 3px}.file-sidebar button{font-size:10px;padding:6px 3px}
  .file-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:7px}
