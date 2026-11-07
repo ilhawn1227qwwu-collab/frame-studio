@@ -1,0 +1,177 @@
+
+/* Kali SIM LAB — XFCE desktop theme, inspired by Kali's Xfce/GTK styling.
+   The OS and wireless devices remain simulated inside the browser. */
+:root{--text:#e4e8f3;--sub:#a8afc3;--line:#5d718650;--aqua:#53aff3;--lime:#91e6b4;--warn:#f2bb76;--red:#f18e9c;--panel:#1a1e29;--gtk:#222838;--gtk-border:#546075;--gtk-accent:#2a81bc;font-family:Cantarell,Inter,"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;color-scheme:dark}
+html,body{background:#080d17;overscroll-behavior:none}button,input,select{font-family:inherit}
+.desktop{background:radial-gradient(ellipse at 84% 22%,#2363a737,transparent 42%),radial-gradient(ellipse at 24% 98%,#092a4c,transparent 59%),linear-gradient(136deg,#11151f,#151d32 51%,#070e1a);min-height:0}
+.desktop:before{z-index:-1;opacity:.67;inset:0;background-image:repeating-linear-gradient(149deg,transparent 0 76px,#63b0ee06 77px,#63b0ee06 79px,transparent 80px 146px),radial-gradient(circle at 66% 42%,#3e8dcc0e,transparent 35%);background-size:auto}
+.backdrop-mark{border:0;border-radius:0;right:8%;top:16%;height:min(57vw,560px);width:min(57vw,560px);opacity:.52;box-shadow:none;transform:rotate(-9deg)}
+.backdrop-mark svg{width:90%;height:90%;stroke:#5fbcff9c;filter:drop-shadow(0 0 38px #2675be70)}
+.backdrop-mark:after{content:"KALI";position:absolute;bottom:-4%;left:26%;font:900 clamp(42px,8vw,108px)/1 Cantarell,Arial,sans-serif;letter-spacing:.19em;color:#7cc8ff15;transform:rotate(9deg);pointer-events:none}
+.top-panel{height:36px;background:#1d2330f5;border-bottom:1px solid #6c7b91a0;box-shadow:0 2px 8px #0007;padding:0 7px;gap:6px;backdrop-filter:blur(18px)}
+.panel-left,.panel-right{gap:2px}.panel-right{gap:3px}
+.panel-item{height:29px;min-width:32px;font:500 12px Cantarell,Inter,"Noto Sans KR",sans-serif;color:#e0e5ef;padding:4px 9px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.panel-item:hover,.panel-item.active{background:#53657a68}
+.app-menu{font-weight:650;padding:3px 10px 3px 3px;min-width:105px}
+.kali-badge{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#2e70b3,#12365e);border:1px solid #6896c0;border-radius:3px;width:28px;height:26px;color:#d2f0ff;flex:none}
+.kali-badge svg{width:20px;height:20px}
+.ico{width:17px;height:17px;display:inline-block;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.big{width:32px;height:32px;stroke-width:1.45}.ico.mini{width:15px;height:15px}
+.icon-dark{color:#bcd0e8}.icon-blue{color:#6bb8f0}.icon-yellow{color:#e8c67b}
+.panel-sep{width:1px;height:19px;background:#566273;margin:0 4px;flex:none}
+.workspaces{display:flex;gap:2px;border-right:1px solid #58637599;padding-right:6px;margin-left:5px}
+.workspace{height:24px;width:22px;background:#343e4e;color:#c2cbd7;border:1px solid #516075;font:11px ui-monospace,monospace;border-radius:2px}
+.workspace.active{background:#2b82bb;border-color:#2a97d4;color:#fff}
+.fake-status{font:10px ui-monospace,monospace;letter-spacing:0;color:#8494ae;padding:0 7px}
+.clock{font:12px Cantarell,Arial,sans-serif;color:#edf0f6;background:#2e3747a1;padding:5px 9px;border-radius:3px;white-space:nowrap}
+#shutdown-btn{color:#f2c5bf!important}#full-btn{min-width:28px}#full-btn .ico{width:16px}
+.menu-panel{top:36px;left:3px;z-index:450;width:min(650px,calc(100vw - 8px));height:min(510px,calc(100dvh - 81px));padding:0;overflow:hidden;background:#242a39f9;border:1px solid #738099;border-radius:0 0 5px 5px;box-shadow:0 18px 44px #000b;backdrop-filter:blur(18px)}
+.menu-panel.open{display:flex;flex-direction:column}
+.menu-head{display:flex;align-items:center;gap:12px;flex:none;padding:12px 14px 10px;border-bottom:1px solid #4b566b;background:#2a3040}
+.menu-head-logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:#dcecff}
+.menu-head input{flex:1;min-width:80px;border:1px solid #636d81;background:#161c28;border-radius:3px;color:#eef3ff;padding:8px 11px;font-size:12px;outline:none}
+.menu-core{display:grid;grid-template-columns:188px minmax(0,1fr);min-height:0;flex:1}
+.menu-categories{padding:11px 7px;border-right:1px solid #485267;overflow:auto}
+.menu-panel .menu-categories button{display:flex;align-items:center;gap:9px;font-size:11px;padding:10px;color:#b7c7d9;text-align:left;width:100%}
+.menu-panel .menu-categories button.sel{background:#2d587b;color:white}
+.menu-apps{padding:11px;overflow:auto;align-content:start;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.menu-panel .menu-apps button{font-size:11px;line-height:1.45;text-align:center;white-space:normal;color:#e4eaf4;min-height:87px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;border:1px solid transparent}
+.menu-panel .menu-apps button:hover{border-color:#648eb9;background:#37577782}
+.menu-apps button .ico{width:28px;height:28px;color:#a3d8ff}
+.menu-panel .menu-footer{padding:9px 13px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #505b6b;background:#1c2331;gap:8px}
+.menu-panel .menu-footer button{width:auto;display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #536075;border-radius:3px;font-size:11px}
+.menu-footer .session-indicator{color:#92a8bf;font-size:11px;margin-right:auto}
+.desktop-shortcuts{top:62px;left:17px;gap:6px;z-index:2}
+.shortcut{width:98px;border-radius:3px;padding:8px 2px 6px;gap:7px;font:12px Cantarell,"Noto Sans KR",sans-serif;text-shadow:1px 1px 3px #000;text-align:center}
+.shortcut:hover,.shortcut:focus-visible{background:#4c8fc337;border-color:#b5dcff7e}
+.shortcut-icon{height:46px;width:46px;border:0;background:transparent;border-radius:0;box-shadow:none;color:#d3eafc;filter:drop-shadow(0 4px 3px #0008)}
+.shortcut-icon .ico{width:42px;height:42px;stroke-width:1.3}
+.mission{top:65px;right:20px;width:313px;max-height:calc(100dvh - 143px);background:#222939f4;border:1px solid #717e94;border-radius:5px;padding:0;box-shadow:0 16px 38px #000b;backdrop-filter:blur(16px)}
+.mission-titlebar{height:34px;padding:0 11px;background:#2b3344;border-bottom:1px solid #555f74;display:flex;align-items:center;justify-content:space-between;gap:7px;font-size:12px;font-weight:700;position:sticky;top:0;z-index:1}
+.mission-titlebar .ico{color:#a9d4f0}
+.mission-content{padding:16px}.mission .eyebrow{font:11px ui-monospace,monospace;letter-spacing:.06em;color:#76b9ec}
+.mission h2{font-size:17px;margin:10px 0}.mission .sub{color:#aebbd0;font-size:12px;line-height:1.65}
+.mission .progress-meta{margin:16px 0 8px;color:#c4d1e2}
+.mission .progress{height:6px;border-radius:0;background:#111a28;border:1px solid #425466}
+.mission .progress span{background:#3aa3de;border-radius:0}
+.steps{gap:5px}.step{padding:4px 0;color:#aab5c5;font-size:11px}
+.step-index{background:#333f50;border-radius:2px;width:20px;height:20px}
+.step.done .step-index{background:#2d7058}.step.current .step-index{background:#266994}
+.hint{background:#18263a;border:1px solid #50617a;border-radius:3px;color:#cae0f4;padding:12px}
+.btn{background:#394559;border:1px solid #6b798c;border-radius:3px;color:#ecf1fa;padding:9px 14px}
+.btn:hover{background:#4b5b70}.btn.primary{background:#2b78b7;border-color:#418bd0}.btn.primary:hover{background:#408cc7}
+.window{--panel:#1b202c;min-width:310px;min-height:220px;background:#1f2635f9;border:1px solid #707d92;border-radius:6px;box-shadow:0 24px 60px #000c;backdrop-filter:none}
+.window-head{height:35px;min-height:35px;background:linear-gradient(#30394c,#2a3242);border-bottom:1px solid #58677b;padding:0 7px 0 12px;border-radius:5px 5px 0 0}
+.win-name{font:600 12px Cantarell,"Noto Sans KR",sans-serif;gap:8px;color:#dee5f0}
+.win-name .ico{color:#a9d6f6}
+.window-buttons{gap:3px}.window-buttons button{color:#d7dfeb;background:#3c4759;border:1px solid #64718470;border-radius:3px;height:23px;min-width:24px;font-size:13px}
+.window-buttons button:hover{background:#526278}.window-buttons .close:hover{background:#ad3c4f}
+.window-buttons .typing-switch{background:#172331!important;border:1px solid #607e9c!important;font:10px ui-monospace,monospace!important;height:23px!important;min-width:70px}
+.window.maximized{left:7px!important;right:7px!important;top:41px!important;bottom:57px!important;width:calc(100% - 14px)!important;height:calc(100% - 98px)!important}
+.window.minimized{display:none}
+#terminal{left:11%;top:14%;width:min(790px,calc(100vw - 410px));height:min(605px,calc(100dvh - 172px))}
+#wifi{left:20%;top:19%;width:min(590px,60vw);height:min(495px,69vh)}
+#guide{left:20%;top:17%;width:min(610px,62vw);height:min(560px,71vh)}
+#router{left:22%;top:20%;width:min(585px,58vw);height:min(490px,65vh)}
+#files{left:17%;top:16%;width:min(650px,66vw);height:min(530px,70vh)}
+#appearance{left:25%;top:22%;width:min(480px,50vw);height:min(385px,60vh)}
+.terminal-menubar,.gtk-menubar{min-height:26px;flex:none;background:#262d3d;border-bottom:1px solid #435369;display:flex;align-items:center;gap:3px;padding:1px 8px}
+.terminal-menubar button,.gtk-menubar button{border:0;color:#cad2df;background:transparent;border-radius:2px;padding:4px 9px;font-size:11px}
+.terminal-menubar button:hover,.gtk-menubar button:hover{background:#495a70}
+.terminal-body{background:#0e1118}
+.terminal-log{font:12px/1.48 "DejaVu Sans Mono","Liberation Mono",ui-monospace,monospace;padding:17px 16px;color:#dde1e6;white-space:pre-wrap}
+.line.ok{color:#95daac}.line.warn{color:#e8b870}.line.err{color:#f18e8e}.line.sys{color:#76b4ed}.line.prompt{color:#e6e4eb}.prompt-user{color:#85d6a9}.prompt-host{color:#88c3ef}
+.terminal-bottom{background:#0e1118;border-top:1px solid #364051;padding:6px 12px 11px}
+.quick{padding:5px 0 7px}.quick button{border-radius:2px;background:#242d3d;border-color:#52647a;font:10px "DejaVu Sans Mono",monospace;color:#d0e9fd}
+.quick button:hover{background:#355676}.shell-input .caret{color:#97dda9}
+.shell-input input{font:12px/1.5 "DejaVu Sans Mono",ui-monospace,monospace;caret-color:#b8f5cb}
+.shell-input button{background:#264b6d;border:1px solid #4d7190;border-radius:3px}
+.window-body{padding:17px;background:#212839;color:#e1e6ef}
+.window-body h2{font-size:16px;margin-bottom:6px}
+.window-body .sub{font-size:12px;line-height:1.6}
+.net{border-radius:2px;border:1px solid #526377;background:#283243;padding:11px}
+.net.target{border-color:#498eca;background:#253f5b73}
+.net-symbol{color:#81bbe7}.net button{border-radius:3px;background:#36506b;border-color:#6784a3}
+.network-list{gap:4px}
+.notice{background:#55462b38;border:1px solid #9a784a76;border-radius:2px;color:#f3d9af}
+.info{background:#1b354844;border:1px solid #42748c8c;border-radius:2px;color:#c2d6e6}
+.guide-block{background:#242b3b;border-left:3px solid #4a95c6;margin:12px 0;padding:9px 15px}
+.guide-block h3{color:#dfebf8;font-size:13px}
+.guide-block p{color:#bdcbdc}
+.field{background:#151e2b;border:1px solid #66778e;border-radius:3px;color:#eaf2fa}
+.field:focus{outline:1px solid #4da8ed}
+.field-label{font-size:12px}.quality{color:#eac08a}.quality.good{color:#a3dda8}
+.gtk-toolbar{display:flex;gap:5px;align-items:center;flex:none;background:#30394b;border-bottom:1px solid #536076;padding:7px 10px;color:#dee7f2;font-size:11px}
+.gtk-toolbar .ico{color:#b6d9fb}
+.gtk-toolbar button{background:#3a465a;border:1px solid #6b7c90;border-radius:3px;padding:6px 8px;color:#dae6f3;font-size:11px}
+.gtk-toolbar .path{background:#1b2330;border:1px solid #4b5d75;color:#dce8f9;border-radius:3px;padding:6px 10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-layout{display:grid;grid-template-columns:145px 1fr;flex:1;min-height:0;background:#1d2635}
+.file-sidebar{background:#242c3b;border-right:1px solid #4f6176;padding:10px 8px;display:grid;align-content:start;gap:2px}
+.file-sidebar button{border:0;background:transparent;color:#cdd9e9;text-align:left;padding:8px;display:flex;align-items:center;gap:8px;border-radius:2px;font-size:11px}
+.file-sidebar button:hover,.file-sidebar button.active{background:#35688a8a}
+.file-content{padding:15px;display:grid;align-content:start;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:14px}
+.file-icon{background:transparent;color:#b9d9f3;border:1px solid transparent;min-height:85px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;border-radius:2px;font-size:11px}
+.file-icon:hover{background:#47749c45;border-color:#5d93c38c}
+.file-icon .ico{height:37px;width:37px;stroke-width:1.4}.file-status{padding:7px 12px;background:#242c3b;border-top:1px solid #4b6078;color:#a5b6cb;font-size:11px;flex:none;min-height:29px}
+.browser-tabs{display:flex;gap:3px;background:#171e29;padding:8px 9px 0}
+.browser-tab{background:#313b4d;color:#e1e8f0;border:1px solid #59677c;border-bottom:0;padding:7px 12px;border-radius:5px 5px 0 0;font-size:11px}
+.browser-toolbar{background:#313c4c;padding:8px;display:flex;gap:8px;align-items:center;border-bottom:1px solid #566577;font-size:12px}
+.browser-url{flex:1;border:1px solid #63748c;border-radius:4px;padding:7px;background:#1a2230;font:12px ui-monospace,monospace;color:#c9dbea}
+.browser-info{padding:7px 12px;background:#1c2636;border-bottom:1px solid #536178;color:#a9bcce;font-size:11px}
+.taskbar{left:50%;right:auto;transform:translateX(-50%);bottom:10px;max-width:calc(100% - 16px);width:max-content;min-width:290px;height:47px;background:#222b3bed;border:1px solid #72839a;border-radius:5px;padding:5px 9px;gap:4px;box-shadow:0 9px 24px #000a}
+.desktop-task{background:transparent;border-radius:3px;border:1px solid transparent;width:37px;height:35px;font-size:14px;color:#cde4f4}
+.desktop-task:hover,.desktop-task.active{background:#46688e88;border-color:#7697ad66}
+.desktop-task .ico{width:23px;height:23px}
+.task-caption{font:11px Cantarell,Arial,sans-serif;color:#a7b7c8;padding:0 7px;white-space:nowrap}
+.mobile-icons{gap:4px}.mobile-icons button{border-radius:2px}
+.toast{z-index:890;background:#1d2e40f2;border:1px solid #7795b1;border-radius:3px;color:#e1f1fc;font-size:12px}
+.finish{z-index:1050;background:#01040cd6}.finish-card{background:#242e40;border:1px solid #8893a7;border-radius:5px;box-shadow:0 30px 70px #000d}.finish-icon{border-radius:50%;background:#1d6d5d;color:#b2f5ce}
+.power-layer{background:radial-gradient(ellipse at 60% 36%,#17426a 0%,#080f1d 53%,#04070d 100%);z-index:1200}
+.power-layer:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.24;background:repeating-linear-gradient(0deg,transparent 0 5px,#9bbce909 6px)}
+.power-card{position:relative;z-index:1;width:min(450px,100%);border:1px solid #7794b7;background:#1e2637f4;border-radius:5px;box-shadow:0 27px 85px #000d;padding:35px 27px 28px}
+.power-emblem{border-radius:50%;background:#173c61;border:1px solid #72a9d2;box-shadow:0 0 44px #2e87c15b;color:#d9f0ff}
+.power-overline{color:#7fbeed}.power-card h1{font:700 25px Cantarell,"Noto Sans KR",sans-serif;color:#f4f6fb}
+.power-start{background:linear-gradient(#367ab1,#2569a0);border:1px solid #76b9ed;border-radius:3px;box-shadow:inset 0 1px #ffffff2d}
+.power-start:hover{background:#378dca}
+.boot-heading{color:#edf8ff}.boot-grub{border-radius:1px;background:#080d17;border:1px solid #6f809d}
+.boot-screen{position:relative;z-index:1}.boot-bar{background:#263f5a}.boot-bar span{background:#4daae8}
+.desktop[data-wallpaper="graphite"]{background:linear-gradient(120deg,#10141c,#1d2633 52%,#0a101c)}
+.desktop[data-wallpaper="graphite"] .backdrop-mark{opacity:.19}
+.desktop[data-wallpaper="ocean"]{background:radial-gradient(ellipse at 82% 19%,#2a83bd88,transparent 45%),linear-gradient(120deg,#081b33,#122b4b 56%,#050d19)}
+.desktop[data-wallpaper="ocean"] .backdrop-mark{opacity:.7}
+.appearance-options{display:grid;gap:12px;padding:15px}
+.appearance-options label{display:block;font-size:12px;color:#d2deea}
+.appearance-options select{display:block;width:100%;margin-top:7px;border:1px solid #6b7991;border-radius:3px;background:#161e2c;color:#edf5ff;padding:8px}
+.appearance-preview{height:75px;background:linear-gradient(125deg,#11203a,#1f5279,#0b1627);border:1px solid #6882a1;border-radius:3px;display:grid;place-items:center;color:#c5e9ff;font-size:21px;font-weight:800;letter-spacing:.16em}
+@media(max-width:1080px){#terminal{left:11%;width:60vw} .mission{right:10px;width:290px}#wifi,#guide,#router,#files{left:13%;width:68vw}}
+@media(max-width:760px){
+ .desktop{min-height:0}.top-panel{height:39px;padding:0 4px}.panel-left{gap:1px}.panel-left .panel-label{display:none}
+ .panel-right .fake-status,.workspaces,.panel-sep{display:none}.panel-right{gap:0}
+ .panel-item{min-width:29px;padding:4px 6px}.app-menu{min-width:35px;padding:3px}
+ .app-menu .menu-title{display:none}#full-btn #full-label{display:none}
+ .clock{font-size:11px;padding:4px 5px}
+ .backdrop-mark{right:-20%;top:24%;height:75vw;width:75vw}.desktop-shortcuts{top:54px;left:9px;gap:3px}
+ .shortcut{font-size:10px;width:78px;padding:6px 2px}.shortcut-icon{width:42px;height:42px}
+ .mission{display:none;position:absolute;top:44px;left:6px;right:6px;bottom:57px;width:auto;max-height:none;z-index:520;overflow:auto}
+ .mission.show{display:block}.mission-content{padding:13px}.mission-titlebar{height:34px}
+ .window{left:5px!important;right:5px!important;top:44px!important;bottom:58px!important;width:calc(100% - 10px)!important;height:calc(100dvh - 102px)!important;min-width:0;max-height:none!important;border-radius:3px;box-shadow:0 8px 20px #0009}
+ .window.maximized{left:0!important;right:0!important;top:39px!important;bottom:52px!important;width:100%!important;height:calc(100dvh - 91px)!important;border-radius:0}
+ .window-head{height:34px;min-height:34px;padding-left:8px}.win-name{font-size:11px}
+ .terminal-log{padding:10px 9px;font-size:10px;line-height:1.5}.terminal-bottom{padding:7px 8px 9px}
+ .quick{padding:4px 0 7px}.shell-input input{font-size:11px}.shell-input button{padding:7px}
+ .window-body{padding:12px}.guide-block{padding:9px}
+ .menu-panel{top:39px;left:0;height:min(600px,calc(100dvh - 98px));width:calc(100vw - 4px)}
+ .menu-core{grid-template-columns:116px minmax(0,1fr)}.menu-categories{padding:8px 3px}
+ .menu-panel .menu-categories button{padding:9px 6px;font-size:10px;gap:4px}
+ .menu-apps{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:7px}
+ .menu-panel .menu-apps button{min-height:74px;padding:8px 3px;font-size:10px}
+ .menu-head{padding:9px}.menu-head-logo{font-size:12px}
+ .taskbar{left:0;right:0;bottom:0;transform:none;max-width:none;width:100%;height:53px;min-width:0;background:#1d2534fa;border:0;border-top:1px solid #60728b;border-radius:0;padding:5px 8px;justify-content:space-evenly}
+ .task-caption{display:none}.mobile-icons button{font-size:15px}
+ .file-layout{grid-template-columns:91px 1fr}.file-sidebar{padding:6px 3px}.file-sidebar button{font-size:10px;padding:6px 3px}
+ .file-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:7px}
+ .browser-url{font-size:10px;min-width:0}
+ .power-card{padding:25px 18px}.power-card h1{font-size:22px}
+ .boot-logs{font-size:10px}
+}
+@media(max-width:355px){.desktop-shortcuts .shortcut{width:70px}.menu-core{grid-template-columns:103px minmax(0,1fr)}.menu-head input{min-width:60px}}
