@@ -115,7 +115,7 @@ function renderHub(){
  const left=$('course-list');left.replaceChildren();
  for(const id of trackOrder){
   const t=tracks[id],n=currentProgress(id),max=currentLength(id);
-  const b=document.createElement('button');b.type='button';b.className=data.active===id?'selected':'';
+  const b=document.createElement('button');b.type='button';b.dataset.track=id;b.className=data.active===id?'selected':'';
   const icon=document.createElement('span');icon.textContent=t.glyph;icon.setAttribute('aria-hidden','true');
   const title=document.createElement('span');title.className='course-label';title.textContent=t.title;
   const progress=document.createElement('span');progress.className='course-count';progress.textContent=n+'/'+max;
