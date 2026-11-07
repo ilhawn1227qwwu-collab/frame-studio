@@ -42,11 +42,11 @@ const stages=[
  C('익숙한 Wi-Fi 보안 과목도 있어요.','처음 배운 무선 네트워크 실습을 학습센터에서도 선택할 수 있어요.','#course-list button[data-track="wireless"]','Wi-Fi 보안 실습을 눌러주세요.'),
  I('Wi-Fi 보안 — 9단계','무선 장치 확인 → 대상 네트워크 관찰 → 교육용 인증 이벤트 준비 → 암호 점검 → 연결 → WPA3 보안 강화까지 이어져요.','#course-stages','Wi-Fi 실습 안내는 진행률 패널에 나타나고, 연결·캡처는 모두 가상으로 처리해요.','웹 보안 과목 알아보기'),
  C('이번엔 웹 보안을 눌러보세요.','웹사이트가 왜 위험해질 수 있고, 설정을 어떻게 개선하는지 배우는 과목이에요.','#course-list button[data-track="web"]','웹 보안을 선택해 주세요.'),
- I('웹 보안 — 7단계','가상 사이트 확인 → HTTP 헤더 검사 → 설정 진단 → 보안 헤더, 접근 통제, 출력 처리 개선 → 재검증 순서예요.','#course-stages','웹 서버 상태는 Firefox SIM과 같은 가상 환경을 공유해요.','포렌식 과목 알아보기'),
+ I('웹 보안 — 9단계','가상 사이트 확인 → HTTP 검사 → 취약 설정 진단 → SSH로 서버 접속 → 설정 개선 → Kali로 복귀 → 재검증 순서예요.','#course-stages','웹 서버 상태는 Firefox SIM과 같은 가상 환경을 공유해요.','포렌식 과목 알아보기'),
  C('로그와 디지털 포렌식도 있어요!','사건의 흔적을 조사하고 증거가 변경되지 않았는지 검증하는 공부예요.','#course-list button[data-track="forensics"]','로그·디지털 포렌식을 눌러주세요.'),
- I('포렌식 — 5단계','로그 폴더와 인증 기록을 열고, grep으로 실패한 로그인 줄을 찾을 수 있어요. sha256sum으로 학습용 증거의 해시도 계산해요.','#course-stages','로그에 실패 기록이 있다고 바로 침입 성공을 뜻하는 건 아니에요.','종합 임무로 이동'),
+ I('포렌식 — 7단계','가상 웹 서버에 SSH로 접속해 서버 로그를 읽고, Kali로 돌아와 증거 파일 SHA-256을 검증해요. sha256sum으로 학습용 증거의 해시도 계산해요.','#course-stages','로그에 실패 기록이 있다고 바로 침입 성공을 뜻하는 건 아니에요.','종합 임무로 이동'),
  C('종합 임무 INCIDENT-001을 찾아보세요.','여러 과목의 지식을 실제 사건처럼 연결해 보는 과정이에요.','#course-list button[data-track="incident"]','종합 임무를 선택해 주세요.'),
- I('종합 임무 — 8개의 목표','가상 웹 서버의 장애를 확인하고 로그를 읽은 뒤 서비스를 복구하고 보안 설정을 개선해 보고서를 만들어요.','#course-stages','과목 시작 버튼을 누르면 가상 사건이 시작되고, 기존의 종합 임무 저장 상태에 따라 이어서 진행할 수도 있어요.','마지막 모드 알아보기'),
+ I('종합 임무 — 8개의 목표','Kali에서 서버 장애를 확인하고 SSH로 web01에 접속해 로그를 조사해요. 가상 sudo 권한으로 서비스를 재시작하고 보안 설정을 개선한 다음 보고서를 만들어요.','#course-stages','과목 시작 버튼을 누르면 가상 사건이 시작되고, 기존의 종합 임무 저장 상태에 따라 이어서 진행할 수도 있어요.','마지막 모드 알아보기'),
  C('자유 실습 모드를 눌러보세요.','이제는 정해진 순서 없이 가상 네트워크와 서버를 관찰하는 모드예요.','#course-list button[data-track="sandbox"]','자유 실습을 선택해 주세요.'),
  I('자유 실습 — 순서 없이 탐색','help로 지원 명령을 찾고, ping과 curl로 상태를 확인하거나 Firefox·네트워크 지도를 열 수 있어요.','#course-desc','정해진 답을 그대로 입력하는 대신, 원하는 기능을 스스로 골라 실험할 수 있어요.','시작 버튼 살펴보기'),
  I('선택한 실습 시작은 무엇일까요?','이 버튼을 누르면 선택한 과목이 활성화되고 터미널에 그 과목의 안내가 나타나요. 종합 임무는 실제로 시작하면 웹 서버 장애 시나리오를 준비해요.','#course-start','지금은 기존 진도를 보존하려고 눌러보지는 않을게요.','진도 초기화 버튼 살펴보기'),
@@ -62,15 +62,15 @@ const stages=[
  C('Network Map 아이콘을 눌러보세요.','가상 회사 안의 PC, 공유기, 웹 서버와 로그 서버를 한 화면에서 볼 수 있어요.','.desktop-shortcuts .lan-map-shortcut','Network Map 아이콘을 눌러주세요.'),
  I('4개의 가상 장치가 연결되어 있네요!','Kali PC(192.0.2.10), Router(192.0.2.1), Web Server(192.0.2.20), Log Server(192.0.2.30)로 구성돼 있어요.','#lan-topology','이 주소들은 문서·실습을 위한 가상 네트워크 범위에 속해요.','서버 선택해 보기'),
  C('웹 서버를 선택해 보세요.','서버 상태가 정상인지, 서비스가 멈췄는지 상세 정보를 확인할 수 있어요.','#lan-topology .lan-device[data-device="web"]','Web Server 카드를 눌러주세요.'),
- I('웹 서버 상태를 보여주네요.','웹 서비스가 멈추면 여기에는 STOPPED라고 표시되고, Firefox에서도 503이 나타나요.','#lan-device-detail','같은 가상 서버 상태를 여러 앱이 함께 읽는 구조예요.','로그 서버 알아보기'),
+ I('서버 전원과 웹 서비스는 달라요.','서버 자체는 ONLINE이지만 HTTP만 STOPPED일 수 있어요. 이때 ping은 성공해도 Firefox에서 503이 나타날 수 있어요.','#lan-device-detail','같은 가상 서버 상태를 여러 앱이 함께 읽는 구조예요.','로그 서버 알아보기'),
  C('Log Server도 눌러보세요.','보안 사건 기록을 다루는 가상 로그 서버예요.','#lan-topology .lan-device[data-device="log"]','Log Server 카드를 눌러주세요.'),
  I('여기에 사건 기록이 쌓여요.','가상 인증 실패 기록과 네트워크 변경 이벤트를 확인해 포렌식 실습에서 원인을 분석할 수 있어요.','#lan-device-detail','실제 이용자의 기록이나 외부 서버 로그를 수집하지 않아요.','공유기 살펴보기'),
  C('공유기도 살펴볼까요?','네트워크의 출구인 가상 Router 카드를 선택해 보세요.','#lan-topology .lan-device[data-device="router"]','Lab Router 카드를 눌러주세요.'),
  I('공유기가 꺼지면 어떻게 될까요?','공유기 전원이 꺼지면 웹 서버와 Kali PC 사이의 연결도 끊겨요. 그래서 ping과 curl이 성공하지 못할 수 있어요.','#lan-device-detail','NetworkManager의 공유기 전원 버튼으로 직접 상태를 바꿀 수 있지만 지금은 기존 실습 상태를 유지할게요.','네트워크 지도 도구 살펴보기'),
- I('지도 아래에도 버튼이 있네요.','Firefox 열기, 터미널 열기, INCIDENT-001 시작, 웹 서비스 복구, 네트워크 설정 열기 버튼들이 있어요.','#lan-map-actions','종합 임무 시작은 기존 사건 기록을 바꿀 수 있어서 튜토리얼에서는 누르지 않아요.','지도 닫기'),
+ I('지도 아래에도 버튼이 있네요.','Firefox 열기, SSH 접속 안내, 웹 서버 전원 제어, INCIDENT-001 시작, 서비스 재시작 명령 입력 등이 있어요.','#lan-map-actions','종합 임무 시작은 기존 사건 기록을 바꿀 수 있어서 튜토리얼에서는 누르지 않아요.','지도 닫기'),
  C('네트워크 지도를 닫아봐요.','이제 공유기 전원과 클라이언트를 실제로 제어하는 화면을 살펴볼게요.','#lan-map .lan-close','Network Map의 × 버튼을 눌러주세요.'),
  C('Wi-Fi 프로그램을 다시 열어봅시다.','앞서 본 Wi-Fi 목록 안에 네트워크를 조작할 수 있는 제어판이 추가됐어요.','.desktop-shortcuts [data-open="wifi"]','Wi-Fi 아이콘을 눌러주세요.'),
- I('가상 네트워크 제어판이 보이나요?','공유기 전원, 채널, 연습용 암호 시나리오, 클라이언트 준비 여부를 여기서 바꿀 수 있어요.','#sim-radio','실습 진도가 바뀔 수 있어 지금은 기능 설명만 하고 설정을 변경하지 않을게요.','인증 이벤트 버튼 살펴보기'),
+ I('가상 네트워크 제어판이 보이나요?','공유기 전원, 채널, 연습용 암호, 클라이언트 준비 여부를 바꿀 수 있어요. 서버 전원과는 다른 기능이에요.','#sim-radio','실습 진도가 바뀔 수 있어 지금은 기능 설명만 하고 설정을 변경하지 않을게요.','인증 이벤트 버튼 살펴보기'),
  I('연습용 클라이언트 재연결 버튼이에요.','이 버튼은 학습용 클라이언트가 다시 연결했다는 가상 인증 이벤트를 만들어요. Wi-Fi 캡처 실습에서 사용하는 값이에요.','#sim-reconnect','이 클라이언트는 Kali 컴퓨터와 별개의 가상 장치예요.','Kali PC 연결 버튼 살펴보기'),
  I('Kali PC 연결 버튼은 달라요.','이쪽은 Kali PC 자체를 가상 Wi-Fi에 접속시키는 기능이에요. WPA3로 암호를 변경한 다음 새 암호로 다시 연결할 때 사용해요.','#sim-station-connect','교육용 암호만 입력하세요. 실제 사용하는 비밀번호를 넣을 필요는 없어요.','네트워크 목록 살펴보기'),
  I('여기에서 현재 Wi-Fi를 확인해요.','SSID와 채널, 보안 방식은 위의 가상 공유기 설정에 따라 달라져요. 지금 보이는 이름들은 실제 주변 네트워크가 아니에요.','#nets','네트워크를 찾는 것과 연결하는 것, 인증 이벤트를 관찰하는 것은 모두 다른 행동이에요.','Wi-Fi 창 닫기'),
@@ -93,10 +93,42 @@ root.innerHTML='<div id="onboard-spot" aria-hidden="true"></div>'+
 '<div class="ob-progress"><div id="ob-progress"></div></div>'+
 '<div class="ob-content"><div class="ob-icon" aria-hidden="true">⌘</div><h2 id="ob-title"></h2><p id="ob-body"></p>'+
 '<div id="ob-learn" class="ob-learn"></div><div id="ob-action" class="ob-action" hidden><span></span><div id="ob-action-text"></div></div></div>'+
-'<div class="ob-footer"><button id="ob-skip" class="ob-skip" type="button">건너뛰기</button>'+
-'<button id="ob-next" class="ob-next" type="button">다음</button></div></section>';
+'<div class="ob-footer"><button id="ob-skip" class="ob-skip" type="button">건너뛰기</button><button id="ob-chapters" class="ob-skip" type="button" aria-expanded="false">단원 선택</button><button id="ob-resume" class="ob-skip" type="button" hidden>이어서 보기</button>'+
+'<button id="ob-next" class="ob-next" type="button">다음</button></div><nav id="ob-chapter-list" class="ob-chapter-list" aria-label="튜토리얼 단원" hidden></nav></section>';
 $('desktop').append(root);
 const card=$('onboard-card'),spot=$('onboard-spot'),next=$('ob-next');
+const chapterDefinitions=[
+ ['리눅스·데스크톱','Kali Linux에 오신 걸 환영해요!'],
+ ['학습센터·7개 과정','이제 새로 추가된 프로그램도 탐험해 볼까요?'],
+ ['Firefox·HTTP','Firefox SIM을 열어볼까요?'],
+ ['네트워크 지도·서버','Network Map 아이콘을 눌러보세요.'],
+ ['Wi-Fi·관리자 설정','Wi-Fi 프로그램을 다시 열어봅시다.'],
+ ['단축키·아이콘 안내','실습 진행률은 여기서 확인해요.']
+];
+const chapters=chapterDefinitions.map(([title,begin])=>({title,start:stages.findIndex(x=>x.title===begin)}));
+if(chapters.some(x=>x.start<0))throw Error('Tutorial chapter start not found');
+const CHECKPOINT='kali-sim-tour-chapter-v1';
+function checkpoint(){try{return Number(localStorage.getItem(CHECKPOINT))||0}catch(_){return 0}}
+function setCheckpoint(n){try{localStorage.setItem(CHECKPOINT,String(n))}catch(_){}}
+function chapterOf(n){return chapters.reduce((best,x,i)=>n>=x.start?i:best,0)}
+const chapterList=$('ob-chapter-list');
+chapters.forEach((ch,n)=>{
+ const b=document.createElement('button');b.type='button';b.textContent=(n+1)+'. '+ch.title;
+ b.addEventListener('click',()=>jumpToChapter(n));chapterList.append(b);
+});
+function toggleChapters(force){
+ const show=force===undefined?chapterList.hidden:!!force;
+ chapterList.hidden=!show;$('ob-chapters').setAttribute('aria-expanded',String(show));
+}
+$('ob-chapters').addEventListener('click',()=>toggleChapters());
+function jumpToChapter(n){
+ const ch=chapters[n];if(!ch||!active)return;
+ if(originalCourse&&window.KaliCurriculum?.snapshot()?.active!==originalCourse)
+  window.KaliCurriculum.selectTrack(originalCourse);
+ resetDesktop();toggleChapters(false);index=ch.start;setCheckpoint(n);show();
+}
+$('ob-resume').addEventListener('click',()=>jumpToChapter(checkpoint()));
+
 // Tour card clicks must not be treated as outside-clicks by the XFCE launcher.
 card.addEventListener('pointerdown',event=>event.stopPropagation());
 const panel=document.querySelector('.panel-right');
@@ -123,10 +155,11 @@ function resetDesktop(){
 function start(){
  if(!$('power-layer').hidden)return;
  originalCourse=window.KaliCurriculum?.snapshot()?.active||null;
- active=true;index=0;resetDesktop();root.hidden=false;document.dispatchEvent(new Event('kali-sim:tour-started'));show();
+ active=true;index=0;resetDesktop();toggleChapters(false);root.hidden=false;document.dispatchEvent(new Event('kali-sim:tour-started'));show();
 }
 function end(mark=true){
- if(mark)markDone();
+ if(mark){markDone();setCheckpoint(0)}
+ toggleChapters(false);
  active=false;root.hidden=true;root.classList.remove('is-center');
  if(originalCourse&&window.KaliCurriculum?.snapshot()?.active!==originalCourse)window.KaliCurriculum.selectTrack(originalCourse);
  originalCourse=null;document.dispatchEvent(new Event('kali-sim:tour-ended'));
@@ -174,6 +207,9 @@ function schedule(){if(frame)cancelAnimationFrame(frame);frame=requestAnimationF
 function show(){
  if(!active)return;
  const s=stages[index],action=['click','command','change'].includes(s.mode);
+ const chap=chapterOf(index);
+ if(index>0)setCheckpoint(chap);
+ $('ob-resume').hidden=!(index===0&&checkpoint()>0);
  $('onboard-card').querySelector('.ob-brand').textContent=index<26?'KALI · LINUX DESKTOP':index<46?'KALI · LEARNING CENTER':index<54?'KALI · FIREFOX SIM':index<69?'KALI · VIRTUAL NETWORK':'KALI · TOOLS & SHORTCUTS';
  $('ob-title').textContent=s.title;$('ob-body').textContent=s.body;
  $('ob-number').textContent=String(index+1).padStart(2,'0')+' / '+stages.length;
@@ -221,5 +257,5 @@ document.addEventListener('kali-sim:shutdown',()=>{if(active)end(false)});
 window.addEventListener('resize',schedule);
 document.addEventListener('scroll',schedule,true);
 document.addEventListener('fullscreenchange',schedule);
-window.KaliTour={get length(){return stages.length},get index(){return index},get current(){const s=stages[index];return {mode:s.mode,target:s.target||null,title:s.title}},restart:start};
+window.KaliTour={get length(){return stages.length},get index(){return index},get current(){const s=stages[index];return {mode:s.mode,target:s.target||null,title:s.title}},get chapters(){return chapters.map(x=>({...x}))},restart:start,jumpToChapter};
 })();
