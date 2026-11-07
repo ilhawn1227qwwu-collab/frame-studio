@@ -148,7 +148,9 @@ document.addEventListener('change',e=>{
  const step=stages[index];setTimeout(()=>{if(active&&stages[index]===step)proceed()},120);
 },true);
 document.addEventListener('kali-sim:booted',()=>{
- if(!done())setTimeout(()=>{if($('power-layer').hidden&&!active)start()},100);
+ // Every power-on starts the desktop tour, even if it was completed previously.
+ // The nine-stage lab coach takes over only when the tour finishes or is skipped.
+ setTimeout(()=>{if($('power-layer').hidden&&!active)start()},100);
 });
 document.addEventListener('kali-sim:shutdown',()=>{if(active)end(false)});
 window.addEventListener('resize',schedule);
