@@ -274,7 +274,7 @@ function explainFailure(r,cmd){
  if(/curl/i.test(cmd))return 'HTTP와 네트워크는 서로 달라요. ping, 서비스 상태, DNS를 각각 점검해 보세요.';
  return '도움말(help)과 현재 연결 상태를 확인해 보세요.';
 }
-const SHARED=/^(?:ssh(?:\s|$)|exit$|whoami$|hostname$|ip a$|ip route$|ping\s|nslookup\s|ss -tln$|(?:sudo )?(?:systemctl|service)\s|(?:cat|grep)\s.+\/var\/log\/auth\.log|web-fix\s|web-audit\s|incident-status$|incident-report$|nmcli dev wifi connect LAB-TRAINING password )/i;
+const SHARED=/^(?:ssh(?:\s|$)|exit$|whoami$|hostname$|ip a$|ip route$|ping\s|nslookup\s|ss -tln$|(?:sudo )?(?:systemctl|service)\s|(?:cat|grep)\s+.*\/var\/log\/auth\.log|web-fix\s|web-audit\s|incident-status$|incident-report$|nmcli dev wifi connect LAB-TRAINING password )/i;
 function common(cmd){const c=String(cmd||'').trim();return (SHARED.test(c)||(isRemote()&&/^(?:pwd$|ls(?:\s|$)|cd(?:\s|$)|mkdir\s|touch\s|sha256sum\s)/.test(c)))?command(c):null;}
 window.KaliLAN={snapshot,devices,steps,progress,command,common,explainFailure,request,missionStart,resetMission,setHostPower,webFix,issues,logText,link,
  get shell(){return {...state.shell}},get hostOnline(){return hostOnline()},
