@@ -59,13 +59,24 @@
 @media(prefers-reduced-motion:reduce){.boot-bar span{transition:none}}
 
 </style>
-</head>
+<link rel="stylesheet" href="./kali-xfce.css?v=4"><style>
+.mission.hide-on-desktop{display:none}
+.menu-panel .menu-apps button[hidden]{display:none!important}
+.mission-titlebar button{border:0;background:transparent;color:#d6e6f4;padding:4px;display:grid;place-items:center}
+.terminal-menubar span,.gtk-menubar span{padding:4px 8px;font-size:11px;color:#cbd6e4;cursor:default}
+.session-indicator{display:flex;gap:5px;align-items:center}
+@media(min-width:761px){.mission-titlebar button{display:none}}
+@media(max-width:760px){.mission.hide-on-desktop{display:none}}
+</style></head>
 <body><main class="desktop" id="desktop" aria-label="Kali Linux 스타일 가상 보안 실습실">
 <div class="backdrop-mark" aria-hidden="true"><svg viewBox="0 0 220 220"><path d="M35 134 Q48 51 104 58 Q143 57 177 92 Q145 89 120 74 Q156 102 157 125 Q146 151 101 167 Q127 146 117 132 Q86 140 53 175 Q61 143 91 116 Q63 122 35 134Z"/><path d="M103 62 Q92 38 113 18 M157 125 Q180 132 185 160 M64 172 Q72 194 96 199"/><circle cx="130" cy="98" r="3" fill="#7ccfff65"/></svg></div>
 <header class="top-panel"><div class="panel-left"><button class="panel-item app-menu" id="menu-btn" type="button" aria-expanded="false"><span class="kali-logo" aria-hidden="true">K</span> Kali ▾</button><button class="panel-item" data-open="terminal">⌘ Terminal</button><button class="panel-item" data-open="wifi">◉ Network</button></div><div class="panel-right"><span class="fake-status">● XFCE · LOCAL SIMULATION</span><button class="panel-item os-power-btn" id="shutdown-btn" type="button" aria-label="가상 컴퓨터 종료" title="컴퓨터 종료">⏻</button><button class="panel-item" id="full-btn" aria-label="전체화면 켜기">⛶ <span id="full-label">전체화면</span></button><span class="clock" id="clock"></span></div></header>
 <div class="menu-panel" id="menu-panel"><button data-open="terminal">⌘ Terminal Emulator</button><button data-open="wifi">◉ Wi-Fi Networks</button><button data-open="guide">▤ Learning Notes</button><button data-open="router">⚙ Lab Router Settings</button><button id="menu-reset">↺ Reset Training</button><button id="menu-power">⏻ Shut Down Kali (SIM)</button></div>
-<nav class="desktop-shortcuts" aria-label="가상 데스크톱 바로가기"><button class="shortcut" data-open="terminal"><span class="shortcut-icon">⌘</span>Terminal</button><button class="shortcut" data-open="wifi"><span class="shortcut-icon">◉</span>Wi-Fi</button><button class="shortcut" data-open="guide"><span class="shortcut-icon">▤</span>Notes</button><button class="shortcut" data-open="router"><span class="shortcut-icon">⚙</span>Router</button></nav>
-<aside class="mission" aria-label="실습 임무"><div class="eyebrow">WIRELESS LAB / 01</div><h2>Wi-Fi 보안 모의실습</h2><p class="sub">Kali Linux 스타일 환경에서 교육용 네트워크를 점검하고 강화합니다. 모든 명령은 페이지 내부에서만 재현됩니다.</p><div class="progress-meta"><span>진행률</span><strong id="progress-text">0 / 9</strong></div><div class="progress"><span id="progress-bar"></span></div><ol class="steps" id="steps"></ol><div class="hint" id="next-hint">첫 명령어: ip a</div><div class="mission-actions"><button class="btn" id="hint-btn">힌트</button><button class="btn" id="reset-btn">초기화</button></div></aside>
+<nav class="desktop-shortcuts" aria-label="가상 데스크톱 바로가기"><button class="shortcut" data-open="terminal"><span class="shortcut-icon">⌘</span>Terminal</button><button class="shortcut" data-open="wifi"><span class="shortcut-icon">◉</span>Wi-Fi</button><button class="shortcut" data-open="guide"><span class="shortcut-icon">▤</span>Notes</button><button class="shortcut" data-open="router"><span class="shortcut-icon">⚙</span>Router</button>
+<button class="shortcut" data-open="files"><span class="shortcut-icon">⌂</span>Home</button>
+<button class="shortcut" data-open="appearance"><span class="shortcut-icon">⚙</span>Appearance</button>
+</nav>
+<aside class="mission" id="mission" aria-label="실습 임무"><div class="eyebrow">WIRELESS LAB / 01</div><h2>Wi-Fi 보안 모의실습</h2><p class="sub">Kali Linux 스타일 환경에서 교육용 네트워크를 점검하고 강화합니다. 모든 명령은 페이지 내부에서만 재현됩니다.</p><div class="progress-meta"><span>진행률</span><strong id="progress-text">0 / 9</strong></div><div class="progress"><span id="progress-bar"></span></div><ol class="steps" id="steps"></ol><div class="hint" id="next-hint">첫 명령어: ip a</div><div class="mission-actions"><button class="btn" id="hint-btn">힌트</button><button class="btn" id="reset-btn">초기화</button></div></aside>
 <section class="window" id="terminal" aria-label="Kali 가상 터미널"><div class="window-head"><span class="win-name">⌘ kali@kali: ~ <span style="color:#7aa5cb;font-size:10px">[simulation]</span></span><div class="window-buttons"><button class="typing-switch" id="typing-btn" type="button" aria-pressed="true">타이핑 ON</button><button data-close="terminal" class="close" aria-label="터미널 닫기">×</button></div></div><div class="terminal-body"><div class="terminal-log" id="log" role="log" aria-live="polite"></div><div class="terminal-bottom"><div class="quick" id="quick"></div><form class="shell-input" id="shell-form"><span class="caret">└─$</span><input id="shell-input" placeholder="명령어 입력 (help 또는 위 단축 버튼)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="가상 Kali 터미널 명령어"><button type="submit">↵ 실행</button></form></div></div></section>
 <section class="window hidden" id="wifi" aria-label="교육용 Wi-Fi 목록"><div class="window-head"><span class="win-name">◉ NetworkManager — Wi-Fi</span><div class="window-buttons"><button data-close="wifi" class="close" aria-label="Wi-Fi 창 닫기">×</button></div></div><div class="window-body"><h2>Available Wi-Fi Networks</h2><p class="sub">실제 무선 어댑터 검색 결과가 아닌 <b>고정된 가상 SSID</b>입니다.</p><div class="network-list" id="nets"></div><div id="net-info" class="info">모의 해킹 대상은 오직 <b>LAB-TRAINING</b>입니다. 다른 두 네트워크는 설명용입니다.</div><div class="notice">이 페이지는 브라우저에서 동작하는 교육용 운영체제 모형입니다. 실제 Wi-Fi 장치·패킷·외부 서버에 접근하지 않습니다.</div></div></section>
 <section class="window hidden" id="guide" aria-label="명령어와 학습 노트"><div class="window-head"><span class="win-name">▤ Kali Security Training — Notes</span><div class="window-buttons"><button data-close="guide" class="close" aria-label="노트 닫기">×</button></div></div><div class="window-body"><h2>첫 수업 · 무선 네트워크 보안</h2><p class="sub">여기서 사용하는 명령은 실제 Linux/Kali 도구의 문법을 참고했지만, <b>실행되는 것은 JavaScript 모형</b>입니다. 암호 목록·캡처 파일도 가상의 학습 데이터예요.</p><div class="guide-block"><h3>1. 운영체제와 네트워크</h3><p><code>whoami</code>, <code>pwd</code>, <code>ls</code>, <code>ip a</code>는 리눅스에서 널리 쓰는 명령입니다. <code>nmcli dev wifi list</code>는 NetworkManager의 주변 네트워크 목록 기능입니다. 이 앱의 목록은 실제 주변 네트워크가 아닙니다.</p></div><div class="guide-block"><h3>2. 모니터 모드와 AP 관찰</h3><p><code>airmon-ng</code>는 모니터 모드 설정을 돕고, <code>airodump-ng</code>는 무선 트래픽을 관찰하는 데 쓰입니다. 이 실습에서는 장치 제어와 캡처가 전혀 일어나지 않고, 가상 어댑터 상태와 학습용 AP 자료만 바뀝니다.</p></div><div class="guide-block"><h3>3. WPA2 핸드셰이크와 사전 대입 위험</h3><p>WPA2-Personal의 4-way handshake에 비밀번호 평문이 들어 있는 것은 아닙니다. 약한 비밀번호는 캡처한 인증 교환을 이용한 오프라인 후보 검사에 취약할 수 있습니다. 이 실습의 가짜 캡처 파일은 이미 허가된 클라이언트의 정상 연결을 재현하며, 패킷 해독 대신 미리 정한 후보 8개와 문자열을 비교합니다.</p></div><div class="guide-block"><h3>4. 연결 복구와 보안 개선</h3><p>모니터 모드를 종료한 뒤 <code>nmcli</code>를 사용해 가상 연결을 수행합니다. 마지막에는 공유기 설정 화면에서 WPA3-SAE와 긴 고유 암호를 선택합니다. 실제 WPA3는 모든 종류의 공격을 막는 기술은 아닙니다.</p></div><div class="guide-block"><h3>도움 명령</h3><p><code>help</code>, <code>history</code>, <code>clear</code>, <code>status</code>, <code>man nmcli</code>, <code>cat README.txt</code>. 마지막 <code>lab-verify</code>는 이 프로그램에서만 쓰는 <b>교육용 전용 명령</b>이며 실제 Kali 명령이 아닙니다.</p></div></div></section>
@@ -91,6 +102,35 @@
     <div class="boot-sim">STARTING LOCAL VIRTUAL SESSION · NO REAL OS BOOT</div>
   </section>
 </div>
+
+<section class="window hidden" id="files" aria-label="가상 Thunar 파일 관리자">
+  <div class="window-head"><span class="win-name">Thunar File Manager</span><div class="window-buttons"><button class="close" data-close="files" aria-label="파일 관리자 닫기">×</button></div></div>
+  <div class="gtk-toolbar"><button type="button" id="file-back" title="홈 폴더로 돌아가기">⌂ Home</button><span id="file-path" class="path">/home/kali</span><span>⌕</span></div>
+  <div class="file-layout">
+    <nav id="file-sidebar" class="file-sidebar" aria-label="가상 파일 위치">
+      <button type="button" data-place="home">⌂ Home</button><button type="button" data-place="desktop">▤ Desktop</button>
+      <button type="button" data-place="documents">▤ Documents</button><button type="button" data-place="downloads">⇣ Downloads</button>
+      <button type="button" data-place="lab-files">◈ lab-files</button>
+    </nav>
+    <div class="file-content" id="file-items"></div>
+  </div>
+  <div class="file-status" id="file-status">Virtual filesystem — simulated files only.</div>
+</section>
+<section class="window hidden" id="appearance" aria-label="Kali 모양 설정">
+  <div class="window-head"><span class="win-name">Appearance — Kali Dark</span><div class="window-buttons"><button class="close" data-close="appearance" aria-label="모양 설정 닫기">×</button></div></div>
+  <div class="gtk-menubar"><span>Style</span><span>Icons</span><span>Fonts</span><span>Settings</span></div>
+  <div class="window-body">
+    <h2>Appearance</h2><p class="sub">Kali-Dark · Flat-Remix-Blue 스타일의 가상 데스크톱 설정</p>
+    <div class="appearance-options">
+      <div class="appearance-preview">KALI <small style="font-size:9px;letter-spacing:0">[SIM]</small></div>
+      <label for="wallpaper-choice">Desktop Wallpaper
+        <select id="wallpaper-choice" aria-label="가상 배경화면 선택"><option value="default">Kali Blue — 기본</option><option value="graphite">Graphite Dark</option><option value="ocean">Ocean Blue</option></select>
+      </label>
+      <p class="sub">실제 Kali Linux 설정이 아니라 이 실습 사이트의 화면만 변경합니다.</p>
+    </div>
+  </div>
+</section>
+
 </main>
 <script>
 (()=>{'use strict';
@@ -152,7 +192,7 @@ if(canonical==='uname -a'){log('Linux kali 6.12.0-kali-sim #1 SMP x86_64 GNU/Lin
 if(canonical==='man nmcli'){log('nmcli: NetworkManager command-line tool\n예시: nmcli dev wifi list / nmcli dev wifi connect SSID password PASSWORD ifname IFACE\n이 페이지에서는 가상 데이터에만 적용됩니다.','sys');return}
 if(canonical==='history'){shellHistory.slice(-15).forEach((s,i)=>log(String(i+Math.max(1,shellHistory.length-14)).padStart(3)+'  '+s));return}
 if(canonical==='status'){log(`kali@kali · iface=${state.monitor?'wlan0mon (monitor)':'wlan0 (managed)'} · Wi-Fi=${state.protocol} · capture=${state.captured?'YES':'NO'} · connected=${state.connected?'YES':'NO'} · completed=${total()}/9`,'sys');return}
-if(/^open\s+(router|wifi|guide|terminal)$/.test(canonical)){openWindow(canonical.split(' ')[1]);log('가상 앱을 열었습니다.','ok');return}
+if(/^open\s+(router|wifi|guide|terminal|files|appearance)$/.test(canonical)){openWindow(canonical.split(' ')[1]);log('가상 앱을 열었습니다.','ok');return}
 if(canonical==='ip a'||canonical==='ip addr'||canonical==='ip address show'){log('1: lo: <LOOPBACK,UP> mtu 65536 state UNKNOWN\n    inet 127.0.0.1/8 scope host lo');log(state.monitor?'2: wlan0mon: <BROADCAST,MULTICAST,UP> mtu 1500 state UNKNOWN\n    link/ieee802.11 02:00:00:00:00:01':'2: wlan0: <BROADCAST,MULTICAST,UP> mtu 1500 state UP\n    link/ether 02:00:00:00:00:01\n    inet '+(state.connected?'192.0.2.14/24':'(not connected)')+' [SIM]');mark('iface');return}
 if(/^nmcli (?:dev|device) wifi list$/.test(canonical)||/^nmcli -f [\w,]+ (?:dev|device) wifi list$/.test(canonical)){if(requireStep('iface','ip a'))return;if(state.monitor){log('Error: wlan0 is in monitor mode. Return to managed mode first.','warn');return}log('IN-USE  SSID           MODE   CHAN  RATE      SIGNAL  SECURITY');log(`  ${state.connected?'*':' '}     LAB-TRAINING   Infra  6     130 Mb/s  76      ${state.protocol}`);log('        CAMPUS-GUEST   Infra  1     130 Mb/s  58      WPA2');log('        LAB-SECURE     Infra  11    270 Mb/s  88      WPA3');if(!state.hardened)mark('wifi');return}
 if(plain==='airmon-ng start wlan0'){if(requireStep('wifi','nmcli dev wifi list'))return;if(state.monitor){log('wlan0mon is already in monitor mode.','warn');return}state.monitor=true;state.connected=false;save();log('PHY Interface Driver  Chipset\nphy0 wlan0     virtual SIMULATED adapter','sys');log('(mac80211 monitor mode enabled on [phy0]wlan0mon) [SIM]','ok');mark('monitor');return}
@@ -227,4 +267,4 @@ $('menu-power').addEventListener('click',switchOff);
 
 render();welcome();if(total()===9)log('저장된 기록: 모든 실습을 완료한 상태입니다.','ok');
 })();
-</script></body></html>
+</script><script src="./kali-xfce.js?v=4"></script></body></html>
