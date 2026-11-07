@@ -26,3 +26,5 @@ jobs:
         run: node tests/integrity-smoke.cjs
       - name: Test shared LAN, virtual Firefox and incident/free practice
         run: node tests/virtual-lan-smoke.cjs
+      - name: Test offline state, separate client and station, and WPA3 recovery
+        run: node tests/state-transitions-smoke.cjs
