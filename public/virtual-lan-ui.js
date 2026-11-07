@@ -136,7 +136,7 @@ function run(raw){
  $('shell-input').value='';
  if(input==='clear'){$('log').replaceChildren();return}
  const sh=LAN.shell;print('┌──('+sh.user+'㉿'+(sh.host==='web01'?'web01':'kali')+')-[Virtual LAN]\n└─$ '+input,'prompt');
- const r=LAN.command(input);
+ const r=LAN.common(input)||(LAN.shell.host==='kali'?window.KaliCurriculum?.fs(input):null)||LAN.command(input);
  for(const line of r.lines||[])print(line,r.ok?'':'warn');
  if(!r.ok)print(LAN.explainFailure(r,input),'warn');
  if(r.ok)renderMap();
