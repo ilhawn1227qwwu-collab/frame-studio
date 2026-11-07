@@ -51,3 +51,29 @@
  #onboard-card .ob-learn{display:none}
 }
 @media(prefers-reduced-motion:reduce){#onboard-spot,#onboard-spot::after{transition:none;animation:none}}
+
+/* Onboarding chapters: safe navigation between independent desktop chapters. */
+#onboard-card{position:fixed}
+#onboard-card .ob-chapter-list[hidden],#ob-resume[hidden]{display:none!important}
+#onboard-card .ob-chapter-list{
+ position:absolute;bottom:51px;left:10px;right:10px;z-index:6;
+ max-height:min(330px,48dvh);overflow:auto;display:grid;grid-template-columns:1fr 1fr;
+ gap:7px;background:#15283cf5;border:1px solid #6894bc;
+ border-radius:7px;padding:10px;box-shadow:0 12px 30px #0009
+}
+#onboard-card .ob-chapter-list button{
+ border:1px solid #567da1;border-radius:4px;color:#e4f3ff;
+ background:#27445f;text-align:left;padding:10px 11px;cursor:pointer;
+ font:600 11px/1.4 Cantarell,system-ui,sans-serif
+}
+#onboard-card .ob-chapter-list button:hover,
+#onboard-card .ob-chapter-list button:focus-visible{
+ background:#366d98;border-color:#8dc8ed
+}
+#onboard-card #ob-chapters[aria-expanded=true]{background:#284f70;color:white}
+@media(max-width:760px){
+ #onboard-card .ob-chapter-list{bottom:47px;grid-template-columns:1fr;max-height:35dvh}
+ #onboard-card .ob-chapter-list button{font-size:10px;min-height:34px}
+ #onboard-card .ob-footer{gap:4px;flex-wrap:wrap}
+ #onboard-card #ob-chapters,#onboard-card #ob-resume{padding:5px 8px;min-height:33px}
+}
