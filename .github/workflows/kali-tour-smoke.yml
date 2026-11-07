@@ -24,3 +24,5 @@ jobs:
         run: node tests/curriculum-smoke.cjs
       - name: Verify filesystems and negative-case Wi-Fi integrity
         run: node tests/integrity-smoke.cjs
+      - name: Test shared LAN, virtual Firefox and incident/free practice
+        run: node tests/virtual-lan-smoke.cjs
