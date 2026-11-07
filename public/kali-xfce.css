@@ -178,3 +178,6 @@ html,body{background:#080d17;overscroll-behavior:none}button,input,select{font-f
  .boot-logs{font-size:10px}
 }
 @media(max-width:355px){.desktop-shortcuts .shortcut{width:70px}.menu-core{grid-template-columns:103px minmax(0,1fr)}.menu-head input{min-width:60px}}
+
+/* Compact XFCE top panel: prevent hidden or overlapped app shortcuts at 320px. */
+@media(max-width:355px){.top-panel .panel-left>.panel-item[data-open]{display:none!important}}
