@@ -5,9 +5,9 @@ const NET=window.KaliNetwork,by=id=>document.getElementById(id);
 if(!NET||!by('wifi'))return;
 const body=by('wifi').querySelector('.window-body');
 const node=document.createElement('details');node.className='sim-radio';node.id='sim-radio';
-// Keep advanced controls collapsed so the first-screen Wi-Fi list stays visible.
-// The tour opens this panel again when it teaches its controls.
-node.open=false;
+// Keep controls available by default for existing users and lab flows.
+// The tutorial temporarily collapses this panel while teaching the Wi-Fi Info button.
+node.open=true;
 node.innerHTML='<summary>가상 네트워크 제어 · 공유기와 클라이언트</summary>'+
 '<div class="sim-radio-body">'+
 '<div class="sim-fields">'+
