@@ -40,7 +40,7 @@ function changed(type,message=''){
 function net(){return window.KaliNetwork}
 function link(){
  const n=net();
- return !!(n&&n.ap.online&&n.client.present&&n.client.connected&&!n.radio.monitor);
+ return !!(n&&n.ap.online&&n.station.connected&&!n.radio.monitor);
 }
 function issues(){return [
  ...(!state.web.headers?['X-Content-Type-Options 및 CSP 보안 헤더 없음']:[]),
@@ -135,6 +135,7 @@ function command(raw){
  if(cmd==='help')return {ok:true,lines:[
   'KALI SIM LAB — Virtual LAN commands (NO OS / NO EXTERNAL NETWORK)',
   'ip a | ip route | ping 192.0.2.1 | ping 192.0.2.20 | ping 192.0.2.30',
+  'nmcli dev wifi connect LAB-TRAINING password <training-passphrase> ifname wlan0',
   'nslookup training.lab | curl -I http://training.lab | curl http://training.lab',
   'curl -I http://demo.lab | web-audit demo.lab',
   'web-fix headers | web-fix access | web-fix output',
@@ -145,6 +146,12 @@ function command(raw){
   const p=progress();return {ok:true,lines:['INCIDENT-001 '+p.count+'/'+p.total+' · '+(p.started?'진행 중':'미시작'),...p.steps.map((s,i)=>(s.done?'[✓] ':'[ ] ')+(i+1)+'. '+s.title)]};
  }
  if(cmd==='incident-report')return report();
+ if(/^nmcli dev wifi connect LAB-TRAINING password /i.test(cmd)){
+  const match=cmd.match(/^nmcli dev wifi connect LAB-TRAINING password (?:"([^"]+)"|'([^']+)'|([^ ]+)) ifname wlan0$/i);
+  if(!match)return {ok:false,lines:['사용법: nmcli dev wifi connect LAB-TRAINING password [학습용암호] ifname wlan0']};
+  const r=net()?.connect(match[1]||match[2]||match[3]);
+  return {ok:!!r?.ok,lines:[r?.message||'가상 네트워크 연결 실패']};
+ }
  if(cmd==='ip a')return {ok:true,lines:['1: lo    inet 127.0.0.1/8','2: wlan0  [SIM] state '+(link()?'CONNECTED':'DISCONNECTED')]};
  if(cmd==='ip route')return {ok:true,lines:[link()?'default via 192.0.2.1 dev wlan0\n192.0.2.0/24 dev wlan0 scope link':'(현재 가상 LAN 기본 경로 없음)']};
  if(/^ping 192\.0\.2\.(1|20|30)$/.test(cmd)){
