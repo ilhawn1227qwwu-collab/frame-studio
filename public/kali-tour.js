@@ -22,7 +22,7 @@ const stages=[
  C('Home 아이콘은 뭐예요?','리눅스의 파일 탐색기 Thunar를 열어볼까요? Windows 파일 탐색기와 비슷한 역할이에요.','.desktop-shortcuts [data-open="files"]','바탕화면 Home 아이콘을 눌러주세요.'),
  I('여기가 파일 관리자 Thunar예요.','주소 /home/kali는 kali 사용자 홈 폴더의 경로예요. 폴더와 파일을 살펴볼 수 있어요.','#files .gtk-toolbar','리눅스에서 / 문자는 폴더 경로를 구분해요.','실습 폴더 찾아보기'),
  C('lab-files 폴더도 열어볼까요?','왼쪽 목록에서 lab-files를 누르면 연습용 자료들이 나와요.','#file-sidebar [data-place="lab-files"]','왼쪽 lab-files 폴더를 눌러주세요.'),
- I('이곳엔 실습 파일이 있네요.','.cap은 패킷 캡처 파일, .txt는 일반 텍스트 파일을 뜻해요. 실제 보안 실습에서는 파일의 역할을 확인해야 해요.','#file-items','여기 보이는 건 가상 파일 목록이에요. 실제 파일을 생성하거나 읽지는 않아요.','바탕화면으로 돌아가기'),
+ I('학습 자료 폴더를 발견했어요!','lab-demo.txt에는 교육용 암호 후보가 들어 있어요. labcap-01.cap은 Wi-Fi 실습에서 가상 인증 교환 예제를 만들면 나타나요.','#file-items','목록은 실제 시스템이 아니라 브라우저 내부의 가상 파일 시스템과 연동돼요.','바탕화면으로 돌아가기'),
  C('파일 관리자도 닫아볼까요?','오른쪽 위 × 버튼을 눌러주세요.','#files [data-close="files"]','Thunar의 × 버튼을 눌러주세요.'),
  C('이젠 Lab Notes를 열어봐요.','바탕화면의 Lab Notes는 실습 방법을 설명한 메모장이에요.','.desktop-shortcuts [data-open="guide"]','Lab Notes 아이콘을 눌러주세요.'),
  I('여기가 학습 노트예요!','실습에서 사용할 명령어와 주의할 점을 읽을 수 있어요. 낯선 개념이 나오면 이곳부터 확인해요.','#guide .window-body',null,'노트 창 닫기'),
