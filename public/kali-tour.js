@@ -112,6 +112,8 @@ function checkpoint(){try{return Number(localStorage.getItem(CHECKPOINT))||0}cat
 function setCheckpoint(n){try{localStorage.setItem(CHECKPOINT,String(n))}catch(_){}}
 function chapterOf(n){return chapters.reduce((best,x,i)=>n>=x.start?i:best,0)}
 const chapterList=$('ob-chapter-list');
+// A separate fixed dialog avoids clipping through the scrollable tour card on mobile.
+root.append(chapterList);
 chapters.forEach((ch,n)=>{
  const b=document.createElement('button');b.type='button';b.textContent=(n+1)+'. '+ch.title;
  b.addEventListener('click',()=>jumpToChapter(n));chapterList.append(b);
