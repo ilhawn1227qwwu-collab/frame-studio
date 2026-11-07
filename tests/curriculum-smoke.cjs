@@ -20,7 +20,7 @@ async function test(browser,[label,width,height]){
   await page.locator('#ob-skip').click();
   assert.ok(await page.locator('#terminal').isVisible());
   for(const key of ['linux','network','web','forensics']){
-   await page.locator('.desktop-shortcuts .course-shortcut').click();
+   await page.locator(label==='desktop'?'.desktop-shortcuts .course-shortcut':'#course-dock').click();
    await page.locator('#courses').waitFor({state:'visible'});
    await page.locator('#course-list button').filter({hasText:names[key]}).click();
    await page.locator('#course-start').click();
