@@ -32,3 +32,5 @@ jobs:
         run: node tests/extended-audit.cjs
       - name: Verify virtual SSH permissions, separate server health and chapter resume
         run: node tests/ssh-and-chapters-smoke.cjs
+      - name: Verify Wi-Fi tutorial Info visibility and offline recovery
+        run: node tests/tour-info-smoke.cjs
