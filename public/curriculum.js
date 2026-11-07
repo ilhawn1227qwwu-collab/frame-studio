@@ -40,8 +40,9 @@ const tracks={
 };
 const initial=()=>({
  active:'wireless',progress:{linux:0,network:0,web:0,forensics:0},
- fs:{cwd:'/home/kali',dirs:['/','/home','/home/kali','/var','/var/log','/cases','/home/kali/Desktop','/home/kali/Documents','/home/kali/Downloads'],
+ fs:{cwd:'/home/kali',dirs:['/','/home','/home/kali','/var','/var/log','/cases','/home/kali/Desktop','/home/kali/Documents','/home/kali/Downloads','/home/kali/lab-files'],
  files:{'/home/kali/README.txt':'Kali SIM LAB: browser-only training environment.\nNo host OS access.',
+ '/home/kali/lab-files/lab-demo.txt':'12345678\npassword123\nsummer2026\nhello-world\ncoffee2026\nadmin2026\nstarlight88\nletmein2026',
  '/var/log/auth.log':'Nov 07 13:08:10 kali sshd[110]: Failed password for guest from 192.0.2.77 port 52001 ssh2\nNov 07 13:08:13 kali sshd[111]: Failed password for guest from 192.0.2.77 port 52002 ssh2\nNov 07 13:08:15 kali sshd[112]: Failed password for guest from 192.0.2.77 port 52003 ssh2\nNov 07 13:09:22 kali sshd[122]: Accepted password for kali from 192.0.2.20 port 52115 ssh2',
  '/cases/evidence.txt':'CASE SIM-107\nSynthetic timeline: three failed logins from 192.0.2.77.\nNo real users or logs are involved.'}},
  web:{headers:false,access:false,output:false},hashChecked:false
@@ -54,6 +55,7 @@ try{const raw=JSON.parse(localStorage.getItem(STORE)||'null');if(raw&&raw.progre
  for(const k of ['linux','network','web','forensics'])data.progress[k]=Math.min(tracks[k].steps.length,Math.max(0,Number(data.progress[k])||0));
 }}catch(_){}
 function save(){try{localStorage.setItem(STORE,JSON.stringify(data))}catch(_){}}
+function syncFiles(){document.dispatchEvent(new Event('kali-sim:fs-changed'))}
 const desktop=$('desktop'),term=$('terminal'),textlog=$('log');
 const windowEl=document.createElement('section');windowEl.className='window hidden';windowEl.id='courses';windowEl.setAttribute('aria-label','Kali 학습센터');
 windowEl.innerHTML='<div class="window-head"><span class="win-name">▤ Kali Learning Center — Practical Labs [SIM]</span>'+
@@ -180,7 +182,7 @@ function resetCurrent(){
  if(data.active==='linux')data.fs=initial().fs;
  if(data.active==='web')data.web=initial().web;
  if(data.active==='forensics')data.hashChecked=false;
- save();renderCoach();
+ save();syncFiles();renderCoach();
 }
 function print(message,kind=''){
  const line=document.createElement('div');line.className='line '+kind;line.textContent=String(message);
@@ -239,14 +241,20 @@ async function executeTrack(raw){
    const m=cmd.match(/^ls(?: (-l))?(?: (.+))?$/);
    if(m)result=ls(m[2]||'.',!!m[1]);
   }else if(/^mkdir [\w.-]+$/.test(cmd)){
-   const d=normalize(cmd.slice(6));if(fsDir(d))result={ok:false,lines:['mkdir: File exists: '+d]};
-   else {data.fs.dirs.push(d);save();result={ok:true,lines:['디렉터리 생성됨: '+d+' [SIM]']}}
+   const d=normalize(cmd.slice(6));
+   const parent=d.slice(0,d.lastIndexOf('/'))||'/';
+   if(!fsDir(parent))result={ok:false,lines:['mkdir: parent directory does not exist: '+parent]};
+   else if(fsDir(d)||Object.hasOwn(data.fs.files,d))result={ok:false,lines:['mkdir: File exists: '+d]};
+   else {data.fs.dirs.push(d);save();syncFiles();result={ok:true,lines:['디렉터리 생성됨: '+d+' [SIM]']}}
   }else if(/^cd(?: .+)?$/.test(cmd)){
    const p=normalize(cmd==='cd'?'/home/kali':cmd.slice(3).trim()==='~'?'/home/kali':cmd.slice(3));
    if(fsDir(p)){data.fs.cwd=p;save();result={ok:true,lines:['작업 경로: '+p]}}
    else result={ok:false,lines:['cd: no such directory: '+p]};
   }else if(/^touch [\w.-]+$/.test(cmd)){
-   const path=normalize(cmd.slice(6));data.fs.files[path]??='';save();result={ok:true,lines:['파일 생성: '+path+' [SIM]']};
+   const path=normalize(cmd.slice(6)),parent=path.slice(0,path.lastIndexOf('/'))||'/';
+   if(!fsDir(parent))result={ok:false,lines:['touch: parent directory does not exist: '+parent]};
+   else if(fsDir(path))result={ok:false,lines:['touch: cannot overwrite a directory: '+path]};
+   else{data.fs.files[path]??='';save();syncFiles();result={ok:true,lines:['파일 생성: '+path+' [SIM]']}};
   }else if(/^cat \S+$/.test(cmd)){
    const path=normalize(cmd.slice(4));result=data.fs.files[path]!==undefined?{ok:true,lines:[data.fs.files[path]||'(empty file)']}:{ok:false,lines:['cat: no such file: '+path]};
   }
@@ -300,5 +308,5 @@ document.addEventListener('kali-sim:tour-ended',()=>{desktop.classList.remove('t
 document.addEventListener('kali-sim:booted',()=>{renderCoach()});
 document.addEventListener('kali-sim:shutdown',()=>{windowEl.classList.add('hidden')});
 window.KaliCurriculum={selectTrack:startTrack,open:openHub,snapshot:()=>JSON.parse(JSON.stringify(data)),run:executeTrack,reset:resetCurrent};
-renderCoach();
+renderCoach();syncFiles();
 })();
