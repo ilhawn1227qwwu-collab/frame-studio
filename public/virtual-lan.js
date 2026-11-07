@@ -137,7 +137,9 @@ function remoteLogout(){
 
 function webFix(key){
  if(!['headers','access','output'].includes(key))return {ok:false,lines:['수정할 설정은 headers, access, output입니다.']};
- if(!link())return {ok:false,lines:['가상 네트워크에 연결되어 있지 않아 서버 설정을 바꿀 수 없어요.']};
+ if(!isRemote())return localHint();
+ if(!link())return fail('network','가상 네트워크가 끊겨 서버 설정을 바꿀 수 없어요.');
+ if(!hostOnline())return fail('host','원격 웹 서버 전원이 꺼져 있어요.');
  if(!state.web.running)return {ok:false,lines:['lab-web 서비스가 중단된 상태입니다. 먼저 서비스를 복구하세요.']};
  state.web[key]=true;
  changed('web-fix','가상 웹 보안 설정 개선: '+key);
@@ -149,7 +151,7 @@ function report(){
  if(!state.mission.started)return {ok:false,lines:['먼저 Learning Center에서 INCIDENT-001을 시작하세요.']};
  const needed=['gateway','outage','logs','restart','browser','audit','secured'];
  const missing=needed.filter(k=>!state.mission.flags[k]);
- if(missing.length||!state.web.running||issues().length||!link())return {ok:false,lines:['최종 검증 실패: '+(missing.length?'미완료 '+missing.join(', ')+' / ':'')+(!link()?'현재 가상 네트워크가 연결되지 않았습니다. / ':'')+'서버와 보안 설정을 확인하세요.']};
+ if(missing.length||!hostOnline()||!state.web.running||issues().length||!link())return {ok:false,lines:['최종 검증 실패: '+(missing.length?'미완료 '+missing.join(', ')+' / ':'')+(!link()?'현재 가상 네트워크가 연결되지 않았습니다. / ':'')+'서버와 보안 설정을 확인하세요.']};
  state.mission.report='INCIDENT-001 — Virtual Network Incident Report\n'+
  '환경: 192.0.2.0/24 (완전한 로컬 시뮬레이션)\n'+
  '초기 관찰: HTTP 503 서비스 장애, 192.0.2.77의 인증 실패 3회\n'+
@@ -170,8 +172,18 @@ function command(raw){
   'curl -I http://demo.lab | web-audit demo.lab',
   'web-fix headers | web-fix access | web-fix output',
   'cat /var/log/auth.log | grep "Failed password" /var/log/auth.log',
-  'sudo service lab-web restart | ss -tln | incident-status | incident-report'
+  'ssh trainee@192.0.2.20 | whoami | hostname | exit',
+  'sudo systemctl status lab-web | sudo systemctl restart lab-web (SSH 접속 필요)',
+  'ss -tln | incident-status | incident-report'
  ]};
+ if(cmd==='ssh'||cmd.startsWith('ssh '))return remoteLogin(cmd);
+ if(cmd==='exit')return remoteLogout();
+ if(cmd==='whoami')return {ok:true,lines:[state.shell.user]};
+ if(cmd==='hostname')return {ok:true,lines:[state.shell.host==='web01'?'web01':'kali']};
+ if(isRemote()&&(!hostOnline()||!link())){
+  state.shell={host:'kali',user:'kali',cwd:'/home/kali'};persist();
+  return fail('network','가상 서버 연결이 끊겼어요. Kali PC로 돌아왔습니다.');
+ }
  if(cmd==='incident-status'){
   const p=progress();return {ok:true,lines:['INCIDENT-001 '+p.count+'/'+p.total+' · '+(p.started?'진행 중':'미시작'),...p.steps.map((s,i)=>(s.done?'[✓] ':'[ ] ')+(i+1)+'. '+s.title)]};
  }
@@ -193,16 +205,16 @@ function command(raw){
  if(cmd==='nslookup training.lab'||cmd==='nslookup demo.lab')return link()?
  {ok:true,lines:['Server: 192.0.2.1 (SIM)','Name: '+cmd.split(' ')[1],'Address: 192.0.2.20']}:
  {ok:false,lines:['DNS 서버에 도달할 수 없어요.']};
- if(cmd==='ss -tln')return {ok:true,lines:['State  Recv-Q  Send-Q  Local Address:Port',
- 'LISTEN 0 128 192.0.2.30:514  (log service SIM)',
- state.web.running?'LISTEN 0 128 192.0.2.20:80   (lab-web SIM)':'CLOSED    192.0.2.20:80   (lab-web stopped)']};
+ if(cmd==='ss -tln')return {ok:true,lines:isRemote()?['State  Local Address:Port','LISTEN 0.0.0.0:22 (SSH SIM)',state.web.running?'LISTEN 0.0.0.0:80 (lab-web)':'CLOSED :80 (lab-web stopped)']:
+ ['State  Local Address:Port','LISTEN 127.0.0.1:22 (Kali demo)','원격 서버의 포트는 SSH로 접속해서 살펴보세요.']};
  if(cmd==='curl -I http://training.lab'||cmd==='curl -I http://demo.lab'||cmd==='curl http://training.lab'||cmd==='curl http://demo.lab'||cmd==='curl -I http://training.lab/health'){
   const head=cmd.startsWith('curl -I '),url=cmd.slice(head?8:5);
   const r=request(url,{head});return {ok:r.ok,lines:head?r.headers:[...r.headers,'',...r.body],status:r.status};
  }
- if(cmd==='cat /var/log/auth.log'){if(!link())return {ok:false,lines:['로그 서버에 접근할 수 없어요.']};flag('logs');return {ok:true,lines:[logText()]}}
+ if(cmd==='cat /var/log/auth.log'){if(!isRemote())return localHint();if(!link())return fail('network','연결이 끊겼어요.');flag('logs');return {ok:true,lines:[logText()]}}
  if(cmd==='grep "Failed password" /var/log/auth.log'||cmd==='grep Failed /var/log/auth.log'){
-  if(!link())return {ok:false,lines:['로그 서버에 접근할 수 없어요.']};
+  if(!isRemote())return localHint();
+  if(!link())return fail('network','연결이 끊겼어요.');
   flag('logs');return {ok:true,lines:[state.logs.filter(v=>v.includes('Failed password')).join('\n')]};
  }
  if(/^sudo service lab-web restart$|^service lab-web restart$/.test(cmd)){
