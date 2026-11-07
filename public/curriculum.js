@@ -165,7 +165,8 @@ function openHub(){
 function openTerminal(){
  const launcher=document.querySelector('.desktop-shortcuts [data-open="terminal"]');if(launcher)launcher.click();
  term.classList.remove('hidden','minimized');
- term.style.zIndex='1100';
+ // Focus stacking is handled by the original XFCE window manager.
+ // Do not pin the terminal above other application windows.
 }
 function startTrack(id){
  selectTrack(id);
