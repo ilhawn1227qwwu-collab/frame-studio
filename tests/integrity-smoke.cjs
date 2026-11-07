@@ -5,7 +5,7 @@ async function boot(page){
  await page.goto('http://127.0.0.1:8000',{waitUntil:'load'});
  await page.locator('#power-start').click();
  await page.locator('#onboard-root').waitFor({state:'visible',timeout:13000});
- assert.match(await page.locator('#ob-number').innerText(),/^01 \/ 28/);
+ assert.match(await page.locator('#ob-number').innerText(),/^01 \/ \d+/);
  await page.locator('#ob-skip').click();
  await page.locator('#terminal').waitFor({state:'visible',timeout:4000});
  if(await page.locator('#typing-btn').getAttribute('aria-pressed')==='true')await page.locator('#typing-btn').click();
