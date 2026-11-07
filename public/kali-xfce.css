@@ -150,7 +150,7 @@ html,body{background:#080d17;overscroll-behavior:none}button,input,select{font-f
  .panel-item{min-width:29px;padding:4px 6px}.app-menu{min-width:35px;padding:3px}
  .app-menu .menu-title{display:none}#full-btn #full-label{display:none}
  .clock{font-size:11px;padding:4px 5px}
- .backdrop-mark{right:-20%;top:24%;height:75vw;width:75vw}.desktop-shortcuts{top:54px;left:9px;gap:3px}
+ .backdrop-mark{right:-20%;top:24%;height:75vw;width:75vw}.desktop-shortcuts{display:flex!important;top:54px;left:9px;gap:3px;max-height:calc(100dvh - 105px);overflow-y:auto;scrollbar-width:none}.desktop-shortcuts::-webkit-scrollbar{display:none}
  .shortcut{font-size:10px;width:78px;padding:6px 2px}.shortcut-icon{width:42px;height:42px}
  .mission{display:none;position:absolute;top:44px;left:6px;right:6px;bottom:57px;width:auto;max-height:none;z-index:520;overflow:auto}
  .mission.show{display:block}.mission-content{padding:13px}.mission-titlebar{height:34px}
