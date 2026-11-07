@@ -127,6 +127,16 @@ function renderMap(){
 }
 function openMap(){renderMap();open(map)}
 function openTerminal(){document.querySelector('.desktop-shortcuts [data-open="terminal"]')?.click();terminal.classList.remove('hidden','minimized');focus(terminal)}
+
+function updateShellCaption(){
+ const sh=LAN.shell,host=sh.host==='web01'?'web01':'kali';
+ const title=terminal.querySelector('.window-head .win-name');
+ if(title)title.textContent='⌘ '+sh.user+'@'+host+': '+sh.cwd+' [SIM]';
+ const prompt=terminal.querySelector('#shell-form .caret');
+ if(prompt)prompt.textContent=host==='web01'?'web01 $':'kali $';
+ const input=$('shell-input');
+ if(input)input.setAttribute('aria-label',sh.user+'@'+host+' 교육용 가상 터미널 명령어');
+}
 function print(text,kind=''){
  const t=$('log');const e=document.createElement('div');e.className='line '+kind;e.textContent=String(text);t.append(e);t.scrollTop=t.scrollHeight;
 }
@@ -195,12 +205,12 @@ const form=$('shell-form');form.addEventListener('submit',e=>{
  if(!inLAN())return;
  e.preventDefault();e.stopImmediatePropagation();run($('shell-input').value);
 },true);
-document.addEventListener('kali-sim:lan-changed',()=>{renderMap();renderCoach();});
+document.addEventListener('kali-sim:lan-changed',()=>{renderMap();renderCoach();updateShellCaption();});
 document.addEventListener('kali-sim:network-changed',()=>{if(inLAN())renderMap()});
 document.addEventListener('kali-sim:course-switched',renderCoach);
 document.addEventListener('kali-sim:tour-started',()=>desktop.classList.add('tour-running'));
 document.addEventListener('kali-sim:tour-ended',()=>{desktop.classList.remove('tour-running');renderCoach()});
 document.addEventListener('kali-sim:shutdown',()=>{close(browser);close(map)});
 window.KaliLANUI={openMap,openBrowser,run,render:()=>{renderMap();renderCoach()},snapshot:LAN.snapshot};
-renderMap();renderCoach();
+renderMap();renderCoach();updateShellCaption();
 })();
