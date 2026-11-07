@@ -241,7 +241,7 @@ async function executeTrack(raw){
   else if(cmd==='ls'||cmd==='ls -l'||cmd.startsWith('ls ')){
    const m=cmd.match(/^ls(?: (-l))?(?: (.+))?$/);
    if(m)result=ls(m[2]||'.',!!m[1]);
-  }else if(/^mkdir [\w.-]+$/.test(cmd)){
+  }else if(/^mkdir [\w./-]+$/.test(cmd)){
    const d=normalize(cmd.slice(6));
    const parent=d.slice(0,d.lastIndexOf('/'))||'/';
    if(!fsDir(parent))result={ok:false,lines:['mkdir: parent directory does not exist: '+parent]};
@@ -251,7 +251,7 @@ async function executeTrack(raw){
    const p=normalize(cmd==='cd'?'/home/kali':cmd.slice(3).trim()==='~'?'/home/kali':cmd.slice(3));
    if(fsDir(p)){data.fs.cwd=p;save();result={ok:true,lines:['작업 경로: '+p]}}
    else result={ok:false,lines:['cd: no such directory: '+p]};
-  }else if(/^touch [\w.-]+$/.test(cmd)){
+  }else if(/^touch [\w./-]+$/.test(cmd)){
    const path=normalize(cmd.slice(6)),parent=path.slice(0,path.lastIndexOf('/'))||'/';
    if(!fsDir(parent))result={ok:false,lines:['touch: parent directory does not exist: '+parent]};
    else if(fsDir(path))result={ok:false,lines:['touch: cannot overwrite a directory: '+path]};
