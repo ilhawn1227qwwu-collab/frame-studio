@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07172d">
-<title>KALI SIM LAB — Wi-Fi Security Training</title>
+<title>Kali SIM LAB — XFCE Virtual Desktop</title>
 <style>
 :root{color-scheme:dark;--text:#e3eefe;--sub:#a4b4d1;--line:#6c95c037;--aqua:#63c8ff;--lime:#6ee0a9;--warn:#ffce7a;--red:#ff8c9f;--panel:#0b1c34f2;font-family:Inter,Roboto,"Noto Sans KR","Malgun Gothic",system-ui,sans-serif}
 *{box-sizing:border-box}body,html{margin:0;width:100%;height:100%;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #68c8ff;outline-offset:2px}button:disabled{opacity:.5;cursor:not-allowed}button{touch-action:manipulation}
@@ -25,21 +25,72 @@
 @media(max-width:760px){.desktop{min-height:0}.top-panel{padding:0 7px}.fake-status,.clock,.desktop-shortcuts,.task-caption{display:none}.panel-right{gap:4px}.panel-item{font-size:11px;padding:6px}.mission{top:auto;bottom:52px;left:0;right:0;width:auto;max-height:unset;border-radius:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;background:#10233bf5;border-left:0;border-right:0;border-bottom:0;box-shadow:none}.mission h2{font-size:12px;margin:0}.mission .eyebrow,.mission>.sub,.steps,.progress-meta,.progress,.mission-actions{display:none}.hint{margin-left:auto;min-height:0;max-width:55%;padding:4px 7px;font-size:10px;max-height:31px;overflow:hidden}.window{border-radius:0;min-width:0;min-height:0;width:100%!important;height:calc(100dvh - 153px)!important;left:0!important;top:39px!important;right:0;max-width:none}.window-head{cursor:default}.terminal-log{padding:11px;font-size:11px}.terminal-bottom{padding:8px 10px}.shell-input input{font-size:11px}.taskbar{height:52px;bottom:0;justify-content:space-around;padding:3px}.mobile-icons{display:flex;align-items:center;justify-content:space-around;width:100%}.desktop-task{display:none!important}.taskbar button{flex:1}.backdrop-mark{width:53vw;height:53vw;right:24%;top:28%}.net{padding:9px}.window-body{padding:13px}.menu-panel{top:39px}}
 @media(max-width:360px){.panel-item{padding:5px}.win-name{font-size:10px}.typing-switch{font-size:9px!important;padding:3px!important}.window-buttons button{min-width:25px}.hint{max-width:48%}}
 @media(prefers-reduced-motion:reduce){.line.typing:after{animation:none}.progress span,.toast{transition:none}}
+
+/* Kali XFCE-inspired single-user boot experience */
+.desktop{background:radial-gradient(ellipse at 72% 36%,#16427387,transparent 45%),linear-gradient(130deg,#061023 2%,#102b4d 47%,#071426 95%)}
+.top-panel{background:#182537f5;border-bottom:1px solid #5a718c88;box-shadow:0 2px 8px #0006}
+.window{background:#142236f6;border:1px solid #778ba676;box-shadow:0 16px 56px #000b}
+.window-head{background:linear-gradient(#2b394c,#233246);border-bottom:1px solid #91a3bd49}
+.window-head .close{font-size:21px}.terminal-body{background:#0b0f18}.terminal-log{color:#d2e4de}
+.terminal-bottom{background:#121a26}
+.taskbar{left:50%;right:auto;transform:translateX(-50%);bottom:10px;width:max-content;max-width:calc(100% - 22px);height:47px;background:#192c42eb;border:1px solid #8cb0c078;border-radius:10px;padding:4px 8px;box-shadow:0 8px 22px #0009}
+.task-caption{margin-left:9px;margin-right:7px}.top-panel .kali-logo{display:inline-grid;place-items:center;width:23px;height:23px;color:#a6d7ff;font-weight:950;font-style:italic;font-size:17px;text-shadow:0 0 9px #4b9fea}
+.os-power-btn{font-weight:800!important;font-size:16px!important;color:#b0c9de!important}
+.power-layer{position:absolute;inset:0;z-index:1200;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 50% 32%,#0a2b4d 0%,#030810 61%,#010309 100%);color:#f0f6ff}
+.power-layer[hidden]{display:none!important}
+.power-card{width:min(440px,100%);border:1px solid #6c94b45d;background:linear-gradient(145deg,#152b42ef,#0b172af5);border-radius:18px;padding:32px 30px;text-align:center;box-shadow:0 20px 90px #000d}
+.power-emblem{margin:0 auto 19px;display:grid;place-items:center;width:83px;height:83px;background:#123b60;border:1px solid #76b5e877;border-radius:50%;font-size:43px;color:#9ad5ff;box-shadow:0 0 36px #277fc437}
+.power-overline{font:700 11px ui-monospace,monospace;letter-spacing:.20em;color:#7ac8fb}
+.power-card h1{font-size:26px;letter-spacing:-.045em;margin:10px 0 11px;line-height:1.35}
+.power-card .power-desc{font-size:13px;line-height:1.8;color:#bdcfe0}
+.power-start{display:block;width:100%;border:1px solid #7dc9ff91;color:white;background:#216ba4;border-radius:10px;padding:13px;font-weight:800;font-size:15px;margin:25px 0 12px}
+.power-start:hover{background:#3186c5}.power-note{font-size:11px;color:#92a9c0;line-height:1.6;margin:0}
+.boot-screen{display:none;width:min(760px,100%);align-self:stretch;flex-direction:column;justify-content:center}
+.power-layer.booting .power-card{display:none}.power-layer.booting .boot-screen{display:flex}
+.boot-heading{font:800 clamp(31px,7vw,58px) ui-monospace,monospace;letter-spacing:.13em;color:#cdeaff;text-shadow:0 0 30px #4a91cb60}
+.boot-heading span{font-size:12px;letter-spacing:.08em;color:#85a6c8;display:block;margin:7px 0 16px}
+.boot-grub{font:12px ui-monospace,monospace;color:#d0e1ef;border:1px solid #54799c80;background:#091a2d;padding:12px;margin-bottom:22px;line-height:1.7}
+.boot-grub strong{display:block;background:#316d9a;color:#fff;padding:3px 6px;margin-top:6px}
+.boot-logs{font:12px/1.75 ui-monospace,monospace;color:#b3d7e6;white-space:pre-wrap;min-height:156px;overflow-wrap:anywhere}
+.boot-bar{height:3px;background:#163653;overflow:hidden;margin-top:25px;border-radius:3px}
+.boot-bar span{height:100%;display:block;width:0;background:#70d6f6;transition:width .25s}
+.boot-sim{font:10px ui-monospace,monospace;letter-spacing:.12em;color:#80a3c2;margin-top:11px}
+@media(max-width:760px){.taskbar{left:0;right:0;transform:none;bottom:0;width:100%;max-width:none;height:52px;border:0;border-top:1px solid #7e9ca65b;border-radius:0}.power-card{padding:25px 18px}.power-card h1{font-size:23px}.boot-logs{font-size:10px}.boot-grub{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.boot-bar span{transition:none}}
+
 </style>
 </head>
 <body><main class="desktop" id="desktop" aria-label="Kali Linux 스타일 가상 보안 실습실">
 <div class="backdrop-mark" aria-hidden="true"><svg viewBox="0 0 220 220"><path d="M35 134 Q48 51 104 58 Q143 57 177 92 Q145 89 120 74 Q156 102 157 125 Q146 151 101 167 Q127 146 117 132 Q86 140 53 175 Q61 143 91 116 Q63 122 35 134Z"/><path d="M103 62 Q92 38 113 18 M157 125 Q180 132 185 160 M64 172 Q72 194 96 199"/><circle cx="130" cy="98" r="3" fill="#7ccfff65"/></svg></div>
-<header class="top-panel"><div class="panel-left"><button class="panel-item app-menu" id="menu-btn" type="button" aria-expanded="false"><span class="dragon" aria-hidden="true">♞</span> Applications ▾</button><button class="panel-item" data-open="terminal">⌘ Terminal</button><button class="panel-item" data-open="wifi">◉ Network</button></div><div class="panel-right"><span class="fake-status">● ISOLATED SIMULATION</span><button class="panel-item" id="full-btn" aria-label="전체화면 켜기">⛶ <span id="full-label">전체화면</span></button><span class="clock" id="clock"></span></div></header>
-<div class="menu-panel" id="menu-panel"><button data-open="terminal">⌘ Terminal Emulator</button><button data-open="wifi">◉ Wi-Fi Networks</button><button data-open="guide">▤ Learning Notes</button><button data-open="router">⚙ Lab Router Settings</button><button id="menu-reset">↺ Reset Training</button></div>
+<header class="top-panel"><div class="panel-left"><button class="panel-item app-menu" id="menu-btn" type="button" aria-expanded="false"><span class="kali-logo" aria-hidden="true">K</span> Kali ▾</button><button class="panel-item" data-open="terminal">⌘ Terminal</button><button class="panel-item" data-open="wifi">◉ Network</button></div><div class="panel-right"><span class="fake-status">● XFCE · LOCAL SIMULATION</span><button class="panel-item os-power-btn" id="shutdown-btn" type="button" aria-label="가상 컴퓨터 종료" title="컴퓨터 종료">⏻</button><button class="panel-item" id="full-btn" aria-label="전체화면 켜기">⛶ <span id="full-label">전체화면</span></button><span class="clock" id="clock"></span></div></header>
+<div class="menu-panel" id="menu-panel"><button data-open="terminal">⌘ Terminal Emulator</button><button data-open="wifi">◉ Wi-Fi Networks</button><button data-open="guide">▤ Learning Notes</button><button data-open="router">⚙ Lab Router Settings</button><button id="menu-reset">↺ Reset Training</button><button id="menu-power">⏻ Shut Down Kali (SIM)</button></div>
 <nav class="desktop-shortcuts" aria-label="가상 데스크톱 바로가기"><button class="shortcut" data-open="terminal"><span class="shortcut-icon">⌘</span>Terminal</button><button class="shortcut" data-open="wifi"><span class="shortcut-icon">◉</span>Wi-Fi</button><button class="shortcut" data-open="guide"><span class="shortcut-icon">▤</span>Notes</button><button class="shortcut" data-open="router"><span class="shortcut-icon">⚙</span>Router</button></nav>
 <aside class="mission" aria-label="실습 임무"><div class="eyebrow">WIRELESS LAB / 01</div><h2>Wi-Fi 보안 모의실습</h2><p class="sub">Kali Linux 스타일 환경에서 교육용 네트워크를 점검하고 강화합니다. 모든 명령은 페이지 내부에서만 재현됩니다.</p><div class="progress-meta"><span>진행률</span><strong id="progress-text">0 / 9</strong></div><div class="progress"><span id="progress-bar"></span></div><ol class="steps" id="steps"></ol><div class="hint" id="next-hint">첫 명령어: ip a</div><div class="mission-actions"><button class="btn" id="hint-btn">힌트</button><button class="btn" id="reset-btn">초기화</button></div></aside>
 <section class="window" id="terminal" aria-label="Kali 가상 터미널"><div class="window-head"><span class="win-name">⌘ kali@kali: ~ <span style="color:#7aa5cb;font-size:10px">[simulation]</span></span><div class="window-buttons"><button class="typing-switch" id="typing-btn" type="button" aria-pressed="true">타이핑 ON</button><button data-close="terminal" class="close" aria-label="터미널 닫기">×</button></div></div><div class="terminal-body"><div class="terminal-log" id="log" role="log" aria-live="polite"></div><div class="terminal-bottom"><div class="quick" id="quick"></div><form class="shell-input" id="shell-form"><span class="caret">└─$</span><input id="shell-input" placeholder="명령어 입력 (help 또는 위 단축 버튼)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="가상 Kali 터미널 명령어"><button type="submit">↵ 실행</button></form></div></div></section>
 <section class="window hidden" id="wifi" aria-label="교육용 Wi-Fi 목록"><div class="window-head"><span class="win-name">◉ NetworkManager — Wi-Fi</span><div class="window-buttons"><button data-close="wifi" class="close" aria-label="Wi-Fi 창 닫기">×</button></div></div><div class="window-body"><h2>Available Wi-Fi Networks</h2><p class="sub">실제 무선 어댑터 검색 결과가 아닌 <b>고정된 가상 SSID</b>입니다.</p><div class="network-list" id="nets"></div><div id="net-info" class="info">모의 해킹 대상은 오직 <b>LAB-TRAINING</b>입니다. 다른 두 네트워크는 설명용입니다.</div><div class="notice">이 페이지는 브라우저에서 동작하는 교육용 운영체제 모형입니다. 실제 Wi-Fi 장치·패킷·외부 서버에 접근하지 않습니다.</div></div></section>
 <section class="window hidden" id="guide" aria-label="명령어와 학습 노트"><div class="window-head"><span class="win-name">▤ Kali Security Training — Notes</span><div class="window-buttons"><button data-close="guide" class="close" aria-label="노트 닫기">×</button></div></div><div class="window-body"><h2>첫 수업 · 무선 네트워크 보안</h2><p class="sub">여기서 사용하는 명령은 실제 Linux/Kali 도구의 문법을 참고했지만, <b>실행되는 것은 JavaScript 모형</b>입니다. 암호 목록·캡처 파일도 가상의 학습 데이터예요.</p><div class="guide-block"><h3>1. 운영체제와 네트워크</h3><p><code>whoami</code>, <code>pwd</code>, <code>ls</code>, <code>ip a</code>는 리눅스에서 널리 쓰는 명령입니다. <code>nmcli dev wifi list</code>는 NetworkManager의 주변 네트워크 목록 기능입니다. 이 앱의 목록은 실제 주변 네트워크가 아닙니다.</p></div><div class="guide-block"><h3>2. 모니터 모드와 AP 관찰</h3><p><code>airmon-ng</code>는 모니터 모드 설정을 돕고, <code>airodump-ng</code>는 무선 트래픽을 관찰하는 데 쓰입니다. 이 실습에서는 장치 제어와 캡처가 전혀 일어나지 않고, 가상 어댑터 상태와 학습용 AP 자료만 바뀝니다.</p></div><div class="guide-block"><h3>3. WPA2 핸드셰이크와 사전 대입 위험</h3><p>WPA2-Personal의 4-way handshake에 비밀번호 평문이 들어 있는 것은 아닙니다. 약한 비밀번호는 캡처한 인증 교환을 이용한 오프라인 후보 검사에 취약할 수 있습니다. 이 실습의 가짜 캡처 파일은 이미 허가된 클라이언트의 정상 연결을 재현하며, 패킷 해독 대신 미리 정한 후보 8개와 문자열을 비교합니다.</p></div><div class="guide-block"><h3>4. 연결 복구와 보안 개선</h3><p>모니터 모드를 종료한 뒤 <code>nmcli</code>를 사용해 가상 연결을 수행합니다. 마지막에는 공유기 설정 화면에서 WPA3-SAE와 긴 고유 암호를 선택합니다. 실제 WPA3는 모든 종류의 공격을 막는 기술은 아닙니다.</p></div><div class="guide-block"><h3>도움 명령</h3><p><code>help</code>, <code>history</code>, <code>clear</code>, <code>status</code>, <code>man nmcli</code>, <code>cat README.txt</code>. 마지막 <code>lab-verify</code>는 이 프로그램에서만 쓰는 <b>교육용 전용 명령</b>이며 실제 Kali 명령이 아닙니다.</p></div></div></section>
 <section class="window hidden" id="router" aria-label="가상 공유기 설정"><div class="window-head"><span class="win-name">⚙ LAB-TRAINING Router — Admin [SIM]</span><div class="window-buttons"><button data-close="router" class="close" aria-label="설정 창 닫기">×</button></div></div><div class="window-body"><h2>Wireless Security Settings</h2><p class="sub">이 화면은 교육용 가상 공유기 설정입니다. <b>실제 쓰는 비밀번호를 입력하지 마세요.</b> 입력한 새 암호는 저장하지 않습니다.</p><form id="router-form"><label class="field-label" for="security">보안 프로토콜</label><select class="field" id="security"><option value="WPA3-SAE">WPA3-Personal (SAE) — 권장</option><option value="WPA2-PSK">WPA2-Personal (PSK)</option></select><label class="field-label" for="secret">새 가상 Wi-Fi 암호 (16자 이상)</label><input class="field" id="secret" type="text" value="River-Maple-Sky-Cloud-84" autocomplete="off" spellcheck="false"><div class="quality" id="quality"></div><button class="btn primary" type="submit" style="width:100%">Apply Settings</button><div class="message" id="router-message" role="status"></div></form></div></section>
-<footer class="taskbar" aria-label="작업 표시줄"><button class="desktop-task" data-open="terminal" title="Terminal">⌘</button><button class="desktop-task" data-open="wifi" title="Network">◉</button><button class="desktop-task" data-open="guide" title="Notes">▤</button><button class="desktop-task" data-open="router" title="Router">⚙</button><div class="task-caption">KALI SIM LAB · OFFLINE</div><div class="mobile-icons"><button data-open="terminal" aria-label="터미널">⌘</button><button data-open="wifi" aria-label="네트워크">◉</button><button data-open="guide" aria-label="학습 노트">▤</button><button data-open="router" aria-label="가상 공유기">⚙</button></div></footer>
+<footer class="taskbar" aria-label="작업 표시줄"><button class="desktop-task" data-open="terminal" title="Terminal">⌘</button><button class="desktop-task" data-open="wifi" title="Network">◉</button><button class="desktop-task" data-open="guide" title="Notes">▤</button><button class="desktop-task" data-open="router" title="Router">⚙</button><div class="task-caption">kali@kali · xfce4 [SIM]</div><div class="mobile-icons"><button data-open="terminal" aria-label="터미널">⌘</button><button data-open="wifi" aria-label="네트워크">◉</button><button data-open="guide" aria-label="학습 노트">▤</button><button data-open="router" aria-label="가상 공유기">⚙</button></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <div class="finish" id="finish"><div class="finish-card"><div class="finish-icon">✓</div><div class="eyebrow">WIRELESS LAB · COMPLETED</div><h2>보안 실습 완료</h2><p>가상 Kali 터미널로 모의 무선 네트워크를 점검하고, 취약한 암호를 찾아낸 뒤, WPA3와 강한 암호로 설정을 개선했어요.</p><p>실제 무선 신호나 주변 기기를 조작하지 않았습니다.</p><div class="finish-actions"><button class="btn" id="finish-close">데스크톱으로 돌아가기</button><button class="btn primary" id="finish-restart">처음부터 다시</button></div></div></div>
+
+<div class="power-layer" id="power-layer" role="dialog" aria-modal="true" aria-labelledby="power-title">
+  <section class="power-card" id="power-confirm">
+    <div class="power-emblem" aria-hidden="true">⏻</div>
+    <div class="power-overline">KALI LINUX · VIRTUAL MACHINE</div>
+    <h1 id="power-title">컴퓨터를 켜시겠습니까?</h1>
+    <p class="power-desc">가상의 Kali Linux 컴퓨터를 부팅합니다.<br>실제 컴퓨터 설정이나 주변 네트워크에는 영향을 주지 않습니다.</p>
+    <button class="power-start" id="power-start" type="button">⏻ &nbsp; 컴퓨터 켜기 · 전체화면 시작</button>
+    <p class="power-note">전원 버튼을 누르면 전체화면을 요청합니다. 브라우저가 지원하지 않으면 일반 화면으로 시작합니다.<br>Esc 키로 전체화면을 종료할 수 있습니다.</p>
+  </section>
+  <section class="boot-screen" id="boot-screen" aria-label="가상 Kali Linux 부팅 중">
+    <div class="boot-heading">KALI <span>GNU / LINUX · XFCE DESKTOP · SIMULATION</span></div>
+    <div class="boot-grub">GNU GRUB version 2.12 (SIM)<strong>* Kali GNU/Linux — Training Environment</strong></div>
+    <div class="boot-logs" id="boot-logs" role="status" aria-live="polite"></div>
+    <div class="boot-bar" aria-hidden="true"><span id="boot-bar-fill"></span></div>
+    <div class="boot-sim">STARTING LOCAL VIRTUAL SESSION · NO REAL OS BOOT</div>
+  </section>
+</div>
 </main>
 <script>
 (()=>{'use strict';
@@ -124,6 +175,56 @@ function quality(){const p=$('secret').value;const length=p.length>=16,diversity
 $('secret').addEventListener('input',quality);quality();
 $('router-form').addEventListener('submit',e=>{e.preventDefault();const msg=$('router-message');if(!state.done.connect){msg.textContent='먼저 가상 네트워크 연결 단계까지 진행하세요.';return}if($('security').value!=='WPA3-SAE'){msg.textContent='이 임무에서는 WPA3-SAE를 선택해야 합니다.';return}if(!quality()){msg.textContent='실습 조건을 만족하는 새로운 가상 비밀번호가 필요합니다.';return}state.protocol='WPA3-SAE';state.hardened=true;state.connected=false;state.found=false;state.captured=false;save();$('secret').value='';msg.textContent='변경 완료. 터미널에서 lab-verify LAB-TRAINING을 입력하세요.';log('[SIM ROUTER] LAB-TRAINING: WPA3-SAE applied, weak credential retired.','ok');log('다음: lab-verify LAB-TRAINING','sys');render();notify('가상 공유기 보안을 강화했습니다.');openWindow('terminal',false)});
 function welcome(){log('┌─────────────────────────────────────────────────────┐','sys');log('│   KALI SIM LAB  ·  WIRELESS SECURITY TRAINING     │','sys');log('└─────────────────────────────────────────────────────┘','sys');log('Kali Linux 스타일 학습 환경 · 실제 Linux OS 실행 아님','warn');log('실제 Wi-Fi 스캔/패킷 수집/무선 연결은 하지 않습니다.');log('첫 단계: ip a      |      전체 명령어: help','ok');log('Tab: 명령어 자동 완성 · ↑/↓: 입력 기록 · 우측: 9단계 임무','dim')}
+
+/* Power state: a click is required for the Fullscreen API on normal browsers. */
+let powerCycle=0,osRunning=false;
+const bootLogLines=[
+'[    0.0000] Linux kernel initializing (SIMULATED)',
+'[  OK  ] Loaded virtual memory and filesystem',
+'[  OK  ] Started udev device manager (SIM)',
+'[  OK  ] Detected virtual wlan0 training adapter',
+'[  OK  ] Starting NetworkManager simulation',
+'[  OK  ] Starting LightDM / XFCE desktop session',
+'[  OK  ] Kali SIM LAB ready — kali@kali'];
+function switchOff(){
+  powerCycle++;osRunning=false;runGeneration++;busy=false;
+  const layer=$('power-layer');layer.hidden=false;layer.classList.remove('booting');
+  $('boot-logs').textContent='';$('boot-bar-fill').style.width='0%';
+  $('power-confirm').hidden=false;
+  $('menu-panel').classList.remove('open');$('menu-btn').setAttribute('aria-expanded','false');
+  $('shell-input').blur();
+  if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});
+  $('power-start').focus({preventScroll:true});
+}
+function powerOn(){
+  const layer=$('power-layer');if(layer.classList.contains('booting')||osRunning)return;
+  // Must request fullscreen synchronously inside the actual user click.
+  if(!document.fullscreenElement&&$('desktop').requestFullscreen){
+    try{$('desktop').requestFullscreen({navigationUI:'hide'}).catch(()=>{});}catch(_){}
+  }
+  const id=++powerCycle;layer.classList.add('booting');
+  $('boot-logs').textContent='';$('boot-bar-fill').style.width='0%';
+  let n=0;const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function next(){
+    if(id!==powerCycle)return;
+    if(n<bootLogLines.length){
+      $('boot-logs').textContent+=bootLogLines[n]+'\n';
+      $('boot-bar-fill').style.width=String(Math.round((n+1)/bootLogLines.length*100))+'%';
+      n++;setTimeout(next,reduced?25:110+Math.round(Math.random()*140));
+    }else{
+      setTimeout(()=>{
+        if(id!==powerCycle)return;
+        osRunning=true;layer.hidden=true;layer.classList.remove('booting');
+        if(matchMedia('(min-width:761px)').matches)$('shell-input').focus({preventScroll:true});
+      },reduced?0:280);
+    }
+  }
+  setTimeout(next,reduced?0:180);
+}
+$('power-start').addEventListener('click',powerOn);
+$('shutdown-btn').addEventListener('click',switchOff);
+$('menu-power').addEventListener('click',switchOff);
+
 render();welcome();if(total()===9)log('저장된 기록: 모든 실습을 완료한 상태입니다.','ok');
 })();
 </script></body></html>
