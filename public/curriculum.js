@@ -3,8 +3,10 @@
  * Educational UI and a browser-only command interpreter. NO OS, sockets, or external targets. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id), STORE='kali-sim-curriculum-v1';
-const trackOrder=['linux','network','wireless','web','forensics'];
+const trackOrder=['linux','network','wireless','web','forensics','incident','sandbox'];
 const tracks={
+ incident:{title:'종합 임무 · INCIDENT-001',glyph:'⚑',desc:'가상 사내 네트워크에서 서버 장애와 인증 실패 기록을 조사하고 서비스를 복구하며 보안 조치 보고서를 작성하세요.',steps:[['게이트웨이 확인'],['웹 장애 확인'],['인증 로그 조사'],['서비스 복구'],['Firefox로 확인'],['웹 보안 진단'],['취약 설정 개선'],['최종 보고']]},
+ sandbox:{title:'자유 실습 · Virtual LAN',glyph:'∞',desc:'명령 순서를 지정하지 않고 동일한 가상 공유기·웹 서버·로그를 자유롭게 관찰하고 조작할 수 있어요.',steps:[['가상 실습 자유 탐색']]},
  linux:{title:'리눅스 기초',glyph:'⌘',desc:'디렉터리와 파일을 직접 조작하면서 기본 터미널 명령을 익혀요.',steps:[
  ['현재 위치 확인','지금 내가 어디 있는지 알아야 파일을 찾을 수 있겠죠? 현재 작업 경로를 출력해 봅시다.','pwd','경로 앞의 /는 파일 시스템의 시작을 뜻해요.'],
  ['폴더 내용 살펴보기','파일을 찾으려면 현재 폴더에 무엇이 있는지 먼저 살펴봐야겠죠?','ls','ls는 list의 줄임말이에요.'],
@@ -104,6 +106,8 @@ $('course-reset').addEventListener('click',()=>resetCurrent());
 $('course-start').addEventListener('click',()=>startTrack(data.active));
 function currentLength(id){return id==='wireless'?9:tracks[id].steps.length}
 function currentProgress(id){
+ if(id==='incident')return window.KaliLAN?.progress().count||0;
+ if(id==='sandbox')return 0;
  if(id==='wireless'){const m=$('progress-text')?.textContent?.split('/');return m?Number.parseInt(m[0],10)||0:0}
  return data.progress[id]||0;
 }
@@ -129,12 +133,13 @@ function renderHub(){
   const label=document.createElement('span');label.textContent=s[0];row.append(idx,label);$('course-stages').append(row);
  });
  $('course-start').textContent=n===max?'과목 다시 살펴보기':'선택한 실습 시작';
- $('course-reset').disabled=data.active==='wireless';
- $('course-reset').title=data.active==='wireless'?'Wi-Fi 실습의 초기화 버튼은 원래 진행률 창에서 사용해 주세요.':'이 과목만 처음부터 다시 시작';
+ $('course-reset').disabled=data.active==='wireless'||data.active==='sandbox';
+ $('course-reset').title=data.active==='wireless'?'Wi-Fi 실습의 초기화 버튼은 원래 진행률 창에서 사용해 주세요.':data.active==='sandbox'?'자유 실습은 진행률이 없어요.':'이 과목만 처음부터 다시 시작';
 }
 function renderCoach(){
  desktop.classList.toggle('course-other',data.active!=='wireless');
  renderHub();
+ if(data.active==='incident'||data.active==='sandbox'){$('course-coach').hidden=true;mobile.hidden=true;return}
  if(data.active==='wireless'){ $('course-coach').hidden=true;mobile.hidden=true;return }
  const id=data.active,t=tracks[id],n=data.progress[id],len=t.steps.length;
  const step=n>=len?['과목을 완료했어요!','모든 단계가 끝났어요. 학습센터에서 다음 과목을 고르거나 다시 연습해 보세요.','help','명령어가 왜 필요한지 떠올려 보세요.']:t.steps[n];
@@ -160,7 +165,8 @@ function selectTrack(id,saveSelection=true){
 }
 function openHub(){
  if($('power-layer')&&!$('power-layer').hidden)return;
- windowEl.classList.remove('hidden','minimized');windowEl.style.zIndex=String(1200);
+ windowEl.classList.remove('hidden','minimized');
+ windowEl.style.zIndex=String(Math.max(1500,...[...document.querySelectorAll('.window')].map(x=>Number(x.style.zIndex)||0))+1);
  $('menu-panel')?.classList.remove('open');
  renderHub();
 }
@@ -171,12 +177,21 @@ function openTerminal(){
  // Do not pin the terminal above other application windows.
 }
 function startTrack(id){
+ if(id==='incident'&&!window.KaliLAN?.mission.started)window.KaliLAN?.missionStart();
  selectTrack(id);
  windowEl.classList.add('hidden');
  openTerminal();
+ if(id==='incident'||id==='sandbox')window.KaliLANUI?.render();
 }
 function resetCurrent(){
- if(data.active==='wireless')return;
+ if(data.active==='wireless'||data.active==='sandbox')return;
+ if(data.active==='incident'){
+  if(confirm('INCIDENT-001을 가상 서버 초기 상태부터 다시 시작할까요?')){
+   window.KaliLAN?.missionStart();
+   renderCoach();window.KaliLANUI?.render();
+  }
+  return
+ }
  if(!confirm('선택한 과목의 진행을 초기화할까요?'))return;
  data.progress[data.active]=0;
  if(data.active==='linux')data.fs=initial().fs;
@@ -205,11 +220,11 @@ function ls(path,long=false){
  children.sort((a,b)=>a.name.localeCompare(b.name));
  return {ok:true,lines:[children.length?children.map(x=>long?(x.dir?'drwxr-xr-x':'-rw-r--r--')+' kali kali '+x.name:x.name).join('\n'):'(empty directory)']};
 }
-const webPreview=()=>data.web.output?'사용자 입력은 HTML 이스케이프 처리됨':'사용자 입력이 안전하지 않게 표시되는 설정 [SIM]';
+const webPreview=()=> (window.KaliLAN?.web.output??data.web.output)?'사용자 입력은 HTML 이스케이프 처리됨':'사용자 입력이 안전하지 않게 표시되는 설정 [SIM]';
 const issues=()=>[
- ...(!data.web.headers?['보안 응답 헤더가 빠졌습니다.']:[]),
- ...(!data.web.access?['관리자 자료에 대한 접근 통제가 없습니다.']:[]),
- ...(!data.web.output?['사용자 입력이 안전하게 이스케이프되지 않습니다.']:[])
+ ...(!(window.KaliLAN?.web.headers??data.web.headers)?['보안 응답 헤더가 빠졌습니다.']:[]),
+ ...(!(window.KaliLAN?.web.access??data.web.access)?['관리자 자료에 대한 접근 통제가 없습니다.']:[]),
+ ...(!(window.KaliLAN?.web.output??data.web.output)?['사용자 입력이 안전하게 이스케이프되지 않습니다.']:[])
 ];
 async function sha256(text){
  if(!crypto?.subtle)throw Error('SHA-256을 이용하려면 HTTPS 또는 로컬 호스트의 보안 컨텍스트가 필요해요.');
@@ -225,7 +240,7 @@ function success(out,task){
 }
 async function executeTrack(raw){
  const cmd=String(raw).trim().replace(/\s+/g,' ');
- if(!cmd||data.active==='wireless')return;
+ if(!cmd||data.active==='wireless'||data.active==='incident'||data.active==='sandbox')return;
  $('shell-input').value='';const promptPath=data.fs.cwd.startsWith('/home/kali')?'~'+data.fs.cwd.slice('/home/kali'.length):data.fs.cwd;
  print('┌──(kali㉿kali)-['+promptPath+']\n└─$ '+cmd,'prompt');
  const id=data.active,t=tracks[id],progress=data.progress[id],step=t.steps[progress];
@@ -274,18 +289,30 @@ async function executeTrack(raw){
   else if(cmd==='ip route')result={ok:true,lines:[link?'default via 192.0.2.1 dev wlan0\n192.0.2.0/24 dev wlan0 scope link':'(연결된 가상 인터페이스가 없어 기본 경로가 없습니다.)']};
   else if(cmd==='ping 192.0.2.1')result=link?{ok:true,lines:['PING 192.0.2.1: 3 packets transmitted, 3 received (SIM)']}:{ok:false,lines:['Destination Host Unreachable: AP 전원 또는 클라이언트 연결 상태를 Network에서 확인하세요.']};
   else if(cmd==='nslookup training.lab')result=link?{ok:true,lines:['Server: 192.0.2.1 [SIM]\nName: training.lab\nAddress: 192.0.2.20']}:{ok:false,lines:['DNS lookup failed: 가상 네트워크가 연결되지 않았어요.']};
-  else if(cmd==='curl -I http://training.lab')result=link?{ok:true,lines:['HTTP/1.1 200 OK [SIM]\nServer: training-lab\nContent-Type: text/html; charset=utf-8']}:{ok:false,lines:['curl: Could not connect. 가상 AP와 클라이언트 연결을 확인하세요.']};
+  else if(cmd==='curl -I http://training.lab'){const r=window.KaliLAN?.request('http://training.lab',{head:true});result={ok:r?.ok&&r.status===200,lines:r?.headers||['가상 웹 서버에 접근할 수 없어요.']}};
   completed=result.ok&&cmd===step?.[2];
  }else if(id==='web'){
-  if(cmd==='curl http://demo.lab')result={ok:true,lines:['HTTP/1.1 200 OK [SIM]\n<html><body><h1>Demo Lab</h1><p>'+webPreview()+'</p></body></html>']};
-  else if(cmd==='curl -I http://demo.lab')result={ok:true,lines:['HTTP/1.1 200 OK [SIM]\nContent-Type: text/html\n'+(data.web.headers?'X-Content-Type-Options: nosniff\nContent-Security-Policy: default-src \'self\'':'(보안 헤더 없음)')]};
-  else if(cmd==='web-audit demo.lab')result={ok:true,lines:[issues().length?'가상 보안 진단:\n- '+issues().join('\n- '):'가상 보안 진단: 발견된 취약점이 없어요.']};
+  const lan=window.KaliLAN;
+  if(cmd==='curl http://demo.lab'||cmd==='curl -I http://demo.lab'){
+   const head=cmd.startsWith('curl -I ');
+   const r=lan?.request('http://demo.lab',{head})||{ok:false,headers:[],body:[]};
+   result={ok:r.ok&&r.status===200,lines:head?r.headers:[...r.headers,'',...r.body]};
+  }
+  else if(cmd==='web-audit demo.lab'){
+   if(!lan?.web.running)result={ok:false,lines:['가상 lab-web 서비스가 멈춰 있어요. Network Map에서 복구하세요.']};
+   else result={ok:true,lines:[issues().length?'가상 보안 진단:\n- '+issues().join('\n- '):'가상 보안 진단: 발견된 설정 문제가 없어요.']};
+  }
   else if(/^web-fix (headers|access|output)$/.test(cmd)){
-   const what=cmd.split(' ')[1];data.web[what]=true;save();result={ok:true,lines:['수정 적용: '+what+' [SIM]']};
-  }else if(cmd==='web-verify demo.lab')result=issues().length===0?{ok:true,lines:['PASS: 모든 가상 웹 보안 점검 통과']}: {ok:false,lines:['아직 남은 항목:\n- '+issues().join('\n- ')]};
+   const what=cmd.split(' ')[1],r=lan?.webFix(what);
+   if(r?.ok){data.web[what]=true;save();result={ok:true,lines:r.lines}}
+   else result={ok:false,lines:r?.lines||['가상 웹 설정 변경 실패']};
+  }
+  else if(cmd==='web-verify demo.lab')result=lan?.web.running&&issues().length===0?
+   {ok:true,lines:['PASS: 모든 가상 웹 보안 점검 통과']}:
+   {ok:false,lines:['아직 남은 항목:\n- '+(!lan?.web.running?'웹 서비스가 중단되어 있습니다.':issues().join('\n- '))]};
   completed=result.ok&&cmd===step?.[2];
  }else if(id==='forensics'){
-  const logfile=data.fs.files['/var/log/auth.log'];
+  const logfile=window.KaliLAN?.logText()||data.fs.files['/var/log/auth.log'];
   if(cmd==='ls /var/log')result={ok:true,lines:['auth.log']};
   else if(cmd==='cat /var/log/auth.log')result={ok:true,lines:[logfile]};
   else if(cmd==='grep "Failed password" /var/log/auth.log'||cmd==='grep Failed /var/log/auth.log')result={ok:true,lines:[logfile.split('\n').filter(l=>l.includes('Failed password')).join('\n')]};
@@ -300,11 +327,12 @@ async function executeTrack(raw){
 }
 const form=$('shell-form');
 form.addEventListener('submit',e=>{
- if(data.active==='wireless')return;
+ if(data.active==='wireless'||data.active==='incident'||data.active==='sandbox')return;
  e.preventDefault();e.stopImmediatePropagation();
  void executeTrack($('shell-input').value);
 },true);
 document.addEventListener('kali-sim:lab-progress',()=>{if(data.active==='wireless')renderHub()});
+document.addEventListener('kali-sim:lan-changed',()=>{if(['incident','sandbox'].includes(data.active))renderHub()});
 document.addEventListener('kali-sim:tour-started',()=>desktop.classList.add('tour-running'));
 document.addEventListener('kali-sim:tour-ended',()=>{desktop.classList.remove('tour-running');renderCoach()});
 document.addEventListener('kali-sim:booted',()=>{renderCoach()});
