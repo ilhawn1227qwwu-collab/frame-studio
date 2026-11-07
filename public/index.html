@@ -266,7 +266,7 @@ if(/^nmcli (?:dev|device) wifi connect\s+/.test(canonical)){
  if(!result.ok){log(result.message,'warn');return}
  state.connected=true;save();log(result.message,'ok');mark('connect');return
 }
-if(canonical==='lab-verify LAB-TRAINING'){if(requireStep('connect',stages[7].cmd))return;if(!state.hardened||NET.ap.security!=='WPA3-SAE'||NET.ap.psk.length<16){log('현재 공유기 보안 설정을 검증할 수 없습니다. 관리자 설정을 다시 확인하세요: open router','warn');return}log('LAB-TRAINING verification [SIMULATION ONLY]','sys');log('  Security: WPA3-SAE                   PASS','ok');log('  Training password policy: >=16 chars PASS','ok');log('  Old weak credential invalidated      PASS','ok');log('  Final verdict: lab scenario remediated.','ok',()=>{$('finish').classList.add('open')});mark('verify');return}
+if(canonical==='lab-verify LAB-TRAINING'){if(requireStep('connect',stages[7].cmd))return;if(!state.hardened||!NET.ap.online||NET.ap.security!=='WPA3-SAE'||NET.ap.psk.length<16){log('현재 공유기 전원이나 보안 설정을 검증할 수 없습니다. Network와 관리자 설정을 확인하세요.','warn');return}log('LAB-TRAINING verification [SIMULATION ONLY]','sys');log('  Security: WPA3-SAE                   PASS','ok');log('  Training password policy: >=16 chars PASS','ok');log('  Old weak credential invalidated      PASS','ok');log('  Final verdict: lab scenario remediated.','ok',()=>{$('finish').classList.add('open')});mark('verify');return}
 if(/^lab-verify/.test(canonical)){log('사용법: lab-verify LAB-TRAINING (이 실습에서만 쓰는 명령)','err');return}
 if(/^sudo\s+/.test(canonical)){log('sudo: 이 가상 터미널에서 해당 명령은 구현되지 않았습니다.','err');return}
 log('kali: command not found or unsupported in simulator: '+canonical.split(' ')[0],'err');log('지원 명령 확인: help','dim')}
@@ -334,7 +334,14 @@ $('menu-power').addEventListener('click',switchOff);
 document.addEventListener('kali-sim:network-changed',e=>{
  const type=e.detail?.kind;
  if(['channel','password','ap'].includes(type)){
-  // An AP change makes previously observed/captured evidence stale.
+  // Already-hardened WPA3 work remains completed even if the AP reboots or changes channel.
+  // Otherwise an AP power cycle would force an impossible return to the WPA2-only training path.
+  if(state.hardened&&NET.ap.security==='WPA3-SAE'&&['channel','ap'].includes(type)){
+   state.connected=false;
+   if(state.monitor&&NET.radio.monitor)NET.monitorStop();
+   state.monitor=false;state.captured=false;state.found=false;save();render();return;
+  }
+  // For unremediated WPA2 scenarios, changes invalidate earlier evidence.
   for(const id of ['wifi','monitor','survey','capture','audit','managed','connect','verify'])delete state.done[id];
   state.monitor=false;state.survey=false;state.captured=false;state.found=false;
   state.connected=false;state.hardened=false;state.protocol=NET.ap.security;
