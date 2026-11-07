@@ -112,7 +112,7 @@ if(appList){
  b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 5 2c-2 1-2 2-2 3m0 3v1"/></svg>Guided Desktop Tour';
  b.addEventListener('click',()=>start());appList.append(b);
 }
-let active=false,index=0,frame=0;
+let active=false,index=0,frame=0,originalCourse=null;
 const done=()=>{try{return localStorage.getItem(KEY)==='yes'}catch(_){return false}};
 const markDone=()=>{try{localStorage.setItem(KEY,'yes')}catch(_){}};
 function resetDesktop(){
@@ -122,11 +122,14 @@ function resetDesktop(){
 }
 function start(){
  if(!$('power-layer').hidden)return;
+ originalCourse=window.KaliCurriculum?.snapshot()?.active||null;
  active=true;index=0;resetDesktop();root.hidden=false;document.dispatchEvent(new Event('kali-sim:tour-started'));show();
 }
 function end(mark=true){
  if(mark)markDone();
- active=false;root.hidden=true;root.classList.remove('is-center');document.dispatchEvent(new Event('kali-sim:tour-ended'));
+ active=false;root.hidden=true;root.classList.remove('is-center');
+ if(originalCourse&&window.KaliCurriculum?.snapshot()?.active!==originalCourse)window.KaliCurriculum.selectTrack(originalCourse);
+ originalCourse=null;document.dispatchEvent(new Event('kali-sim:tour-ended'));
  $('menu-panel').classList.remove('open');$('menu-btn').setAttribute('aria-expanded','false');
  $('mission').classList.remove('show');
  // After onboarding or skip, open the terminal for the first lab mission.
@@ -137,7 +140,7 @@ function end(mark=true){
 }
 function proceed(){
  if(!active)return;
- if(index===stages.length-1){end();return}
+ if(index===stages.length-1){document.dispatchEvent(new Event('kali-sim:tour-completion'));return}
  index++;show();
 }
 function center(){
@@ -171,6 +174,7 @@ function schedule(){if(frame)cancelAnimationFrame(frame);frame=requestAnimationF
 function show(){
  if(!active)return;
  const s=stages[index],action=['click','command','change'].includes(s.mode);
+ $('onboard-card').querySelector('.ob-brand').textContent=index<26?'KALI · LINUX DESKTOP':index<46?'KALI · LEARNING CENTER':index<54?'KALI · FIREFOX SIM':index<69?'KALI · VIRTUAL NETWORK':'KALI · TOOLS & SHORTCUTS';
  $('ob-title').textContent=s.title;$('ob-body').textContent=s.body;
  $('ob-number').textContent=String(index+1).padStart(2,'0')+' / '+stages.length;
  $('ob-progress').style.width=(100*(index+1)/stages.length)+'%';
@@ -203,8 +207,10 @@ document.addEventListener('kali-sim:booted',()=>{
  // The nine-stage lab coach takes over only when the tour finishes or is skipped.
  setTimeout(()=>{if($('power-layer').hidden&&!active)start()},100);
 });
+document.addEventListener('kali-sim:tour-finished',()=>{if(active&&index===stages.length-1)end(true)});
 document.addEventListener('kali-sim:shutdown',()=>{if(active)end(false)});
 window.addEventListener('resize',schedule);
 document.addEventListener('scroll',schedule,true);
 document.addEventListener('fullscreenchange',schedule);
+window.KaliTour={get length(){return stages.length},get index(){return index},get current(){const s=stages[index];return {mode:s.mode,target:s.target||null,title:s.title}},restart:start};
 })();
