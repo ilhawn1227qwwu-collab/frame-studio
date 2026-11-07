@@ -111,6 +111,30 @@ function missionStart(){
  return {ok:true,message:'INCIDENT-001이 시작되었습니다. 가상 웹 서비스는 중단(503) 상태입니다.'};
 }
 function resetMission(){state=init();changed('mission-reset','INCIDENT-001 및 가상 서버 상태 초기화');}
+function setHostPower(on){
+ state.web.hostOnline=!!on;
+ if(!on)state.shell={host:'kali',user:'kali',cwd:'/home/kali'};
+ changed('host-power','가상 웹 서버 전원이 '+(on?'켜졌어요.':'꺼졌어요. 원격 접속이 종료됩니다.'));
+ return {ok:true,online:state.web.hostOnline};
+}
+function remoteLogin(cmd){
+ if(!link())return fail('network','Kali PC의 가상 Wi-Fi가 연결되지 않았어요.','NetworkManager에서 Kali PC 연결 상태를 확인하세요.');
+ if(!hostOnline())return fail('host','가상 웹 서버 전원이 꺼져 있어 SSH 연결이 불가능해요.','Network Map에서 가상 서버를 켜세요.');
+ const match=cmd.match(/^ssh\s+([^\s@]+)@([^\s]+)$/);
+ if(!match)return fail('syntax','사용법: ssh trainee@192.0.2.20','등록된 가상 학습 키로 로그인하는 모형이에요.');
+ if(!['192.0.2.20','web01','training.lab'].includes(match[2]))return fail('target','허가된 연습용 서버가 아닙니다.','192.0.2.20으로 연결하세요.');
+ if(match[1]!=='trainee')return fail('permission','이 계정은 로그인할 수 없어요.','교육용 계정 trainee를 사용하세요.');
+ state.shell={host:'web01',user:'trainee',cwd:'/home/trainee'};
+ changed('ssh','가상 실습 키로 trainee@web01에 로그인');
+ return {ok:true,lines:['[SIM] trainee@web01 (192.0.2.20) 로그인 성공','등록된 교육용 가상 키 인증을 모의했습니다. 실제 SSH 연결은 수행하지 않아요.','종료하려면 exit를 입력하세요.']};
+}
+function remoteLogout(){
+ if(!isRemote())return fail('location','지금은 Kali PC에 있습니다.','먼저 ssh trainee@192.0.2.20으로 접속하세요.');
+ state.shell={host:'kali',user:'kali',cwd:'/home/kali'};
+ changed('ssh','가상 SSH 세션 종료');
+ return {ok:true,lines:['Connection to 192.0.2.20 closed.','Kali PC로 돌아왔어요.']};
+}
+
 function webFix(key){
  if(!['headers','access','output'].includes(key))return {ok:false,lines:['수정할 설정은 headers, access, output입니다.']};
  if(!link())return {ok:false,lines:['가상 네트워크에 연결되어 있지 않아 서버 설정을 바꿀 수 없어요.']};
