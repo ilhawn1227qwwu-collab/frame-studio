@@ -7,7 +7,7 @@ async function run(browser,[name,width,height]){
  const page=await ctx.newPage(),errors=[],external=[];
  page.on('pageerror',e=>errors.push(e.message));
  page.on('request',r=>{if(/(?:google\.com|training\.lab|demo\.lab)/.test(r.url()))external.push(r.url())});
- const v=async fn=>page.evaluate(fn);
+ const v=async (fn,arg)=>page.evaluate(fn,arg);
  try{
   await page.goto('http://127.0.0.1:8000');
   await page.locator('#power-start').click();
@@ -83,7 +83,7 @@ async function run(browser,[name,width,height]){
   console.log('PASS '+name+' workstation/client independence, offline denials, network recovery, WPA3 reconnection, evidence and reload');
  }catch(e){
   await page.screenshot({path:'/tmp/state-audit-'+name+'.png',fullPage:true});
-  throw new Error(name+': '+e.message);
+  console.error('FAILED '+name+' '+e.stack);throw e;
  }finally{await ctx.close()}
 }
 (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
