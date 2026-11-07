@@ -32,6 +32,14 @@ const api={
    {...world.guest,note:'비교용 가상 네트워크'},
    {...world.secure,note:'비교용 가상 네트워크'}].filter(Boolean);
  },
+ setDemoPassword(password){
+  const allowed=['coffee2026','password123','summer2026','not-in-dictionary'];
+  if(!allowed.includes(password))return {ok:false,message:'허용된 교육용 시나리오 암호를 선택하세요.'};
+  if(world.ap.security!=='WPA2-PSK')return {ok:false,message:'WPA3-SAE에서는 이 약한 암호 시나리오를 변경할 수 없어요.'};
+  world.ap.psk=password;world.capture=null;world.client.connected=false;
+  emit('password','학습용 Wi-Fi 암호가 변경됐어요. 이전 캡처와 접속 상태가 무효화됐습니다.');
+  return {ok:true,message:'가상 암호 변경 완료. 초기 네트워크 연결부터 다시 살펴보세요.'};
+ },
  setChannel(channel){
   if(!isValidChannel(channel))return {ok:false,message:'가상 채널은 1, 6, 11 중에서 고를 수 있어요.'};
   world.ap.channel=Number(channel);world.capture=null;world.radio.handshakeConsumed=world.client.lastEvent;
