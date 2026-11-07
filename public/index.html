@@ -17,7 +17,14 @@
 .window{position:absolute;display:flex;flex-direction:column;min-width:320px;min-height:240px;background:var(--panel);border:1px solid #81a4cf57;border-radius:8px;box-shadow:0 18px 60px #000a;overflow:hidden;z-index:10;backdrop-filter:blur(18px)}.window.hidden{display:none}.window-head{height:37px;min-height:37px;background:linear-gradient(#203851,#12263e);border-bottom:1px solid #7195c039;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 7px 0 13px;touch-action:none;user-select:none;cursor:grab}.window-head:active{cursor:grabbing}.win-name{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:750;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}.window-buttons{display:flex;gap:4px;align-items:center}.window-buttons button{background:transparent;color:#bcd4ee;border:0;border-radius:4px;min-width:27px;height:27px;font-size:18px}.window-buttons button:hover{background:#8cc2ec34}.window-buttons .close:hover{background:#ca445d}.typing-switch{padding:4px 7px!important;width:auto!important;height:26px!important;font-size:10px!important;border:1px solid #5684a85f!important;color:#aee7ff!important}.typing-switch[aria-pressed=false]{color:#91a2b4!important}
 #terminal{left:12%;top:17%;width:min(690px,61vw);height:min(550px,69vh)}#wifi{left:18%;top:24%;width:min(530px,56vw);height:min(445px,61vh)}#guide{left:22%;top:20%;width:min(580px,58vw);height:min(520px,69vh)}#router{left:26%;top:24%;width:min(480px,56vw);height:min(435px,65vh)}
 .terminal-body{display:flex;flex-direction:column;flex:1;min-height:0;background:#06101bf0}.terminal-log{flex:1;min-height:0;overflow:auto;padding:13px 17px 12px;font:12px/1.55 "Cascadia Code","DejaVu Sans Mono",ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;scrollbar-width:thin;color:#c5d8e7}.line{min-height:1.45em;margin-bottom:2px}.line.dim{color:#8fabc5}.line.ok{color:#80ddb1}.line.warn{color:#f4c785}.line.err{color:#ff97a0}.line.sys{color:#81bbff}.line.prompt{color:#d6ddf1}.line.typing:after{content:'▋';color:#82e9c8;display:inline-block;animation:cursor .72s steps(1,end) infinite;margin-left:3px}.prompt-user{color:#75d3b0}.prompt-host{color:#8bcbfa}.shell-input .caret{color:#89d5f9;white-space:nowrap}.terminal-bottom{background:#091a2a;border-top:1px solid #739dc042;padding:10px 13px 12px}.quick{display:flex;gap:5px;overflow-x:auto;padding-bottom:7px;scrollbar-width:thin}.quick button{flex:none;padding:6px 9px;border:1px solid #476f8c;border-radius:5px;background:#173047;color:#c5e4f7;font:10px ui-monospace,monospace}.quick button:hover{background:#254c6d}.shell-input{display:flex;align-items:center;gap:7px}.shell-input input{min-width:0;flex:1;background:transparent;border:0;outline:0;color:#fff;font:12px ui-monospace,monospace;caret-color:#8affc5}.shell-input button{border:0;background:#1b5375;color:#d5f6ff;border-radius:5px;padding:7px 10px;font-size:11px}
-.window-body{flex:1;min-height:0;overflow:auto;padding:18px;scrollbar-width:thin}.window-body h2{font-size:18px;margin:0 0 7px}.network-list{display:grid;gap:8px;margin:15px 0}.net{display:flex;align-items:center;gap:10px;background:#1c36515e;border:1px solid #6b99c441;border-radius:8px;padding:12px}.net.target{border-color:#60c2ea99}.net-symbol{font-size:24px;color:#7ec9fc}.net-details{flex:1;min-width:0}.net-name{font-size:13px;font-weight:700}.net-meta{font-size:11px;color:#9dbbd1;margin-top:4px}.net button{padding:7px 9px;border:1px solid #5e8cac62;border-radius:5px;background:#1a435c;color:#d0ecfc;font-size:11px}.notice{padding:11px;border:1px solid #cfaa644e;border-radius:7px;background:#8d6a1e13;color:#f5d9a4;font-size:11px;line-height:1.6}.info{padding:11px;margin-top:11px;border:1px solid #5f9ab345;border-radius:7px;background:#1e496125;color:#b4d9ed;font-size:11px;line-height:1.6}.guide-block{margin:14px 0;border-left:3px solid #3c8bc1;padding:4px 12px;background:#1834525c}.guide-block h3{font-size:13px;color:#d5ecfa;margin:4px 0}.guide-block p{font-size:12px;line-height:1.75;color:#b7cce1;margin:6px 0}.guide-block code,.hint code{font:11px ui-monospace,monospace;color:#8de2d3}.field-label{font-size:12px;font-weight:700;display:block;margin:15px 0 6px}.field{border:1px solid #6283a77d;background:#0b233b;color:#eef7ff;border-radius:5px;width:100%;padding:10px;font-size:12px}.quality{font-size:11px;color:#ffd29c;padding:7px 0 12px}.quality.good{color:#a2e6c4}.message{font-size:12px;color:#a5ddff;line-height:1.55;min-height:23px}
+.window-body{flex:1;min-height:0;overflow:auto;padding:18px;scrollbar-width:thin}.window-body h2{font-size:18px;margin:0 0 7px}.network-list{display:grid;gap:8px;margin:15px 0}.net{display:flex;align-items:center;gap:10px;background:#1c36515e;border:1px solid #6b99c441;border-radius:8px;padding:12px}.net.target{border-color:#60c2ea99}.net-symbol{font-size:24px;color:#7ec9fc}.net-details{flex:1;min-width:0}.net-name{font-size:13px;font-weight:700}.net-meta{font-size:11px;color:#9dbbd1;margin-top:4px}.net button{padding:7px 9px;border:1px solid #5e8cac62;border-radius:5px;background:#1a435c;color:#d0ecfc;font-size:11px}.notice{padding:11px;border:1px solid #cfaa644e;border-radius:7px;background:#8d6a1e13;color:#f5d9a4;font-size:11px;line-height:1.6}.info{padding:11px;margin-top:11px;border:1px solid #5f9ab345;border-radius:7px;background:#1e496125;color:#b4d9ed;font-size:11px;line-height:1.6}
+#nets>.info{margin:0 0 4px;padding:12px;border-color:#5bb7dc7a;overflow-wrap:anywhere;scroll-margin:12px}
+#nets>.info[hidden]{display:none}
+.net-info-details{display:grid;grid-template-columns:minmax(76px,auto) minmax(0,1fr);gap:5px 12px;margin:10px 0 0}
+.net-info-details dt{color:#8fc8e8;font-weight:700}
+.net-info-details dd{margin:0;color:#d8eeff;overflow-wrap:anywhere}
+#wifi .net button{min-height:34px;flex-shrink:0;cursor:pointer}
+#wifi .net button:focus-visible{outline:2px solid #8dddff;outline-offset:2px}.guide-block{margin:14px 0;border-left:3px solid #3c8bc1;padding:4px 12px;background:#1834525c}.guide-block h3{font-size:13px;color:#d5ecfa;margin:4px 0}.guide-block p{font-size:12px;line-height:1.75;color:#b7cce1;margin:6px 0}.guide-block code,.hint code{font:11px ui-monospace,monospace;color:#8de2d3}.field-label{font-size:12px;font-weight:700;display:block;margin:15px 0 6px}.field{border:1px solid #6283a77d;background:#0b233b;color:#eef7ff;border-radius:5px;width:100%;padding:10px;font-size:12px}.quality{font-size:11px;color:#ffd29c;padding:7px 0 12px}.quality.good{color:#a2e6c4}.message{font-size:12px;color:#a5ddff;line-height:1.55;min-height:23px}
 .taskbar{position:absolute;left:0;right:0;bottom:0;height:49px;background:linear-gradient(#142c46ec,#0c1e32fa);border-top:1px solid #8bb6e543;z-index:220;display:flex;gap:7px;align-items:center;padding:4px 12px;box-shadow:0 -8px 25px #0003}.taskbar button{height:37px;min-width:42px;border:1px solid transparent;background:transparent;color:#e3efff;border-radius:6px;font-size:19px}.taskbar button:hover,.taskbar button.active{background:#2a5b7f8c;border-color:#5698bf71}.task-caption{font-size:10px;color:#91b1c8;margin-left:auto}.mobile-icons{display:none}.toast{position:absolute;z-index:700;bottom:59px;left:50%;transform:translateX(-50%) translateY(10px);opacity:0;pointer-events:none;background:#1c3951;color:#e6f7ff;border:1px solid #6aabd07a;border-radius:9px;padding:10px 14px;font-size:12px;transition:opacity .2s,transform .2s;max-width:90vw;box-shadow:0 12px 32px #0008}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .finish{position:absolute;inset:0;z-index:800;display:none;align-items:center;justify-content:center;background:#02101de7;padding:15px}.finish.open{display:flex}.finish-card{max-width:485px;background:#102944;border:1px solid #5e9acb88;border-radius:14px;padding:29px;text-align:center;box-shadow:0 20px 80px #000a}.finish-card h2{font-size:25px;margin:9px 0}.finish-card p{color:#bfd0e1;line-height:1.7;font-size:13px}.finish-icon{color:#7de6b5;font-size:48px}.finish-actions{display:flex;gap:9px;justify-content:center;margin-top:17px}
 @keyframes cursor{0%,48%{opacity:1}49%,100%{opacity:0}}
@@ -166,23 +173,56 @@ function renderQuick(){
  if(course&&course!=='wireless')return;
  const el=$('quick');el.replaceChildren();let list=['help','status','whoami','ls'];const next=nextStage();if(next){list.unshift(next.cmd);if(next.id==='verify'&&!state.hardened)list.unshift('open router')}for(const cmd of [...new Set(list)].slice(0,6)){const b=document.createElement('button');b.textContent=cmd;b.type='button';b.addEventListener('click',()=>execute(cmd));el.append(b)}}
 function renderNets(){
- const el=$('nets');el.replaceChildren();
+ const el=$('nets'),info=$('net-info');
+ // The information card follows the selected network, not the bottom of a
+ // long scroll area. The tutorial can therefore spotlight the actual result.
+ info.remove();
+ el.replaceChildren();
+ info.hidden=true;
  for(const n of NET.networks()){
-  const row=document.createElement('div');row.className='net'+(n.ssid===TARGET?' target':'');
+  const row=document.createElement('div');
+  row.className='net'+(n.ssid===TARGET?' target':'');
   const icon=document.createElement('div');icon.className='net-symbol';icon.textContent='◉';
   const details=document.createElement('div');details.className='net-details';
   const name=document.createElement('div');name.className='net-name';name.textContent=n.ssid;
   const meta=document.createElement('div');meta.className='net-meta';
   meta.textContent=n.security+' · CH '+n.channel+' · 신호 '+n.signal+'% · '+(n.note||'가상 네트워크');
   details.append(name,meta);
-  const btn=document.createElement('button');btn.type='button';btn.textContent=n.ssid===TARGET?'정보 보기':'설명';
+  const btn=document.createElement('button');btn.type='button';
+  btn.textContent=n.ssid===TARGET?'정보 보기':'설명';
+  btn.setAttribute('aria-controls','net-info');
+  btn.setAttribute('aria-expanded','false');
+  btn.setAttribute('aria-label',n.ssid+' 정보 보기');
   btn.addEventListener('click',()=>{
-   $('net-info').textContent=n.ssid===TARGET?
-   TARGET+' · BSSID '+NET.ap.bssid+' · Channel '+NET.ap.channel+' · '+NET.ap.security+' · '+(NET.station.connected?'가상 연결됨':'연결 안 됨')+' · 허가된 교육용 AP':
-   n.ssid+': 비교를 위한 허구의 네트워크입니다. 이 시나리오의 대상이 아니에요.';
-  });row.append(icon,details,btn);el.append(row)
+   for(const other of el.querySelectorAll('button[aria-controls="net-info"]'))
+    other.setAttribute('aria-expanded','false');
+   btn.setAttribute('aria-expanded','true');
+   info.replaceChildren();
+   const heading=document.createElement('strong');
+   heading.textContent=n.ssid===TARGET?'LAB-TRAINING · 네트워크 상세 정보':n.ssid+' · 비교용 가상 네트워크';
+   info.append(heading);
+   const values=n.ssid===TARGET?
+    [['SSID',TARGET],['BSSID',NET.ap.bssid],['채널',String(NET.ap.channel)],
+     ['보안 방식',NET.ap.security],['Kali PC',NET.station.connected?'연결됨':'연결 안 됨'],
+     ['실습 허가','교육용 가상 AP']]:
+    [['구분','비교용 허구 네트워크'],['보안 방식',n.security],['채널',String(n.channel)],
+     ['실습 여부','현재 학습 과정의 대상이 아님']];
+   const dl=document.createElement('dl');dl.className='net-info-details';
+   for(const [label,value] of values){
+    const dt=document.createElement('dt');dt.textContent=label;
+    const dd=document.createElement('dd');dd.textContent=value;
+    dl.append(dt,dd);
+   }
+   info.append(dl);
+   row.after(info);info.hidden=false;
+   requestAnimationFrame(()=>info.scrollIntoView({block:'nearest',inline:'nearest'}));
+  });
+  row.append(icon,details,btn);el.append(row);
  }
- if(!NET.ap.online)$('net-info').textContent='LAB-TRAINING 공유기가 꺼져 목록에 나타나지 않아요. 가상 전원을 켜면 다시 나타납니다.';
+ if(!NET.ap.online){
+  info.textContent='LAB-TRAINING 공유기 전원이 꺼져 목록에 표시되지 않아요. 상단의 가상 네트워크 제어판에서 전원을 켜면 정보 보기를 사용할 수 있어요.';
+  info.hidden=false;el.prepend(info);
+ }
 }
 function focusWindow(id){const w=$(id);if(!w)return;active=id;w.style.zIndex=String(++z);document.querySelectorAll('[data-open]').forEach(b=>b.classList.toggle('active',b.dataset.open===id))}
 function openWindow(id,shouldFocus=true){const w=$(id);if(!w)return;w.classList.remove('hidden');focusWindow(id);if(id==='terminal'&&shouldFocus&&matchMedia('(min-width:761px)').matches)setTimeout(()=>{if(active==='terminal'&&!w.classList.contains('hidden'))$('shell-input').focus({preventScroll:true})},0)}
