@@ -148,38 +148,80 @@ const guide=$('guide');const gmenu=document.createElement('div');gmenu.className
 const wifi=$('wifi');const toolbar=document.createElement('div');toolbar.className='gtk-toolbar';toolbar.innerHTML=ico('wifi')+' NetworkManager <span style="margin-left:auto;font-size:10px;color:#a8c0d8">wlan0 · virtual device</span>';wifi.insertBefore(toolbar,wifi.querySelector('.window-body'));
 const router=$('router');const rbody=router.querySelector('.window-body');
 rbody.insertAdjacentHTML('beforebegin','<div class="browser-tabs"><span class="browser-tab">192.0.2.1 — Router Administration</span></div><div class="browser-toolbar"><span>‹ &nbsp; › &nbsp; ↻</span><span class="browser-url">http://192.0.2.1/wireless (SIM ONLY)</span></div>');
-/* Virtual Thunar file manager and Appearance settings. */
-const places={
- home:[['Desktop','folder','desktop'],['Documents','folder','documents'],['Downloads','folder','downloads'],['lab-files','folder','lab-files'],['README.txt','doc','README.txt']],
- desktop:[['Wi-Fi Networks','wifi','open:wifi'],['Wireless Lab Notes','notes','open:guide']],
- documents:[['README.txt','doc','README.txt']],
- downloads:[['lab-demo.txt','doc','lab-demo.txt']],
- 'lab-files':[['labcap-01.cap','doc','labcap-01.cap'],['lab-demo.txt','doc','lab-demo.txt']]
+/* Virtual Thunar: shared browser-only filesystem for Linux and forensic lessons. */
+const folderPaths={
+ home:'/home/kali',desktop:'/home/kali/Desktop',documents:'/home/kali/Documents',
+ downloads:'/home/kali/Downloads','lab-files':'/home/kali/lab-files'
 };
-let currentFolder='home';const fileContainer=$('file-items');const fileStatus=$('file-status'),filePath=$('file-path');
+const starterPlaces={
+ home:[['Desktop','folder','path:/home/kali/Desktop'],['Documents','folder','path:/home/kali/Documents'],['Downloads','folder','path:/home/kali/Downloads'],['lab-files','folder','path:/home/kali/lab-files'],['README.txt','doc','file:/home/kali/README.txt']],
+ desktop:[['Wi-Fi Networks','wifi','open:wifi'],['Wireless Lab Notes','notes','open:guide']],
+ documents:[],downloads:[],
+ 'lab-files':[['lab-demo.txt','doc','file:/home/kali/lab-files/lab-demo.txt']]
+};
+let currentFolder='home';
+const fileContainer=$('file-items'),fileStatus=$('file-status'),pathDisplay=$('file-path');
+const fsSnapshot=()=>window.KaliCurriculum?.snapshot()?.fs||null;
+function folderPath(key){return key.startsWith('path:')?key.slice(5):folderPaths[key]||'/home/kali'}
 function showFolder(location){
- currentFolder=location;if(!fileContainer)return;fileContainer.replaceChildren();
- const path={'home':'/home/kali','desktop':'/home/kali/Desktop','documents':'/home/kali/Documents','downloads':'/home/kali/Downloads','lab-files':'/home/kali/lab-files'}[location]||'/home/kali';
- filePath.textContent=path;
- $('file-sidebar').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.place===location));
- const rows=places[location]||[];
- for(const [name,icon,action] of rows){
-  const b=document.createElement('button');b.className='file-icon';b.innerHTML=ico(icon)+name;
-  b.title=name;b.addEventListener('click',()=>{
-    if(icon==='folder'){showFolder(action);return}
-    if(action.startsWith('open:')){openApp(action.slice(5));return}
-    const notes={
-     'README.txt':'KALI SIM LAB — Virtual environment. Commands run in JavaScript. No real kernel or wireless adapter.',
-     'lab-demo.txt':'교육용 모의 사전 파일 · 8개의 가상 비밀번호 후보. 실제 파일이 아닙니다.',
-     'labcap-01.cap':'모의 패킷 캡처. 캡처 단계 완료 전에는 읽을 수 없습니다.'
-    };
-    fileStatus.textContent=name+': '+(notes[action]||'가상 파일');
-  });fileContainer.append(b)
+ currentFolder=location;
+ if(!fileContainer)return;
+ const path=folderPath(location),fs=fsSnapshot();
+ fileContainer.replaceChildren();pathDisplay.textContent=path;
+ $('file-sidebar').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.place===location||folderPaths[b.dataset.place]===path));
+ let rows=fs?[]:(starterPlaces[location]||starterPlaces.home).slice();
+ if(fs){
+   if(location==='desktop')rows.push(...starterPlaces.desktop);
+   if(fs.dirs.includes(path)){
+     const prefix=path==='/'?'/':path+'/';
+     for(const d of fs.dirs){
+       if(d===path||!d.startsWith(prefix))continue;
+       const name=d.slice(prefix.length);
+       if(name&&!name.includes('/'))rows.push([name,'folder','path:'+d]);
+     }
+     for(const full of Object.keys(fs.files)){
+       if(!full.startsWith(prefix))continue;
+       const name=full.slice(prefix.length);
+       if(name&&!name.includes('/'))rows.push([name,'doc','file:'+full]);
+     }
+   }
+   if(path==='/home/kali/lab-files'&&window.KaliNetwork?.capture){
+     rows.push(['labcap-01.cap','doc','capture']);
+   }
+   rows.sort((a,b)=>a[1]===b[1]?a[0].localeCompare(b[0]):a[1]==='folder'?-1:b[1]==='folder'?1:0);
  }
- fileStatus.textContent=rows.length+' items · Virtual filesystem — files are simulated';
+ for(const [name,icon,action] of rows){
+   const b=document.createElement('button');b.type='button';b.className='file-icon';
+   b.insertAdjacentHTML('afterbegin',ico(icon));b.append(document.createTextNode(name));
+   b.title=name;
+   b.addEventListener('click',()=>{
+     if(action.startsWith('path:')){showFolder(action);return}
+     if(action.startsWith('open:')){openApp(action.slice(5));return}
+     if(action==='capture'){
+       const fixture=window.KaliNetwork?.capture;
+       fileStatus.textContent=fixture?
+         '가상 캡처 예제: event #'+fixture.event+' · BSSID '+fixture.bssid+' · CH '+fixture.channel+' (실제 패킷 파일 아님)':
+         '이제 캡처 예제를 생성해야 합니다.';
+       return
+     }
+     if(action.startsWith('file:')){
+       const content=fsSnapshot()?.files?.[action.slice(5)];
+       fileStatus.textContent=content===undefined?'가상 파일을 찾을 수 없어요.':
+         name+': '+(content?content.slice(0,260).replace(/\n/g,' · '):'(빈 파일)')+
+         (content?.length>260?' …':'');
+       return
+     }
+     fileStatus.textContent=name+' · 교육용 가상 파일';
+   });
+   fileContainer.append(b);
+ }
+ fileStatus.textContent=rows.length+' items · Virtual filesystem (browser only)';
 }
 $('file-sidebar').querySelectorAll('[data-place]').forEach(b=>b.addEventListener('click',()=>showFolder(b.dataset.place)));
-$('file-back').addEventListener('click',()=>showFolder('home'));showFolder('home');
+$('file-back').addEventListener('click',()=>showFolder('home'));
+document.addEventListener('kali-sim:fs-changed',()=>showFolder(currentFolder));
+document.addEventListener('kali-sim:network-changed',()=>{if(folderPath(currentFolder)==='/home/kali/lab-files')showFolder(currentFolder)});
+showFolder('home');
 const choice=$('wallpaper-choice');
 try{choice.value=localStorage.getItem('kali-wallpaper-choice-v3')||'default'}catch(_){}
 $('desktop').dataset.wallpaper=choice.value;
