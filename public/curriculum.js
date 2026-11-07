@@ -23,25 +23,29 @@ const tracks={
  ['웹 서비스 응답 확인','네트워크가 살아 있다면 서버는 어떤 응답 헤더를 줄까요?','curl -I http://training.lab','이 사이트에서는 실제 HTTP 요청 대신 준비된 가상 응답만 반환해요.']
  ]},
  wireless:{title:'Wi-Fi 보안 실습',glyph:'⌁',desc:'상태가 바뀌는 허가된 가상 공유기에서 관찰·교육용 암호 점검·방어까지 연습해요.',steps:[]},
- web:{title:'웹 보안',glyph:'▣',desc:'가상 웹앱을 검사하고, 보안 헤더·접근 통제·출력 이스케이프 문제를 직접 고쳐요.',steps:[
- ['가상 웹사이트 살펴보기','먼저 어떤 웹 페이지인지 확인해야겠죠? 교육용 demo.lab의 응답을 확인해요.','curl http://demo.lab','외부 사이트에 접속하지 않습니다. 로컬 응답 모형만 실행돼요.'],
- ['보안 헤더 확인','웹 서버가 브라우저에 어떤 보안 지침을 전달하는지 살펴볼까요?','curl -I http://demo.lab','X-Content-Type-Options, Content-Security-Policy 같은 헤더가 중요해요.'],
- ['취약점 진단','현재 서버 설정에서 무엇을 고쳐야 할지 진단해 봅시다.','web-audit demo.lab','이 명령은 학습용 가상 웹 보안 점검 도구예요.'],
- ['보안 헤더 적용','진단에서 발견한 첫 문제부터 해결해 볼게요.','web-fix headers','실제 서비스의 보안 정책은 환경에 맞게 더 세심한 설정이 필요해요.'],
- ['접근 통제 강화','로그인한 사용자가 아무 관리자 자료나 열면 안 되겠죠?','web-fix access','인증(누구인가)과 인가(무엇을 할 수 있는가)는 달라요.'],
- ['출력 데이터 안전하게 표시','입력값을 HTML 코드처럼 실행하지 않고 문자 그대로 표시하도록 바꿔 봅시다.','web-fix output','사용자 입력을 안전하게 출력하려면 출력 문맥별 이스케이프가 중요해요.'],
- ['다시 검증하기','설정을 바꿨다고 끝난 것은 아니에요. 다시 검사해서 모두 해결됐는지 확인해요.','web-verify demo.lab','학습 환경의 가상 검사이지 실제 보안 취약점 스캐너는 아니에요.']
+ web:{title:'웹 보안',glyph:'▣',desc:'HTTP 응답 검사부터 가상 SSH 원격 접속, 권한 확인, 서버 보안 설정 개선까지 연습해요.',steps:[
+ ['웹사이트 살펴보기','가상 웹페이지가 어떤 응답을 보내는지 먼저 확인해 봅시다.','curl http://demo.lab','Kali PC에서 교육용 도메인의 응답을 확인해요.'],
+ ['보안 헤더 확인','서버에서 Content-Security-Policy 등의 설정이 전달될까요?','curl -I http://demo.lab','응답 헤더를 살펴보세요.'],
+ ['보안 문제 진단','서버 설정 중 부족한 부분을 알아봅시다.','web-audit demo.lab','현재 서버에 도달할 수 있어야 진단이 가능해요.'],
+ ['SSH 원격 로그인','이제 서버의 설정을 고치려면 서버에 직접 접속해야겠죠?','ssh trainee@192.0.2.20','교육용 SSH 키가 이미 등록되어 있는 모형입니다. 실제 로그인은 하지 않아요.'],
+ ['보안 헤더 적용','웹 서버에 접속했으니 첫 번째 문제부터 개선해 봅시다.','web-fix headers','실제 서비스에서는 설정 적용과 검증에 더 세심한 절차가 필요해요.'],
+ ['접근 통제 강화','관리자 자료에 일반 사용자가 접근하지 못하게 해봐요.','web-fix access','접근 통제는 누구에게 어떤 권한을 줄지 결정하는 과정이에요.'],
+ ['출력 안전하게 처리','사용자 입력이 코드처럼 실행되지 않고 문자로 보이게 고쳐요.','web-fix output','출력 문맥에 맞는 인코딩과 검증이 중요해요.'],
+ ['원격 서버에서 나오기','설정을 다 바꿨으면 exit로 Kali PC로 돌아갑시다.','exit','현재 실행 위치가 Kali인지 web01인지 확인해 보세요.'],
+ ['최종 보안 검증','다시 Kali에서 점검 도구를 실행해 설정이 개선됐는지 확인해 봅시다.','web-verify demo.lab','이 명령은 외부 서버가 아니라 가상 보안 설정만 검사합니다.']
  ]},
- forensics:{title:'로그·디지털 포렌식',glyph:'▤',desc:'가상 보안 로그에서 이상 징후를 찾아보고 증거 파일의 SHA-256 무결성을 점검해요.',steps:[
- ['로그 폴더 보기','무슨 일이 있었는지 조사하려면 기록이 어디 있는지 알아야겠죠?','ls /var/log','실제 시스템 로그가 아닌 연습용 허구의 기록이에요.'],
- ['인증 로그 읽기','로그를 열어 실패한 로그인과 정상 로그인의 차이를 찾아봐요.','cat /var/log/auth.log','시간과 호스트, 사용자, 결과를 함께 살펴보세요.'],
- ['실패 기록 검색하기','로그가 길면 필요한 줄만 골라야겠죠? Failed password가 있는 줄을 찾아봐요.','grep "Failed password" /var/log/auth.log','같은 출처에서 반복된 인증 실패가 있는지 확인하세요.'],
- ['증거 파일 해시 계산','조사 자료가 변하지 않았는지 확인하려면 해시 값을 기록해 둘 수 있어요.','sha256sum /cases/evidence.txt','이 단계는 브라우저 Web Crypto로 실제 SHA-256 계산을 수행해요.'],
- ['분석 결과 정리하기','증거를 모았으니 반복된 실패 기록과 무결성 검사 결과를 짧게 정리해 봅시다.','forensic-report','로그 하나만으로 공격자 신원이나 범죄 사실을 단정할 수 없어요.']
+ forensics:{title:'로그·디지털 포렌식',glyph:'▤',desc:'원격 서버에 접속해 인증 로그를 조사하고 Kali로 돌아와 증거 무결성을 확인해요.',steps:[
+ ['가상 웹 서버 SSH 접속','로그가 웹 서버에 있다면 먼저 원격 시스템에 접속해야겠죠?','ssh trainee@192.0.2.20','등록된 교육용 키를 사용하는 SSH 모의 연결이에요.'],
+ ['원격 로그 폴더 확인','어디에 기록이 있는지 서버의 /var/log 폴더를 살펴봐요.','ls /var/log','서버에서 실행하는 명령이라는 점을 확인하세요.'],
+ ['서버 인증 로그 읽기','서버에서 로그인 성공과 실패 기록을 구별해 봅시다.','cat /var/log/auth.log','시간·사용자·접속 출처를 함께 확인하세요.'],
+ ['실패 기록 검색하기','반복된 실패 기록만 골라 검색해 보세요.','grep "Failed password" /var/log/auth.log','반복된 로그인 실패만으로 침입 성공을 단정할 수는 없어요.'],
+ ['Kali 컴퓨터로 돌아가기','이제 원격 서버의 기록을 확인했으니 exit로 Kali로 돌아가요.','exit','원격 서버와 Kali PC는 다른 컴퓨터예요.'],
+ ['증거 파일의 무결성 검사','Kali에 보관된 가상 증거 파일의 SHA-256을 계산해요.','sha256sum /cases/evidence.txt','이 SHA-256은 브라우저의 Web Crypto로 실제 계산해요.'],
+ ['분석 결과 작성','실패 기록과 정상 인증, 해시 결과를 정리해 봅시다.','forensic-report','로그만으로 특정 인물이 공격했다고 단정하면 안 돼요.']
  ]}
 };
 const initial=()=>({
- active:'wireless',progress:{linux:0,network:0,web:0,forensics:0},
+ schemaVersion:2,active:'wireless',progress:{linux:0,network:0,web:0,forensics:0},
  fs:{cwd:'/home/kali',dirs:['/','/home','/home/kali','/var','/var/log','/cases','/home/kali/Desktop','/home/kali/Documents','/home/kali/Downloads','/home/kali/lab-files'],
  files:{'/home/kali/README.txt':'Kali SIM LAB: browser-only training environment.\nNo host OS access.',
  '/home/kali/lab-files/lab-demo.txt':'12345678\npassword123\nsummer2026\nhello-world\ncoffee2026\nadmin2026\nstarlight88\nletmein2026',
@@ -54,6 +58,12 @@ try{const raw=JSON.parse(localStorage.getItem(STORE)||'null');if(raw&&raw.progre
  const clean=initial();
  data={...clean,...raw,progress:{...clean.progress,...raw.progress},fs:{...clean.fs,...raw.fs,dirs:Array.isArray(raw.fs.dirs)?raw.fs.dirs:clean.fs.dirs,files:{...clean.fs.files,...raw.fs.files}},web:{...clean.web,...raw.web}};
  if(!trackOrder.includes(data.active))data.active='wireless';
+ if((data.schemaVersion||1)<2){
+  const web=Number(data.progress.web)||0,forensics=Number(data.progress.forensics)||0;
+  data.progress.web=web===7?9:web>3?web+1: web;
+  data.progress.forensics=forensics===5?7:forensics>3?forensics+2:forensics>0?forensics+1:forensics;
+  data.schemaVersion=2;
+ }
  for(const k of ['linux','network','web','forensics'])data.progress[k]=Math.min(tracks[k].steps.length,Math.max(0,Number(data.progress[k])||0));
 }}catch(_){}
 function save(){try{localStorage.setItem(STORE,JSON.stringify(data))}catch(_){}}
