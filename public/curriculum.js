@@ -284,7 +284,7 @@ async function executeTrack(raw){
   );
  } else if(id==='network'){
   const net=window.KaliNetwork,ap=net?.ap||{online:true,channel:6,security:'WPA2-PSK'};
-  const link=!!(ap.online&&net?.client?.present&&net?.client?.connected);
+  const link=!!(ap.online&&net?.station?.connected&&!net?.radio?.monitor);
   if(cmd==='ip a')result={ok:true,lines:['1: lo    inet 127.0.0.1/8\n2: wlan0  [SIM] state '+(link?'CONNECTED':ap.online?'DISCONNECTED':'DOWN')]};
   else if(cmd==='ip route')result={ok:true,lines:[link?'default via 192.0.2.1 dev wlan0\n192.0.2.0/24 dev wlan0 scope link':'(연결된 가상 인터페이스가 없어 기본 경로가 없습니다.)']};
   else if(cmd==='ping 192.0.2.1')result=link?{ok:true,lines:['PING 192.0.2.1: 3 packets transmitted, 3 received (SIM)']}:{ok:false,lines:['Destination Host Unreachable: AP 전원 또는 클라이언트 연결 상태를 Network에서 확인하세요.']};
