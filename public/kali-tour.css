@@ -77,3 +77,23 @@
  #onboard-card .ob-footer{gap:4px;flex-wrap:wrap}
  #onboard-card #ob-chapters,#onboard-card #ob-resume{padding:5px 8px;min-height:33px}
 }
+
+/* Chapter menu is portaled to the tour root to avoid mobile card clipping. */
+#onboard-root>.ob-chapter-list[hidden]{display:none!important}
+#onboard-root>.ob-chapter-list{
+ position:fixed;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);
+ z-index:10;pointer-events:auto;display:grid;grid-template-columns:1fr 1fr;
+ gap:8px;width:min(450px,calc(100vw - 20px));max-height:min(70dvh,450px);
+ overflow:auto;padding:13px;border:1px solid #8cc8ec;border-radius:9px;
+ background:#172e45f9;box-shadow:0 25px 90px #000c
+}
+#onboard-root>.ob-chapter-list button{
+ background:#274762;color:#f0faff;text-align:left;font:700 12px/1.4 Cantarell,system-ui,sans-serif;
+ padding:12px;border:1px solid #648daf;border-radius:5px;cursor:pointer;min-height:43px
+}
+#onboard-root>.ob-chapter-list button:hover,
+#onboard-root>.ob-chapter-list button:focus-visible{background:#376e99;outline:2px solid #92d8fa}
+@media(max-width:760px){
+ #onboard-root>.ob-chapter-list{grid-template-columns:1fr;max-height:68dvh;gap:7px;padding:10px}
+ #onboard-root>.ob-chapter-list button{font-size:11px;min-height:39px;padding:9px 11px}
+}
