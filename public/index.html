@@ -173,7 +173,7 @@ function renderNets(){
   const btn=document.createElement('button');btn.type='button';btn.textContent=n.ssid===TARGET?'정보 보기':'설명';
   btn.addEventListener('click',()=>{
    $('net-info').textContent=n.ssid===TARGET?
-   TARGET+' · BSSID '+NET.ap.bssid+' · Channel '+NET.ap.channel+' · '+NET.ap.security+' · '+(state.connected?'가상 연결됨':'연결 안 됨')+' · 허가된 교육용 AP':
+   TARGET+' · BSSID '+NET.ap.bssid+' · Channel '+NET.ap.channel+' · '+NET.ap.security+' · '+(NET.station.connected?'가상 연결됨':'연결 안 됨')+' · 허가된 교육용 AP':
    n.ssid+': 비교를 위한 허구의 네트워크입니다. 이 시나리오의 대상이 아니에요.';
   });row.append(icon,details,btn);el.append(row)
  }
@@ -212,15 +212,15 @@ if(canonical==='cat README.txt'||canonical==='cat /home/kali/README.txt'){log('K
 if(canonical==='uname -a'){log('Linux kali 6.12.0-kali-sim #1 SMP x86_64 GNU/Linux (SIMULATED)','dim');return}
 if(canonical==='man nmcli'){log('nmcli: NetworkManager command-line tool\n예시: nmcli dev wifi list / nmcli dev wifi connect SSID password PASSWORD ifname IFACE\n이 페이지에서는 가상 데이터에만 적용됩니다.','sys');return}
 if(canonical==='history'){shellHistory.slice(-15).forEach((s,i)=>log(String(i+Math.max(1,shellHistory.length-14)).padStart(3)+'  '+s));return}
-if(canonical==='status'){log(`kali@kali · iface=${state.monitor?'wlan0mon (monitor)':'wlan0 (managed)'} · Wi-Fi=${state.protocol} · capture=${state.captured?'YES':'NO'} · connected=${state.connected?'YES':'NO'} · completed=${total()}/9`,'sys');return}
+if(canonical==='status'){log(`kali@kali · iface=${state.monitor?'wlan0mon (monitor)':'wlan0 (managed)'} · Wi-Fi=${state.protocol} · capture=${state.captured?'YES':'NO'} · connected=${NET.station.connected?'YES':'NO'} · completed=${total()}/9`,'sys');return}
 if(/^open\s+(router|wifi|guide|terminal|files|appearance)$/.test(canonical)){openWindow(canonical.split(' ')[1]);log('가상 앱을 열었습니다.','ok');return}
-if(canonical==='ip a'||canonical==='ip addr'||canonical==='ip address show'){log('1: lo: <LOOPBACK,UP> mtu 65536 state UNKNOWN\n    inet 127.0.0.1/8 scope host lo');log(state.monitor?'2: wlan0mon: <BROADCAST,MULTICAST,UP> mtu 1500 state UNKNOWN\n    link/ieee802.11 02:00:00:00:00:01':'2: wlan0: <BROADCAST,MULTICAST,UP> mtu 1500 state UP\n    link/ether 02:00:00:00:00:01\n    inet '+(state.connected?'192.0.2.14/24':'(not connected)')+' [SIM]');mark('iface');return}
+if(canonical==='ip a'||canonical==='ip addr'||canonical==='ip address show'){log('1: lo: <LOOPBACK,UP> mtu 65536 state UNKNOWN\n    inet 127.0.0.1/8 scope host lo');log(state.monitor?'2: wlan0mon: <BROADCAST,MULTICAST,UP> mtu 1500 state UNKNOWN\n    link/ieee802.11 02:00:00:00:00:01':'2: wlan0: <BROADCAST,MULTICAST,UP> mtu 1500 state UP\n    link/ether 02:00:00:00:00:01\n    inet '+(NET.station.connected?'192.0.2.14/24':'(not connected)')+' [SIM]');mark('iface');return}
 if(/^nmcli (?:dev|device) wifi list$/.test(canonical)||/^nmcli -f [\w,]+ (?:dev|device) wifi list$/.test(canonical)){
  if(requireStep('iface','ip a'))return;
  if(state.monitor){log('Error: wlan0 is in monitor mode. Return to managed mode first.','warn');return}
  log('IN-USE  SSID           MODE   CHAN  SIGNAL  SECURITY');
  for(const n of NET.networks())
-   log('  '+(state.connected&&n.ssid===TARGET?'*':' ')+'     '+n.ssid.padEnd(15)+' Infra  '+String(n.channel).padEnd(5)+' '+String(n.signal).padEnd(6)+'  '+n.security);
+   log('  '+(NET.station.connected&&n.ssid===TARGET?'*':' ')+'     '+n.ssid.padEnd(15)+' Infra  '+String(n.channel).padEnd(5)+' '+String(n.signal).padEnd(6)+'  '+n.security);
  if(!NET.ap.online){log('LAB-TRAINING은 현재 꺼져 있습니다. Network 창에서 가상 전원을 켜세요.','warn');return}
  if(!state.hardened)mark('wifi');return
 }
