@@ -215,13 +215,56 @@ if(canonical==='history'){shellHistory.slice(-15).forEach((s,i)=>log(String(i+Ma
 if(canonical==='status'){log(`kali@kali · iface=${state.monitor?'wlan0mon (monitor)':'wlan0 (managed)'} · Wi-Fi=${state.protocol} · capture=${state.captured?'YES':'NO'} · connected=${state.connected?'YES':'NO'} · completed=${total()}/9`,'sys');return}
 if(/^open\s+(router|wifi|guide|terminal|files|appearance)$/.test(canonical)){openWindow(canonical.split(' ')[1]);log('가상 앱을 열었습니다.','ok');return}
 if(canonical==='ip a'||canonical==='ip addr'||canonical==='ip address show'){log('1: lo: <LOOPBACK,UP> mtu 65536 state UNKNOWN\n    inet 127.0.0.1/8 scope host lo');log(state.monitor?'2: wlan0mon: <BROADCAST,MULTICAST,UP> mtu 1500 state UNKNOWN\n    link/ieee802.11 02:00:00:00:00:01':'2: wlan0: <BROADCAST,MULTICAST,UP> mtu 1500 state UP\n    link/ether 02:00:00:00:00:01\n    inet '+(state.connected?'192.0.2.14/24':'(not connected)')+' [SIM]');mark('iface');return}
-if(/^nmcli (?:dev|device) wifi list$/.test(canonical)||/^nmcli -f [\w,]+ (?:dev|device) wifi list$/.test(canonical)){if(requireStep('iface','ip a'))return;if(state.monitor){log('Error: wlan0 is in monitor mode. Return to managed mode first.','warn');return}log('IN-USE  SSID           MODE   CHAN  RATE      SIGNAL  SECURITY');log(`  ${state.connected?'*':' '}     LAB-TRAINING   Infra  6     130 Mb/s  76      ${state.protocol}`);log('        CAMPUS-GUEST   Infra  1     130 Mb/s  58      WPA2');log('        LAB-SECURE     Infra  11    270 Mb/s  88      WPA3');if(!state.hardened)mark('wifi');return}
+if(/^nmcli (?:dev|device) wifi list$/.test(canonical)||/^nmcli -f [\w,]+ (?:dev|device) wifi list$/.test(canonical)){
+ if(requireStep('iface','ip a'))return;
+ if(state.monitor){log('Error: wlan0 is in monitor mode. Return to managed mode first.','warn');return}
+ log('IN-USE  SSID           MODE   CHAN  SIGNAL  SECURITY');
+ for(const n of NET.networks())
+   log('  '+(state.connected&&n.ssid===TARGET?'*':' ')+'     '+n.ssid.padEnd(15)+' Infra  '+String(n.channel).padEnd(5)+' '+String(n.signal).padEnd(6)+'  '+n.security);
+ if(!NET.ap.online){log('LAB-TRAINING은 현재 꺼져 있습니다. Network 창에서 가상 전원을 켜세요.','warn');return}
+ if(!state.hardened)mark('wifi');return
+}
 if(plain==='airmon-ng start wlan0'){if(requireStep('wifi','nmcli dev wifi list'))return;if(state.monitor){log('wlan0mon is already in monitor mode.','warn');return}NET.monitorStart();state.monitor=true;state.connected=false;save();log('PHY Interface Driver  Chipset\nphy0 wlan0     virtual SIMULATED adapter','sys');log('(mac80211 monitor mode enabled on [phy0]wlan0mon) [SIM]','ok');mark('monitor');return}
 if(plain==='airmon-ng stop wlan0mon'){if(requireStep('audit','aircrack-ng -w ... labcap-01.cap'))return;if(!state.monitor){log('wlan0mon is not active.','warn');return}NET.monitorStop();state.monitor=false;save();log('(mac80211 monitor mode disabled for [phy0]wlan0mon) [SIM]','ok');log('wlan0 managed mode available again.');mark('managed');return}
-if(/^airodump-ng wlan0mon$/.test(plain)){if(requireStep('monitor','sudo airmon-ng start wlan0'))return;log('CH  6 ][ Elapsed: 00:00:12 ][ SIMULATION ONLY','sys');log(' BSSID              PWR  CH  ENC   CIPHER AUTH ESSID');log(' '+BSSID+'   -36   6  WPA2  CCMP   PSK  LAB-TRAINING');log(' 02:1A:11:20:26:02   -68   1  WPA2  CCMP   PSK  CAMPUS-GUEST');log(' 02:1A:11:20:26:03   -48  11  WPA3  CCMP   SAE  LAB-SECURE');log('실습 정보는 정해진 예시입니다. 실제 무선 패킷은 읽지 않았습니다.','warn');state.survey=true;save();mark('survey');return}
-if(/^airodump-ng\s+/.test(plain)&&/\bwlan0mon$/.test(plain)){if(requireStep('survey','sudo airodump-ng wlan0mon'))return;const bssidOk=plain.includes('--bssid '+BSSID),channelOk=/(?:-c |--channel )6(?:\s|$)/.test(plain),writeOk=/(?:-w |--write )labcap(?:\s|$)/.test(plain);if(!bssidOk||!channelOk||!writeOk){log('이 실습에서는 정확한 대상 BSSID, 채널 6, 출력 이름 labcap을 지정하세요.','warn');log(stages.find(x=>x.id==='capture').cmd,'dim');return}state.captured=true;save();log(' CH  6 ][ WPA handshake: '+BSSID+' ][ SIM FIXTURE','ok');log('사전에 준비한 정상 클라이언트 연결 예시를 labcap-01.cap로 생성한 것으로 처리했습니다.');log('실제 패킷 저장이나 강제 재연결은 수행하지 않습니다.','warn');mark('capture');return}
-if(/^aircrack-ng\s+/.test(plain)){if(requireStep('capture',stages[4].cmd))return;if(!/\s-w\s+\/usr\/share\/wordlists\/lab-demo\.txt\s+labcap-01\.cap$/.test(plain)){log('학습용 사전 경로와 캡처 이름을 확인하세요.','warn');log(stages[5].cmd,'dim');return}if(state.protocol!=='WPA2-PSK'){log('이 예제는 초기 WPA2-PSK 시나리오 전용입니다.','warn');return}startAudit();return}
-if(/^nmcli (?:dev|device) wifi connect\s+/.test(canonical)){if(requireStep('managed','sudo airmon-ng stop wlan0mon'))return;if(requireStep('audit',stages[5].cmd))return;if(state.hardened){log('공유기 설정이 바뀌었습니다. 이전 암호로는 접속할 수 없습니다.','warn');return}if(!/^nmcli (?:dev|device) wifi connect ["']?LAB-TRAINING["']? password ["']?coffee2026["']? ifname wlan0$/.test(canonical)){log('연결 명령과 훈련용 암호를 확인하세요.','warn');log(stages[7].cmd,'dim');return}state.connected=true;save();log('Device "wlan0" successfully activated with "LAB-TRAINING" (SIM ONLY).','ok');log('가상 연결 상태만 변경됐습니다. 실제 인터넷 연결은 일어나지 않았습니다.');mark('connect');return}
+if(/^airodump-ng wlan0mon$/.test(plain)){
+ if(requireStep('monitor','sudo airmon-ng start wlan0'))return;
+ if(!state.monitor){log('모니터 모드가 켜져 있지 않아요.','warn');return}
+ log('CH '+NET.ap.channel+' ][ Elapsed: 00:00:12 ][ LOCAL SIMULATOR','sys');
+ log(' BSSID              PWR  CH  SECURITY ESSID');
+ for(const n of NET.networks())
+  log(' '+n.bssid+'   -'+Math.round(100-n.signal)+'   '+n.channel+'   '+n.security.padEnd(8)+' '+n.ssid);
+ log('가상의 접속 지점 상태만 출력합니다. 실제 무선 패킷은 읽지 않아요.','warn');
+ if(!NET.ap.online){log('LAB-TRAINING 공유기의 가상 전원이 꺼져 있습니다.','warn');return}
+ state.survey=true;save();mark('survey');return
+}
+if(/^airodump-ng\s+/.test(plain)&&/\bwlan0mon$/.test(plain)){
+ if(requireStep('survey','sudo airodump-ng wlan0mon'))return;
+ const bssid=plain.match(/--bssid\s+([a-f\d:]+)/i)?.[1];
+ const channel=plain.match(/(?:-c|--channel)\s+(\d+)/)?.[1];
+ const filename=plain.match(/(?:-w|--write)\s+([\w-]+)/)?.[1];
+ const attempt=NET.captureFixture({bssid,channel,filename});
+ if(!attempt.ok){
+   log(attempt.message,'warn');
+   log('명령어 예시: '+stages[4].cmd,'dim');
+   return
+ }
+ state.captured=true;save();
+ log(' CH '+NET.ap.channel+' ][ EDU auth event #'+NET.capture.event+' ][ SIM FIXTURE','ok');
+ log(attempt.message);
+ log('실제 인증 패킷 수집이나 강제 재연결을 수행하지 않습니다.','warn');
+ mark('capture');return
+}
+if(/^aircrack-ng\s+/.test(plain)){if(requireStep('capture',stages[4].cmd))return;if(!/\s-w\s+\/usr\/share\/wordlists\/lab-demo\.txt\s+labcap-01\.cap$/.test(plain)){log('학습용 사전 경로와 캡처 이름을 확인하세요.','warn');log(stages[5].cmd,'dim');return}if(NET.ap.security!=='WPA2-PSK'){log('이 예제는 WPA2-PSK 학습 전용입니다. 현재 '+NET.ap.security+'입니다.','warn');return}if(!NET.capture){log('가상 인증 교환 예제가 없습니다. 클라이언트 재연결과 캡처를 먼저 완료하세요.','warn');return}startAudit();return}
+if(/^nmcli (?:dev|device) wifi connect\s+/.test(canonical)){
+ if(requireStep('managed','sudo airmon-ng stop wlan0mon'))return;
+ if(requireStep('audit',stages[5].cmd))return;
+ if(state.hardened){log('가상 공유기의 보안 설정이 이미 변경돼 이전의 비밀번호는 사용할 수 없어요.','warn');return}
+ const m=canonical.match(/^nmcli (?:dev|device) wifi connect ["']?LAB-TRAINING["']? password ["']?([^"']+)["']? ifname wlan0$/);
+ if(!m){log('SSID·암호·인터페이스 값을 확인하세요.','warn');log(stages[7].cmd,'dim');return}
+ const result=NET.connect(m[1]);
+ if(!result.ok){log(result.message,'warn');return}
+ state.connected=true;save();log(result.message,'ok');mark('connect');return
+}
 if(canonical==='lab-verify LAB-TRAINING'){if(requireStep('connect',stages[7].cmd))return;if(!state.hardened){log('가상 공유기 보안을 먼저 강화하세요: open router','warn');return}log('LAB-TRAINING verification [SIMULATION ONLY]','sys');log('  Security: WPA3-SAE                   PASS','ok');log('  Training password policy: >=16 chars PASS','ok');log('  Old weak credential invalidated      PASS','ok');log('  Final verdict: lab scenario remediated.','ok',()=>{$('finish').classList.add('open')});mark('verify');return}
 if(/^lab-verify/.test(canonical)){log('사용법: lab-verify LAB-TRAINING (이 실습에서만 쓰는 명령)','err');return}
 if(/^sudo\s+/.test(canonical)){log('sudo: 이 가상 터미널에서 해당 명령은 구현되지 않았습니다.','err');return}
@@ -287,6 +330,19 @@ $('power-start').addEventListener('click',powerOn);
 $('shutdown-btn').addEventListener('click',switchOff);
 $('menu-power').addEventListener('click',switchOff);
 
+document.addEventListener('kali-sim:network-changed',e=>{
+ const type=e.detail?.kind;
+ if(['channel','password','ap'].includes(type)){
+  // An AP change makes previously observed/captured evidence stale.
+  for(const id of ['wifi','monitor','survey','capture','audit','managed','connect','verify'])delete state.done[id];
+  state.monitor=false;state.survey=false;state.captured=false;state.found=false;
+  state.connected=false;state.hardened=false;state.protocol=NET.ap.security;
+  if(NET.radio.monitor)NET.monitorStop();
+  runGeneration++;busy=false;save();render();
+ }else{
+  state.protocol=NET.ap.security;renderNets();
+ }
+});
 render();welcome();if(total()===9)log('저장된 기록: 모든 실습을 완료한 상태입니다.','ok');
 })();
 </script><script src="./kali-xfce.js?v=4"></script><script src="./kali-tour.js?v=2"></script><script src="./lab-guide.js?v=1"></script><script src="./network-controls.js?v=1"></script><script src="./curriculum.js?v=1"></script></body></html>
