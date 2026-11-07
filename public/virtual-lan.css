@@ -69,3 +69,7 @@
  .desktop.lan-active #lan-side{display:none!important}
  .desktop.lan-active #lan-mobile-guide{display:block}
 }
+
+/* Hidden windows must never block tutorials or other XFCE apps. */
+#lan-browser.hidden,#lan-map.hidden,#lan-browser.minimized,#lan-map.minimized{display:none!important}
+#lan-side[hidden],#lan-mobile-guide[hidden]{display:none!important}
