@@ -190,7 +190,12 @@ document.addEventListener('click',e=>{
  if(!active)return;
  const step=stages[index];if(step.mode!=='click')return;
  const target=e.target.closest(step.target);if(!target)return;
- setTimeout(()=>{if(active&&stages[index]===step)proceed()},100);
+ setTimeout(()=>{
+  if(!active||stages[index]!==step)return;
+  if(step.target==='#course-close'&&originalCourse&&window.KaliCurriculum?.snapshot()?.active!==originalCourse)
+   window.KaliCurriculum.selectTrack(originalCourse);
+  proceed();
+ },100);
 },true);
 document.addEventListener('submit',e=>{
  if(!active||stages[index].mode!=='command'||e.target.id!=='shell-form')return;
