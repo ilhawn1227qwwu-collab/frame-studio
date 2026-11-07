@@ -19,15 +19,15 @@ const steps=[
  ['취약 설정 개선','보안 헤더, 관리자 접근 통제, HTML 출력 처리 세 항목을 모두 수정해 봅시다.','web-fix headers\nweb-fix access\nweb-fix output','세 설정이 모두 적용되어야 검증할 수 있어요.'],
  ['최종 보고와 검증','정상 작동과 보안 개선을 확인한 다음, 조사한 근거를 보고서로 남겨 볼까요?','incident-report','보고서에는 관찰한 증거와 조치 결과가 함께 기록돼요.']
 ];
-const init=()=>({version:1,web:{running:true,headers:false,access:false,output:false},
+const init=()=>({version:2,web:{hostOnline:true,running:true,headers:false,access:false,output:false},shell:{host:'kali',user:'kali',cwd:'/home/kali'},
  logs:seedLogs.slice(),events:[{when:'13:09',message:'가상 환경 준비됨'}],
  mission:{started:false,flags:{gateway:false,outage:false,logs:false,restart:false,browser:false,audit:false,secured:false,report:false},report:''}
 });
 let state=init();
 try{
  const v=JSON.parse(localStorage.getItem(KEY)||'null');
- if(v&&v.version===1&&v.web&&v.mission){
-  state={...init(),...v,web:{...init().web,...v.web},mission:{...init().mission,...v.mission,flags:{...init().mission.flags,...v.mission.flags}}};
+ if(v&&[1,2].includes(v.version)&&v.web&&v.mission){
+  state={...init(),...v,version:2,web:{...init().web,...v.web},shell:{host:'kali',user:'kali',cwd:'/home/kali'},mission:{...init().mission,...v.mission,flags:{...init().mission.flags,...v.mission.flags}}};
   if(!Array.isArray(state.logs))state.logs=seedLogs.slice();
   if(!Array.isArray(state.events))state.events=[];
  }
@@ -38,6 +38,10 @@ function changed(type,message=''){
  persist();document.dispatchEvent(new CustomEvent('kali-sim:lan-changed',{detail:{type,message}}));
 }
 function net(){return window.KaliNetwork}
+function hostOnline(){return !!state.web.hostOnline}
+function isRemote(){return state.shell.host==='web01'}
+function localHint(){return {ok:false,reason:'location',lines:['lab-web는 Kali PC가 아닌 192.0.2.20 서버에 있어요.','ssh trainee@192.0.2.20으로 가상 서버에 접속해 보세요.']}}
+function fail(reason,message,help){return {ok:false,reason,lines:[message,...(help?[help]:[])]}}
 function link(){
  const n=net();
  return !!(n&&n.ap.online&&n.station.connected&&!n.radio.monitor);
@@ -65,7 +69,7 @@ function devices(){
  return [
   {id:'kali',name:'Kali Workstation',ip:'192.0.2.10',type:'workstation',online:true,detail:connected?'가상 LAN 연결됨':'가상 LAN 연결 안 됨'},
   {id:'router',name:'Lab Router',ip:'192.0.2.1',type:'router',online:on,detail:on?'게이트웨이 동작 중':'가상 AP 꺼짐'},
-  {id:'web',name:'Web Server',ip:'192.0.2.20',type:'server',online:on&&state.web.running,detail:!on?'라우터 연결 끊김':state.web.running?'HTTP 서비스 정상':'HTTP 서비스 중단 (503)'},
+  {id:'web',name:'Web Server',ip:'192.0.2.20',type:'server',online:hostOnline(),reachable:on&&hostOnline(),service:hostOnline()?(state.web.running?'RUNNING':'STOPPED'):'UNAVAILABLE',detail:!hostOnline()?'서버 전원 OFF':!on?'공유기 연결 끊김':state.web.running?'서버 온라인 · HTTP 서비스 정상':'서버 온라인 · HTTP 서비스 중단 (503)'},
   {id:'log',name:'Log Server',ip:'192.0.2.30',type:'server',online:on,detail:'학습용 인증 로그 보관'}
  ]
 }
@@ -80,6 +84,7 @@ function request(raw,{head=false,browser=false}={}){
  const p=urlParts(raw);
  if(!p)return {ok:false,status:0,heading:'주소를 확인하세요',message:'가상 브라우저는 training.lab, demo.lab, 192.0.2.20만 지원합니다. 외부 인터넷 요청은 하지 않습니다.',headers:[],body:[]};
  if(!link())return {ok:false,status:0,heading:'연결할 수 없습니다',message:'가상 네트워크 연결이 없습니다. 공유기 전원과 클라이언트 상태를 확인하세요.',headers:[],body:[]};
+ if(!hostOnline())return {ok:false,status:0,heading:'서버에 연결할 수 없습니다',message:'가상 웹 서버 전원이 꺼져 TCP 연결을 맺을 수 없어요.',headers:[],body:[]};
  if(!state.web.running){
   if(head&&p.hostname==='training.lab')flag('outage');
   return {ok:true,status:503,heading:'503 Service Unavailable',message:'가상 lab-web 서비스가 중지되어 있습니다.',headers:['HTTP/1.1 503 Service Unavailable','Server: training-lab (SIM)','Retry-After: 30'],body:['현재 웹 서비스를 사용할 수 없습니다.','서버의 서비스 상태를 확인하세요.']}
@@ -99,7 +104,8 @@ function request(raw,{head=false,browser=false}={}){
  return {ok:true,status:200,heading:p.path==='/admin'?'관리자 페이지':p.path==='/health'?'서비스 상태':'Virtual Training Portal',message:'이 문서는 브라우저 안에서 생성한 가상 HTTP 응답입니다.',headers,body};
 }
 function missionStart(){
- state.web={running:false,headers:false,access:false,output:false};
+ state.web={hostOnline:true,running:false,headers:false,access:false,output:false};
+ state.shell={host:'kali',user:'kali',cwd:'/home/kali'};
  state.mission={started:true,flags:{gateway:false,outage:false,logs:false,restart:false,browser:false,audit:false,secured:false,report:false},report:''};
  changed('mission-start','INCIDENT-001 시작: 가상 웹 서비스 중단과 인증 실패 로그 발생');
  return {ok:true,message:'INCIDENT-001이 시작되었습니다. 가상 웹 서비스는 중단(503) 상태입니다.'};
