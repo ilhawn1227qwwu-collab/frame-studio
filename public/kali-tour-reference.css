@@ -1,0 +1,39 @@
+
+/* App reference at end of complete guided tour; also reachable from the Kali panel. */
+#onboard-icon-reference[hidden]{display:none!important}
+#onboard-icon-reference{position:fixed;inset:0;z-index:2300;display:grid;place-items:center;font-family:Cantarell,Inter,"Noto Sans KR",system-ui,sans-serif}
+#onboard-icon-reference .ob-ref-backdrop{position:absolute;inset:0;background:#07111ccf;backdrop-filter:blur(9px)}
+#onboard-icon-reference .ob-ref-modal{position:relative;width:min(940px,calc(100vw - 22px));height:min(750px,calc(100dvh - 20px));display:flex;flex-direction:column;background:#1f2e42;border:1px solid #79a8cc;border-radius:9px;color:#f1f7ff;box-shadow:0 24px 90px #000c;overflow:hidden}
+.ob-ref-header{flex:none;padding:18px 21px 16px;background:linear-gradient(110deg,#2d4864,#26374c);border-bottom:1px solid #597792;display:flex;justify-content:space-between;align-items:start;gap:16px}
+.ob-ref-header small{font:700 10px ui-monospace,monospace;color:#92d7ff;letter-spacing:.09em}
+.ob-ref-header h2{margin:5px 0 3px;color:white;font-size:22px;line-height:1.35}
+.ob-ref-header p{margin:3px 0 0;font-size:12px;color:#c5d9ea;line-height:1.65}
+#ob-ref-x{flex:none;border:1px solid #6d8bab;border-radius:4px;background:#354a62;color:#e7f7ff;font-size:21px;width:36px;height:36px;cursor:pointer}
+.ob-ref-list{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;align-content:start;gap:9px;padding:18px;scrollbar-width:thin;scrollbar-color:#658aaa #20334b}
+.ob-ref-item{display:flex;gap:11px;align-items:flex-start;border:1px solid #46617f;border-radius:5px;background:#293a50;padding:11px 12px;min-height:81px}
+.ob-ref-item .ob-ref-glyph{display:grid;place-items:center;flex:0 0 37px;height:37px;border:1px solid #557a9c;border-radius:6px;background:#194066;color:#a7e1ff;font-size:22px}
+.ob-ref-item strong{display:block;font-size:13px;color:#f0faff;margin-bottom:5px}
+.ob-ref-item p{font-size:11px;color:#bfd3e5;line-height:1.55;margin:0}
+.ob-ref-footer{flex:none;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 19px;border-top:1px solid #56748d;background:#263d56}
+.ob-ref-footer span{font-size:10px;color:#b3cadb;line-height:1.5}
+#ob-ref-done{font-size:12px;font-weight:700;padding:10px 16px;background:#226ca1;border:1px solid #64b2e5;border-radius:4px;color:white;cursor:pointer;white-space:nowrap}
+#ob-ref-done:hover{background:#378dca}
+#onboard-icon-reference button:focus-visible{outline:2px solid #b2e4ff;outline-offset:2px}
+#onboard-icons{display:inline-flex;align-items:center;gap:5px}
+@media(max-width:760px){
+ #onboard-icon-reference .ob-ref-modal{width:calc(100vw - 12px);height:calc(100dvh - 12px)}
+ .ob-ref-header{padding:12px;gap:8px}
+ .ob-ref-header h2{font-size:17px}
+ .ob-ref-header p{font-size:11px}
+ .ob-ref-list{padding:9px;gap:7px;grid-template-columns:1fr}
+ .ob-ref-item{padding:9px 10px;gap:9px;min-height:66px}
+ .ob-ref-item .ob-ref-glyph{flex-basis:30px;height:30px;font-size:18px}
+ .ob-ref-item strong{font-size:12px;margin-bottom:2px}
+ .ob-ref-item p{font-size:10px}
+ .ob-ref-footer{padding:9px;gap:8px}
+ .ob-ref-footer span{font-size:9px}
+ #ob-ref-done{padding:9px;font-size:11px;white-space:normal;max-width:52%}
+ #onboard-icons .ob-help-label{display:none}
+ #onboard-icons{min-width:30px;padding:5px}
+}
+@media(max-width:355px){.ob-ref-header h2{font-size:15px}}
