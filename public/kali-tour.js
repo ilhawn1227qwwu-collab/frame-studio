@@ -78,6 +78,11 @@ function end(mark=true){
  active=false;root.hidden=true;root.classList.remove('is-center');document.dispatchEvent(new Event('kali-sim:tour-ended'));
  $('menu-panel').classList.remove('open');$('menu-btn').setAttribute('aria-expanded','false');
  $('mission').classList.remove('show');
+ // After onboarding or skip, open the terminal for the first lab mission.
+ if(mark&&$('power-layer').hidden){
+   const terminalLauncher=document.querySelector('.desktop-shortcuts [data-open="terminal"]');
+   if(terminalLauncher)terminalLauncher.click();
+ }
 }
 function proceed(){
  if(!active)return;
