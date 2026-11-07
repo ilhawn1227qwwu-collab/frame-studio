@@ -206,8 +206,25 @@ const shellHistory=[];let historyPos=0;
 function requireStep(id,cmd){if(!state.done[id]){log('먼저 실행하세요: '+cmd,'warn');return true}return false}
 const candidates=['12345678','password123','summer2026','hello-world','coffee2026','admin2026','starlight88','letmein2026'];
 function startAudit(){if(busy)return;busy=true;let generation=++runGeneration;log('Aircrack-ng 1.7 / [SIM] 교육용 문자열 비교 시작','sys');log('Reading sample capture: labcap-01.cap (fictional)');log('Dictionary: 8 lab-only candidates; no cryptographic cracking is performed.','warn');let i=0;const next=()=>{if(generation!==runGeneration||!busy)return;if(i>=candidates.length){busy=false;state.found=false;save();log('NO MATCH: 교육용 사전에 일치하는 비밀번호가 없어요. (SIM)','warn');log('이는 정상적인 보안 점검 결과예요. 실제로 암호를 알아낸 것이 아닙니다.','sys');log('다음에는 관리자에게 제공받은 연습용 접속 암호로 연결해 보세요.','sys');mark('audit');return}const w=candidates[i++];const match=NET.auditCandidate(w).matched===true;log(`  [${String(i).padStart(2,'0')}/08] ${w.padEnd(16)} ${match?'MATCH':'NO MATCH'}`,match?'ok':'dim');if(match){state.found=true;save();busy=false;log('KEY FOUND! [ '+w+' ] (SIMULATED EXAMPLE)','ok');log('원리: 흔한 비밀번호는 후보 목록에 포함되어 있을 수 있습니다.');mark('audit');return}setTimeout(next,160)};setTimeout(next,250)}
-function execute(raw){const cmd=String(raw).trim();if(!cmd)return;if(busy){notify('가상 사전 검사가 진행 중입니다.');return}drain();openWindow('terminal',false);$('shell-input').value='';shellHistory.push(cmd);historyPos=shellHistory.length;log('┌──(kali㉿kali)-[~]\n└─$ '+cmd,'prompt');const canonical=cmd.replace(/\s+/g,' ').trim();const plain=canonical.replace(/^sudo\s+/,'');
+function execute(raw){const cmd=String(raw).trim();if(!cmd)return;if(busy){notify('가상 사전 검사가 진행 중입니다.');return}drain();openWindow('terminal',false);$('shell-input').value='';shellHistory.push(cmd);historyPos=shellHistory.length;const shell=window.KaliLAN?.shell||{host:'kali',user:'kali'};log('┌──('+shell.user+'㉿'+shell.host+')-[~]\n└─$ '+cmd,'prompt');const canonical=cmd.replace(/\s+/g,' ').trim();const plain=canonical.replace(/^sudo\s+/,'');
 if(canonical==='clear'){clearOutput();return}
+if(window.KaliLAN){
+ const shared=!(/^ip a$|^nmcli (?:dev|device) wifi connect /i.test(canonical))?
+   window.KaliLAN.common(canonical):null;
+ if(shared){
+  for(const line of shared.lines||[])log(line,shared.ok?'sys':'warn');
+  if(!shared.ok)log(window.KaliLAN.explainFailure(shared,canonical),'warn');
+  return
+ }
+ if(window.KaliLAN.shell.host==='web01'){
+  const remote=window.KaliLAN.command(canonical);
+  for(const line of remote.lines||[])log(line,remote.ok?'sys':'warn');
+  if(!remote.ok)log(window.KaliLAN.explainFailure(remote,canonical),'warn');
+  return
+ }
+}
+const fs=window.KaliCurriculum?.fs(canonical);
+if(fs){for(const line of fs.lines||[])log(line,fs.ok?'sys':'warn');return}
 if(canonical==='help'||canonical==='--help'){log('실제 Kali/Linux 문법을 참고한 명령 (이 페이지 안에서만 시뮬레이션)','sys');log('  whoami, pwd, ls, cd, cat README.txt, uname -a');log('  ip a  |  nmcli dev wifi list');log('  sudo airmon-ng start wlan0  |  sudo airmon-ng stop wlan0mon');log('  sudo airodump-ng wlan0mon  |  sudo airodump-ng --bssid ... -c 6 -w labcap wlan0mon');log('  aircrack-ng -w /usr/share/wordlists/lab-demo.txt labcap-01.cap');log('  nmcli dev wifi connect LAB-TRAINING password '+NET.ap.psk+' ifname wlan0');log('  lab-verify LAB-TRAINING  (이 실습 전용 명령)');log('  open router, open wifi, open guide, status, history, man nmcli, clear');return}
 if(canonical==='whoami'){log('kali');return}
 if(canonical==='pwd'){log('/home/kali');return}
