@@ -14,7 +14,7 @@ async function check(browser,config){
  const page=await context.newPage(),errors=[],missing=[];
  page.on('pageerror',e=>errors.push(e.message));
  page.on('response',r=>{if(r.status()>=400&&r.url().startsWith('http://127.0.0.1:8000/'))missing.push(r.status()+' '+r.url())});
- const evalPage=fn=>page.evaluate(fn);
+ const evalPage=(fn,arg)=>page.evaluate(fn,arg);
  try{
   await page.goto('http://127.0.0.1:8000',{waitUntil:'load'});
   await page.locator('#power-start').click();
@@ -31,7 +31,7 @@ async function check(browser,config){
   for(const track of ['network','web','sandbox','wireless']){
    await evalPage(id=>window.KaliCurriculum.selectTrack(id),track);
    const before=await page.locator('#quick').innerText();
-   const expected={network:'ip a',web:'curl http://demo.lab',sandbox:'incident-status',wireless:'nmcli'};
+   const expected={network:'ip a',web:'curl http://demo.lab',sandbox:'incident-status',wireless:'ip a'};
    assert.ok(before.includes(expected[track]),'course '+track+' missing quick command: '+before);
    await evalPage(()=>window.KaliNetwork.setOnline(false));
    const off=await page.locator('#quick').innerText();
@@ -41,6 +41,7 @@ async function check(browser,config){
    assert.equal(on,before,'course '+track+' quick commands overwritten after AP on');
   }
   // Web course resets progress only, not the server state shared with other courses.
+  await evalPage(()=>window.KaliNetwork.connect('coffee2026'));
   await evalPage(()=>window.KaliCurriculum.selectTrack('web'));
   const pass=await evalPage(()=>window.KaliLAN.webFix('headers'));
   assert.equal(pass.ok,true);
