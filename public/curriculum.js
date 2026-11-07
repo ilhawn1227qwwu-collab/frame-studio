@@ -251,6 +251,35 @@ function success(out,task){
   print('✓ '+tracks[data.active].title+' '+data.progress[data.active]+'/'+tracks[data.active].steps.length+' 단계 완료','ok');
  }
 }
+
+const LOCAL_FS=/^(?:pwd$|ls(?:\s|$)|cd(?:\s|$)|mkdir\s|touch\s|cat\s)/;
+function virtualFs(cmd){
+ if(!LOCAL_FS.test(cmd))return null;
+ let result={ok:false,lines:['가상 파일 시스템에서 지원하지 않는 명령입니다.']};
+ if(cmd==='pwd')result={ok:true,lines:[data.fs.cwd]};
+ else if(cmd==='ls'||cmd==='ls -l'||cmd.startsWith('ls ')){
+  const m=cmd.match(/^ls(?: (-l))?(?: (.+))?$/);
+  if(m)result=ls(m[2]||'.',!!m[1]);
+ }else if(/^mkdir [\w./-]+$/.test(cmd)){
+  const d=normalize(cmd.slice(6)),parent=d.slice(0,d.lastIndexOf('/'))||'/';
+  if(!fsDir(parent))result={ok:false,lines:['mkdir: parent directory does not exist: '+parent]};
+  else if(fsDir(d)||Object.hasOwn(data.fs.files,d))result={ok:false,lines:['mkdir: File exists: '+d]};
+  else{data.fs.dirs.push(d);save();syncFiles();result={ok:true,lines:['디렉터리 생성됨: '+d+' [SIM]']}}
+ }else if(/^cd(?: .+)?$/.test(cmd)){
+  const p=normalize(cmd==='cd'?'/home/kali':cmd.slice(3).trim()==='~'?'/home/kali':cmd.slice(3));
+  if(fsDir(p)){data.fs.cwd=p;save();result={ok:true,lines:['작업 경로: '+p]}}
+  else result={ok:false,lines:['cd: no such directory: '+p]};
+ }else if(/^touch [\w./-]+$/.test(cmd)){
+  const path=normalize(cmd.slice(6)),parent=path.slice(0,path.lastIndexOf('/'))||'/';
+  if(!fsDir(parent))result={ok:false,lines:['touch: parent directory does not exist: '+parent]};
+  else if(fsDir(path))result={ok:false,lines:['touch: cannot overwrite a directory: '+path]};
+  else{data.fs.files[path]??='';save();syncFiles();result={ok:true,lines:['파일 생성: '+path+' [SIM]']}}
+ }else if(/^cat \S+$/.test(cmd)){
+  const path=normalize(cmd.slice(4));
+  result=data.fs.files[path]!==undefined?{ok:true,lines:[data.fs.files[path]||'(empty file)']}:{ok:false,lines:['cat: no such file: '+path]};
+ }
+ return result;
+}
 async function executeTrack(raw){
  const cmd=String(raw).trim().replace(/\s+/g,' ');
  if(!cmd||data.active==='wireless'||data.active==='incident'||data.active==='sandbox')return;
@@ -264,30 +293,9 @@ async function executeTrack(raw){
  }
  let result={ok:false,lines:['지원되지 않는 가상 명령입니다. 현재 과목의 안내를 확인하세요.']};
  let completed=false;
- if(id==='linux'){
-  if(cmd==='pwd')result={ok:true,lines:[data.fs.cwd]};
-  else if(cmd==='ls'||cmd==='ls -l'||cmd.startsWith('ls ')){
-   const m=cmd.match(/^ls(?: (-l))?(?: (.+))?$/);
-   if(m)result=ls(m[2]||'.',!!m[1]);
-  }else if(/^mkdir [\w./-]+$/.test(cmd)){
-   const d=normalize(cmd.slice(6));
-   const parent=d.slice(0,d.lastIndexOf('/'))||'/';
-   if(!fsDir(parent))result={ok:false,lines:['mkdir: parent directory does not exist: '+parent]};
-   else if(fsDir(d)||Object.hasOwn(data.fs.files,d))result={ok:false,lines:['mkdir: File exists: '+d]};
-   else {data.fs.dirs.push(d);save();syncFiles();result={ok:true,lines:['디렉터리 생성됨: '+d+' [SIM]']}}
-  }else if(/^cd(?: .+)?$/.test(cmd)){
-   const p=normalize(cmd==='cd'?'/home/kali':cmd.slice(3).trim()==='~'?'/home/kali':cmd.slice(3));
-   if(fsDir(p)){data.fs.cwd=p;save();result={ok:true,lines:['작업 경로: '+p]}}
-   else result={ok:false,lines:['cd: no such directory: '+p]};
-  }else if(/^touch [\w./-]+$/.test(cmd)){
-   const path=normalize(cmd.slice(6)),parent=path.slice(0,path.lastIndexOf('/'))||'/';
-   if(!fsDir(parent))result={ok:false,lines:['touch: parent directory does not exist: '+parent]};
-   else if(fsDir(path))result={ok:false,lines:['touch: cannot overwrite a directory: '+path]};
-   else{data.fs.files[path]??='';save();syncFiles();result={ok:true,lines:['파일 생성: '+path+' [SIM]']}};
-  }else if(/^cat \S+$/.test(cmd)){
-   const path=normalize(cmd.slice(4));result=data.fs.files[path]!==undefined?{ok:true,lines:[data.fs.files[path]||'(empty file)']}:{ok:false,lines:['cat: no such file: '+path]};
-  }
-  completed=result.ok&&(
+ if(id==='linux'||(LOCAL_FS.test(cmd)&&window.KaliLAN?.shell.host!=='web01')){
+  result=virtualFs(cmd)||result;
+  completed=id==='linux'&&result.ok&&(
    (progress===0&&cmd==='pwd'&&data.fs.cwd==='/home/kali')||
    (progress===1&&cmd==='ls')||
    (progress===2&&cmd==='mkdir training'&&fsDir('/home/kali/training'))||
@@ -350,6 +358,6 @@ document.addEventListener('kali-sim:tour-started',()=>desktop.classList.add('tou
 document.addEventListener('kali-sim:tour-ended',()=>{desktop.classList.remove('tour-running');renderCoach()});
 document.addEventListener('kali-sim:booted',()=>{renderCoach()});
 document.addEventListener('kali-sim:shutdown',()=>{windowEl.classList.add('hidden')});
-window.KaliCurriculum={selectTrack:startTrack,open:openHub,snapshot:()=>JSON.parse(JSON.stringify(data)),run:executeTrack,reset:resetCurrent};
+window.KaliCurriculum={selectTrack:startTrack,open:openHub,fs:virtualFs,snapshot:()=>JSON.parse(JSON.stringify(data)),run:executeTrack,reset:resetCurrent};
 renderCoach();syncFiles();
 })();
