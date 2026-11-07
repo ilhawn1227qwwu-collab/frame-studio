@@ -257,14 +257,15 @@ if(/^airodump-ng\s+/.test(plain)&&/\bwlan0mon$/.test(plain)){
 }
 if(/^aircrack-ng\s+/.test(plain)){if(requireStep('capture',stages[4].cmd))return;if(!/\s-w\s+\/usr\/share\/wordlists\/lab-demo\.txt\s+labcap-01\.cap$/.test(plain)){log('학습용 사전 경로와 캡처 이름을 확인하세요.','warn');log(stages[5].cmd,'dim');return}if(NET.ap.security!=='WPA2-PSK'){log('이 예제는 WPA2-PSK 학습 전용입니다. 현재 '+NET.ap.security+'입니다.','warn');return}if(!NET.capture){log('가상 인증 교환 예제가 없습니다. 클라이언트 재연결과 캡처를 먼저 완료하세요.','warn');return}startAudit();return}
 if(/^nmcli (?:dev|device) wifi connect\s+/.test(canonical)){
- if(requireStep('managed','sudo airmon-ng stop wlan0mon'))return;
- if(requireStep('audit',stages[5].cmd))return;
- if(state.hardened){log('가상 공유기의 보안 설정이 이미 변경돼 이전의 비밀번호는 사용할 수 없어요.','warn');return}
+ if(!state.hardened){
+  if(requireStep('managed','sudo airmon-ng stop wlan0mon'))return;
+  if(requireStep('audit',stages[5].cmd))return;
+ }
  const m=canonical.match(/^nmcli (?:dev|device) wifi connect ["']?LAB-TRAINING["']? password ["']?([^"']+)["']? ifname wlan0$/);
  if(!m){log('SSID·암호·인터페이스 값을 확인하세요.','warn');log(stages[7].cmd,'dim');return}
  const result=NET.connect(m[1]);
  if(!result.ok){log(result.message,'warn');return}
- state.connected=true;save();log(result.message,'ok');mark('connect');return
+ state.connected=true;save();log(result.message,'ok');if(state.hardened){log('강화된 가상 Wi-Fi에 다시 연결했습니다. 기존 보안 실습 완료 기록은 유지됩니다.','sys');render()}else mark('connect');return
 }
 if(canonical==='lab-verify LAB-TRAINING'){if(requireStep('connect',stages[7].cmd))return;if(!state.hardened||!NET.ap.online||NET.ap.security!=='WPA3-SAE'||NET.ap.psk.length<16){log('현재 공유기 전원이나 보안 설정을 검증할 수 없습니다. Network와 관리자 설정을 확인하세요.','warn');return}log('LAB-TRAINING verification [SIMULATION ONLY]','sys');log('  Security: WPA3-SAE                   PASS','ok');log('  Training password policy: >=16 chars PASS','ok');log('  Old weak credential invalidated      PASS','ok');log('  Final verdict: lab scenario remediated.','ok',()=>{$('finish').classList.add('open')});mark('verify');return}
 if(/^lab-verify/.test(canonical)){log('사용법: lab-verify LAB-TRAINING (이 실습에서만 쓰는 명령)','err');return}
