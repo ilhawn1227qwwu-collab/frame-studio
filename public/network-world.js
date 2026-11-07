@@ -58,7 +58,7 @@ const api={
   emit('client',present?'연습용 클라이언트가 준비됐어요.':'연습용 클라이언트를 분리했어요.');
  },
  monitorStart(){world.radio.monitor=true;world.radio.observationSince=world.client.lastEvent;world.capture=null;emit('radio','가상 wlan0mon 관찰 모드를 시작했어요.');},
- monitorStop(){world.radio.monitor=false;world.capture=null;emit('radio','관리 모드로 돌아왔어요.');},
+ monitorStop(){world.radio.monitor=false;emit('radio','관리 모드로 돌아왔어요. 기존 가상 캡처 파일은 유지돼요.');},
  reconnect(){
   if(!world.ap.online)return {ok:false,message:'공유기가 꺼져 있어 클라이언트를 연결할 수 없어요.'};
   if(!world.client.present)return {ok:false,message:'가상 클라이언트가 연결 대상에 없어요. 클라이언트를 먼저 켜세요.'};
@@ -109,9 +109,13 @@ const api={
   world=defaults();store();document.dispatchEvent(new CustomEvent('kali-sim:network-changed',{detail:{kind:'reset',message:'가상 네트워크를 초기화했습니다.'}}));
  },
  restoreFromLegacy({monitor=false,protocol,connected=false,hardened=false}){
-  // Preserve old study progress without giving legacy flags authority over newer simulation events.
+  // One-time migration only. Never overwrite the newer radio-world settings on reload.
+  let alreadySaved=false;
+  try{alreadySaved=localStorage.getItem(KEY)!==null}catch(_){}
+  if(alreadySaved)return;
   if(protocol==='WPA3-SAE'||hardened){
-   world.ap.security='WPA3-SAE';if(world.ap.psk==='coffee2026')world.ap.psk='River-Maple-Sky-Cloud-84';
+   world.ap.security='WPA3-SAE';
+   if(world.ap.psk==='coffee2026')world.ap.psk='River-Maple-Sky-Cloud-84';
   }
   if(monitor)world.radio.monitor=true;
   if(connected)world.client.connected=true;
