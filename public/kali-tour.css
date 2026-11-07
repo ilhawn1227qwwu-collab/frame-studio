@@ -1,0 +1,53 @@
+
+/* Kali SIM LAB: interactive first-boot guided tour */
+#onboard-root[hidden]{display:none!important}
+#onboard-root{position:fixed;inset:0;z-index:1600;pointer-events:none;isolation:isolate;font-family:Cantarell,Inter,"Noto Sans KR",system-ui,sans-serif}
+#onboard-spot{position:fixed;left:0;top:0;width:1px;height:1px;box-shadow:0 0 0 9999px rgba(1,7,17,.76);border:2px solid #6dd2ff;border-radius:5px;outline:1px solid #d3efff;pointer-events:none;z-index:1;transition:left .16s ease,top .16s ease,width .16s ease,height .16s ease}
+#onboard-spot::after{content:"";position:absolute;inset:-7px;border:1px dashed #74d2fdb0;border-radius:8px;animation:onboard-pulse 1.9s ease-in-out infinite}
+@keyframes onboard-pulse{50%{opacity:.26;transform:scale(1.025)}}
+#onboard-root.is-center #onboard-spot{display:none}
+#onboard-card{position:fixed;z-index:2;pointer-events:auto;width:min(358px,calc(100vw - 24px));max-height:min(80dvh,590px);overflow-y:auto;background:#242c3cf7;color:#eaf4ff;border:1px solid #80a8d0;border-radius:7px;box-shadow:0 22px 55px #000d,0 0 30px #125d9e62;backdrop-filter:blur(14px);padding:0;text-align:left;line-height:1.6}
+#onboard-card:focus{outline:none}
+#onboard-card .ob-head{padding:11px 15px;border-bottom:1px solid #52647c;display:flex;justify-content:space-between;gap:8px;align-items:center;background:#2b3951}
+#onboard-card .ob-brand{font-size:11px;font-weight:800;letter-spacing:.06em;color:#a8dbff}
+#onboard-card .ob-number{color:#99adc8;font:11px ui-monospace,monospace;white-space:nowrap}
+#onboard-card .ob-content{padding:17px 18px 12px}
+#onboard-card .ob-icon{font-size:28px;color:#78caf8;margin-bottom:5px}
+#onboard-card h2{margin:4px 0 10px;font-size:19px;line-height:1.35;color:#f8fbff;font-weight:750;letter-spacing:-.03em}
+#onboard-card p{margin:0;color:#d3deee;font-size:13px;line-height:1.78;white-space:pre-line}
+#onboard-card .ob-learn{margin-top:12px;background:#16283c;border-left:3px solid #4ab9e9;padding:9px 10px;color:#b9ddf6;font-size:11px;line-height:1.6}
+#onboard-card .ob-footer{padding:10px 13px 14px;display:flex;gap:8px;align-items:center;justify-content:flex-end}
+#onboard-card button{border-radius:3px;border:1px solid #607b97;background:#33445a;color:#e9f2ff;padding:8px 12px;font-size:12px;cursor:pointer;min-height:36px}
+#onboard-card button:hover{background:#3a5d7e}
+#onboard-card button:focus-visible{outline:2px solid #93dcff;outline-offset:2px}
+#onboard-card .ob-skip{border:0;background:transparent;color:#abbfd4;margin-right:auto}
+#onboard-card .ob-next{background:#2376b5;border-color:#58a1d0;color:white;font-weight:700;padding:8px 14px}
+#onboard-card .ob-next:hover{background:#358dcd}
+#onboard-card .ob-next[hidden]{display:none}
+#onboard-card .ob-action{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:12px;color:#98e1ff;font-weight:700}
+#onboard-card .ob-action span{display:inline-block;height:7px;width:7px;background:#5bc5eb;border-radius:50%;box-shadow:0 0 9px #6acbf3}
+#onboard-card .ob-progress{height:3px;background:#192636;position:relative}
+#onboard-card .ob-progress div{height:100%;background:#5fbcf5;transition:width .25s ease}
+#onboard-restart{display:inline-flex;align-items:center;gap:6px}
+#onboard-restart .ob-help-icon{display:grid;place-items:center;border:1px solid #9ab3d1;color:#dff2ff;font-weight:900;border-radius:50%;font-size:12px;width:18px;height:18px}
+#onboard-menu-entry{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px}
+#onboard-menu-entry svg{width:27px;height:27px;color:#8ccefc}
+@media(max-width:760px){
+ #onboard-card{width:calc(100vw - 20px);max-width:440px;max-height:min(50dvh,430px)}
+ #onboard-card .ob-content{padding:11px 14px 8px}
+ #onboard-card h2{font-size:16px;margin:0 0 6px}
+ #onboard-card p{font-size:12px;line-height:1.54}
+ #onboard-card .ob-learn{margin-top:7px;padding:6px 9px;font-size:10px}
+ #onboard-card .ob-icon{display:none}
+ #onboard-card .ob-footer{padding:6px 10px 10px}
+ #onboard-card button{min-height:34px;font-size:11px}
+ #onboard-card .ob-head{padding:7px 11px}
+ #onboard-card .ob-action{font-size:11px;margin-top:7px}
+ #onboard-restart .ob-help-label{display:none}
+ #onboard-restart{min-width:30px;padding:5px}
+}
+@media(max-height:580px){
+ #onboard-card{max-height:63dvh}
+ #onboard-card .ob-learn{display:none}
+}
+@media(prefers-reduced-motion:reduce){#onboard-spot,#onboard-spot::after{transition:none;animation:none}}
