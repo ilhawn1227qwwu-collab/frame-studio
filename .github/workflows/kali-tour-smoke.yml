@@ -30,3 +30,5 @@ jobs:
         run: node tests/state-transitions-smoke.cjs
       - name: Extended tutorial, icons, privacy and cross-course QA
         run: node tests/extended-audit.cjs
+      - name: Verify virtual SSH permissions, separate server health and chapter resume
+        run: node tests/ssh-and-chapters-smoke.cjs
