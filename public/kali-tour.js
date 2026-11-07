@@ -71,11 +71,11 @@ function resetDesktop(){
 }
 function start(){
  if(!$('power-layer').hidden)return;
- active=true;index=0;resetDesktop();root.hidden=false;show();
+ active=true;index=0;resetDesktop();root.hidden=false;document.dispatchEvent(new Event('kali-sim:tour-started'));show();
 }
 function end(mark=true){
  if(mark)markDone();
- active=false;root.hidden=true;root.classList.remove('is-center');
+ active=false;root.hidden=true;root.classList.remove('is-center');document.dispatchEvent(new Event('kali-sim:tour-ended'));
  $('menu-panel').classList.remove('open');$('menu-btn').setAttribute('aria-expanded','false');
  $('mission').classList.remove('show');
 }
