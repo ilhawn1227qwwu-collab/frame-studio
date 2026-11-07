@@ -147,7 +147,7 @@ term.insertBefore(tmenu,term.querySelector('.terminal-body'));
 const guide=$('guide');const gmenu=document.createElement('div');gmenu.className='gtk-menubar';gmenu.innerHTML='<span>File</span><span>Edit</span><span>Search</span><span>View</span><span>Document</span><span>Help</span>';guide.insertBefore(gmenu,guide.querySelector('.window-body'));
 const wifi=$('wifi');const toolbar=document.createElement('div');toolbar.className='gtk-toolbar';toolbar.innerHTML=ico('wifi')+' NetworkManager <span style="margin-left:auto;font-size:10px;color:#a8c0d8">wlan0 · virtual device</span>';wifi.insertBefore(toolbar,wifi.querySelector('.window-body'));
 const router=$('router');const rbody=router.querySelector('.window-body');
-rbody.insertAdjacentHTML('beforebegin','<div class="browser-tabs"><span class="browser-tab">192.0.2.1 — Router Administration</span></div><div class="browser-toolbar"><span>‹ &nbsp; › &nbsp; ↻</span><span class="browser-url">🔒 http://192.0.2.1/wireless (SIM ONLY)</span></div>');
+rbody.insertAdjacentHTML('beforebegin','<div class="browser-tabs"><span class="browser-tab">192.0.2.1 — Router Administration</span></div><div class="browser-toolbar"><span>‹ &nbsp; › &nbsp; ↻</span><span class="browser-url">http://192.0.2.1/wireless (SIM ONLY)</span></div>');
 /* Virtual Thunar file manager and Appearance settings. */
 const places={
  home:[['Desktop','folder','desktop'],['Documents','folder','documents'],['Downloads','folder','downloads'],['lab-files','folder','lab-files'],['README.txt','doc','README.txt']],
@@ -188,6 +188,11 @@ choice.addEventListener('change',()=>{
  try{localStorage.setItem('kali-wallpaper-choice-v3',choice.value)}catch(_){}
 });
 /* Power-on prompt stays explicit so the browser can honor fullscreen via click. */
+/* Unminimize from any original app launcher, including top panel icons. */
+document.addEventListener('click',event=>{
+  const b=event.target.closest('[data-open]');
+  if(b&&$(b.dataset.open))$(b.dataset.open).classList.remove('minimized');
+});
 const power=$('power-start');if(power)power.innerHTML=ico('power')+' 컴퓨터 켜기 · 전체화면 요청';
 const pEmblem=document.querySelector('.power-emblem');if(pEmblem)pEmblem.innerHTML=ico('power','big');
 /* Surface simulator/accuracy disclaimer in native-looking titlebars. */
