@@ -22,3 +22,5 @@ jobs:
         run: node tests/lab-guide-smoke.cjs
       - name: Test Kali multi-course Learning Center
         run: node tests/curriculum-smoke.cjs
+      - name: Verify filesystems and negative-case Wi-Fi integrity
+        run: node tests/integrity-smoke.cjs
