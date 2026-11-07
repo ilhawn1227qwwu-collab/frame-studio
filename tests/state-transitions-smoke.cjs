@@ -58,7 +58,7 @@ async function run(browser,[name,width,height]){
   await v(()=>window.KaliNetwork.harden('River-Maple-Sky-Cloud-84'));
   assert.equal(await v(()=>window.KaliLAN.link()),false);
   assert.equal((await v(()=>window.KaliLAN.command('nmcli dev wifi connect LAB-TRAINING password coffee2026 ifname wlan0'))).ok,false);
-  await page.locator('.panel-left [data-open="wifi"]').click();
+  await page.locator(name==='small'?'.taskbar [data-open="wifi"]':'.panel-left [data-open="wifi"]').click();
   await page.locator('#wifi').waitFor({state:'visible'});
   await page.locator('#sim-station-pass').fill('River-Maple-Sky-Cloud-84');
   await page.locator('#sim-station-connect').click();
