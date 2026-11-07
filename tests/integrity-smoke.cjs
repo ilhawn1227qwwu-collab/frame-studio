@@ -108,7 +108,7 @@ async function networkTest(browser,label,width,height){
   await page.locator('.panel-left [data-open="wifi"]').click();
   await page.locator('#sim-ap-power').uncheck();
   assert.equal(await page.locator('#nets .net.target').count(),0);
-  assert.equal((await page.locator('#progress-text').innerText()).trim(),'1 / 9','AP change must invalidate dependent progress while keeping iface check');
+  assert.equal((await page.locator('#progress-text').innerText()).trim(),'9 / 9','AP power cycling must not erase already completed WPA3 remediation');
   await page.locator('#sim-ap-power').check();
   assert.equal(await page.locator('#nets .net.target').count(),1);
   assert.deepEqual(errors,[],'JS errors');
