@@ -1,0 +1,71 @@
+
+/* Kali Virtual Network — isolated instructional applications */
+#lan-browser,#lan-map{background:#212c3c;display:flex;flex-direction:column;overflow:hidden;min-height:230px}
+#lan-browser{position:absolute;left:15%;top:11%;width:min(810px,70vw);height:min(590px,76dvh);z-index:44}
+#lan-map{position:absolute;left:19%;top:14%;width:min(750px,68vw);height:min(605px,76dvh);z-index:45}
+#lan-browser .window-head,#lan-map .window-head{flex:none}
+.lan-toolbar{background:#2b3647;padding:9px 10px;display:flex;gap:8px;align-items:center;border-bottom:1px solid #50647d;flex:none}
+.lan-toolbar button{padding:6px 9px;background:#3c4b61;border:1px solid #718398;border-radius:3px;color:#e4effa;font-size:11px;cursor:pointer}
+.lan-toolbar button:focus-visible{outline:2px solid #88caff;outline-offset:1px}
+.lan-toolbar input{flex:1;min-width:0;padding:7px 9px;background:#131e2a;color:#d8ebfc;border:1px solid #5c7591;border-radius:3px;font:12px ui-monospace,monospace}
+.lan-browser-status{padding:6px 11px;border-bottom:1px solid #475d75;background:#182838;font:10px ui-monospace,monospace;color:#a7c4db;flex:none}
+.lan-browser-page{padding:23px;overflow:auto;min-height:0;flex:1;background:#eaf1f6;color:#172b40;font-family:system-ui,"Noto Sans KR",sans-serif}
+.lan-browser-page h2{font-size:22px;font-weight:750;line-height:1.3;color:#162f49;margin:8px 0 13px}
+.lan-browser-page .lan-site-head{background:#d6e7f1;padding:14px 17px;border-left:4px solid #246c9e;font-size:11px;color:#325777;letter-spacing:.05em}
+.lan-browser-page .lan-web-box{padding:15px;background:#fff;border:1px solid #bed1df;border-radius:5px;box-shadow:0 3px 9px #1d365017}
+.lan-browser-page p{font-size:13px;line-height:1.8;color:#3a5266}
+.lan-browser-page .lan-browse-warning{margin:13px 0;padding:10px;background:#fff5e3;color:#7d501f;border:1px solid #e8cb91;font-size:11px}
+.lan-browser-page .lan-http-status{font:700 12px ui-monospace,monospace;margin-bottom:10px;color:#276b98}
+.lan-browser-page .lan-http-status.bad{color:#b4433c}
+.lan-browser-page .lan-links{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}
+.lan-browser-page .lan-links button{border:1px solid #a8c9de;border-radius:3px;background:#e7f5fe;color:#2c6797;font-size:11px;padding:7px 10px;cursor:pointer}
+.lan-browser-page .lan-headers{font:11px/1.6 ui-monospace,monospace;white-space:pre-wrap;margin-top:15px;background:#e1ebf3;color:#334b60;padding:10px;border:1px solid #c9d9e7;overflow-wrap:anywhere}
+.lan-browser-page .lan-browser-small{font-size:10px;color:#607f95}
+.lan-map-content{flex:1;min-height:0;overflow-y:auto;padding:14px;background:#1b2737}
+.lan-map-overline{font:700 10px ui-monospace,monospace;color:#9ad3fa;letter-spacing:.09em;margin-bottom:9px}
+.lan-topology{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;align-items:stretch}
+.lan-topology .lan-device{border:1px solid #60768e;border-radius:4px;background:#243b52;text-align:left;padding:12px;min-height:111px;display:flex;flex-direction:column;gap:6px;color:#dcecff;cursor:pointer}
+.lan-topology .lan-device:hover{background:#2b4d6c}
+.lan-topology .lan-device.off{background:#3a3542;border-color:#865760}
+.lan-topology .lan-device strong{font-size:12px;line-height:1.45}
+.lan-topology .lan-device span{color:#abc8dc;font:10px/1.4 ui-monospace,monospace;overflow-wrap:anywhere}
+.lan-topology .lan-device .lan-device-icon{font-size:22px;color:#8fd5ff;line-height:1.2}
+.lan-device .lan-dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#70d6a9;box-shadow:0 0 0 2px #3b6755}
+.lan-device.off .lan-dot{background:#f3a5a5;box-shadow:0 0 0 2px #75565f}
+.lan-map-hint{margin:13px 0;padding:10px;border:1px solid #506980;background:#213449;color:#c4d8ea;font-size:11px;line-height:1.65;white-space:pre-line}
+.lan-map-actions{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.lan-map-actions button{background:#2c638e;border:1px solid #638fb4;color:#e6f5ff;font-size:11px;border-radius:3px;padding:8px 10px;cursor:pointer}
+.lan-map-actions button:hover{background:#397cae}
+.lan-map-events{font:10px/1.7 ui-monospace,monospace;color:#a7bed2;margin:8px 0;white-space:pre-wrap}
+.lan-side{display:none;position:absolute;right:16px;top:64px;width:min(310px,30vw);max-height:calc(100dvh - 140px);overflow:auto;z-index:5;background:#202e40f5;border:1px solid #6684a0;border-radius:5px;color:#e3eefb;box-shadow:0 12px 30px #000a}
+.lan-side .lan-side-head{background:#2c435d;border-bottom:1px solid #6586a5;padding:11px;font:700 11px ui-monospace,monospace;color:#9dd9ff;display:flex;justify-content:space-between;gap:4px}
+.lan-side .lan-side-content{padding:13px;font-size:12px;line-height:1.7}
+.lan-side .lan-side-content h3{font-size:14px;margin:4px 0 9px;color:white}
+.lan-side .lan-side-content p{font-size:11px;color:#c5d7e8;line-height:1.7;white-space:pre-line}
+.lan-side .lan-side-content code{display:block;font:11px/1.6 ui-monospace,monospace;color:#afe8c9;white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0;background:#12253a;padding:8px}
+.lan-side .lan-side-content button{border:1px solid #7499b6;background:#32618b;color:#e9f6ff;padding:7px 9px;border-radius:3px;font-size:11px;margin:5px 4px 0 0;cursor:pointer}
+.lan-side .lan-complete{color:#a7efbd;font-weight:700}
+.lan-side .lan-progress{font:10px ui-monospace,monospace;color:#b6d1e6}
+.lan-mobile-guide{display:none;flex:none;background:#1c344b;border-bottom:1px solid #6b87a0;color:#d8eefd}
+.lan-mobile-guide button{background:transparent;color:inherit;border:0;padding:9px 11px;display:flex;gap:9px;width:100%;align-items:center;text-align:left;font-size:11px}
+.lan-mobile-guide .lan-mobile-count{font:700 10px ui-monospace,monospace;color:#9dd5ff;white-space:nowrap}
+.lan-mobile-guide .lan-mobile-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lan-mobile-detail{font-size:11px;line-height:1.65;padding:9px 11px;max-height:30dvh;overflow:auto;border-top:1px solid #53677f;white-space:pre-wrap}
+.lan-mobile-detail code{display:block;color:#a6f3cc;white-space:pre-wrap;margin:7px 0}
+.desktop.lan-active #mission,.desktop.lan-active #lab-guide,.desktop.lan-active #lab-mobile-guide,.desktop.lan-active #course-coach,.desktop.lan-active #course-mobile{display:none!important}
+.desktop.lan-active #lan-side{display:block}
+.desktop:not(.lan-active) #lan-side{display:none}
+.desktop.tour-running #lan-side,.desktop.tour-running #lan-mobile-guide{display:none!important}
+.lan-report{white-space:pre-wrap;border:1px solid #67869d;background:#152a3f;color:#c7e3f5;padding:12px;font:11px/1.6 ui-monospace,monospace;max-height:260px;overflow-y:auto}
+.lan-window-actions{display:flex;gap:8px;margin:9px 0}
+.lan-window-actions button{font-size:11px;background:#2a618b;color:#e8f6ff;border:1px solid #618eb0;padding:8px 10px;border-radius:3px;cursor:pointer}
+@media(max-width:1080px){#lan-browser{left:9%;width:74vw}#lan-map{left:10%;width:75vw}.lan-side{right:9px;width:27vw}}
+@media(max-width:760px){
+ #lan-browser,#lan-map{left:5px!important;right:5px!important;top:44px!important;bottom:58px!important;width:calc(100% - 10px)!important;height:calc(100dvh - 102px)!important}
+ .lan-browser-page{padding:12px}.lan-browser-page h2{font-size:18px}
+ .lan-toolbar{padding:6px;gap:4px}.lan-toolbar button{padding:6px}.lan-toolbar input{font-size:10px}
+ .lan-map-content{padding:9px}.lan-topology{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .lan-topology .lan-device{padding:8px;min-height:100px}.lan-topology .lan-device strong{font-size:11px}
+ .desktop.lan-active #lan-side{display:none!important}
+ .desktop.lan-active #lan-mobile-guide{display:block}
+}
