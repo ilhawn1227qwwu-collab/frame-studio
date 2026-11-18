@@ -244,3 +244,100 @@ def test_mp4_full_video_streamcopy_and_high_quality_trim(tmp_path, monkeypatch):
     assert hd_clip.is_file() and hd_clip.stat().st_size > 1000
 
 
+
+
+def test_official_instance_fallback_keeps_only_post_id_and_relative_media_hosts(monkeypatch):
+    """Switch hosts after an outage; never forward the original tracking URL."""
+    import io
+    import json
+    import urllib.error
+    seen = []
+    class Response(io.BytesIO):
+        status = 200
+        headers = {"content-type": "application/json"}
+        def __enter__(self): return self
+        def __exit__(self, *_): pass
+    payload = sample_info()
+    for stream in payload["adaptiveFormats"]:
+        stream["url"] = "/latest_version?id=" + VIDEO_ID + "&itag=" + stream["itag"]
+    class Opener:
+        def open(self, req, timeout):
+            seen.append(req.full_url)
+            assert 0 < timeout <= 10
+            if len(seen) == 1:
+                raise urllib.error.URLError("primary instance down")
+            return Response(json.dumps(payload).encode("utf-8"))
+    monkeypatch.setattr(alternative, "OPENER", Opener())
+    item = alternative._read_info(VIDEO_ID)
+    assert len(seen) == 2
+    assert seen[0].startswith("https://yt.chocolatemoo53.com/")
+    assert seen[1].startswith("https://invidious.f5.si/")
+    assert all(VIDEO_ID in url and "test?" not in url for url in seen)
+    assert item["_frame_origin"] == "https://invidious.f5.si"
+    assert alternative._candidates(item, "video")
+    assert alternative._candidates(item, "audio")
+
+
+def test_empty_media_instance_falls_back(monkeypatch):
+    import io
+    import json
+    calls = []
+    class Response(io.BytesIO):
+        status = 200
+        headers = {"content-type": "application/json"}
+        def __enter__(self): return self
+        def __exit__(self, *_): pass
+    bad = sample_info()
+    bad["adaptiveFormats"] = []
+    class Opener:
+        def open(self, req, timeout):
+            calls.append(req.full_url)
+            return Response(json.dumps(bad if len(calls) == 1 else sample_info()).encode())
+    monkeypatch.setattr(alternative, "OPENER", Opener())
+    found = alternative._read_info(VIDEO_ID)
+    assert len(calls) == 2
+    assert found["_frame_origin"] == "https://invidious.f5.si"
+
+
+def test_all_external_servers_unreachable_is_explicit_and_bounded(monkeypatch):
+    import urllib.error
+    seen = []
+    class Opener:
+        def open(self, req, timeout):
+            seen.append(req.full_url)
+            raise urllib.error.URLError("down")
+    monkeypatch.setattr(alternative, "OPENER", Opener())
+    with pytest.raises(alternative.AlternativeError, match="외부 공개 영상 서버들"):
+        alternative._read_info(VIDEO_ID)
+    assert len(seen) == len(alternative.INVIDIOUS_ORIGINS)
+    assert len(set(seen)) == len(seen)
+    assert all(url.startswith("https://") for url in seen)
+
+
+def test_backup_media_host_is_strictly_allowlisted(tmp_path, monkeypatch):
+    import io
+    names = ("https://invidious.f5.si/latest_version",
+             "https://inv.nadeko.net/latest_version")
+    for url in names:
+        assert alternative._validate_media_url(url) == url
+    for url in ("https://invidious.f5.si.evil.example/latest_version",
+                "http://inv.nadeko.net/latest_version",
+                "https://inv.nadeko.net@127.0.0.1/latest_version"):
+        with pytest.raises(alternative.AlternativeError):
+            alternative._validate_media_url(url)
+    seen = []
+    class Response(io.BytesIO):
+        status = 200
+        headers = {"content-type": "video/webm", "content-length": "512"}
+        def __enter__(self): return self
+        def __exit__(self, *_): pass
+    class Opener:
+        def open(self, req, timeout):
+            seen.append(req.full_url)
+            return Response(b"x" * 512)
+    monkeypatch.setattr(alternative, "OPENER", Opener())
+    target = tmp_path / "sample.bin"
+    alternative._download("/latest_version?itag=140", target, 10000,
+                          lambda _: None, origin="https://invidious.f5.si")
+    assert target.stat().st_size == 512
+    assert seen == ["https://invidious.f5.si/latest_version?itag=140"]
