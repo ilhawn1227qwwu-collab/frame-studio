@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#0d1016">
   <meta name="description" content="링크를 넣고, 필요한 장면을 원하는 형식으로. 개인용 미디어 추출 스튜디오.">
   <title>FRAME — 미디어 추출 스튜디오</title>
-  <link rel="stylesheet" href="/static/style.css?v=1.8.3">
-  <script src="/static/app.js?v=1.8.3" defer></script>
+  <link rel="stylesheet" href="/static/style.css?v=1.8.4">
+  <script src="/static/app.js?v=1.8.4" defer></script>
 </head>
 <body>
   <div class="page-ambient" aria-hidden="true"></div>
@@ -18,7 +18,7 @@
         <span class="brand-text">FRAME<span class="brand-period">.</span></span>
         <span class="brand-sub">STUDIO</span>
       </a>
-      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.8.3</span></div>
+      <div class="nav-right"><span class="nav-dot"></span> PRIVATE WEB WORKSPACE <span class="nav-sep"></span><span class="nav-version">v1.8.4</span></div>
     </header>
 
     <main>
@@ -41,7 +41,7 @@
             <div class="url-field" id="urlField"><span class="url-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M10 13.5a5 5 0 0 0 7.1 0l2-2a5 5 0 1 0-7.1-7.1l-1.1 1.1"/><path d="M14 10.5a5 5 0 0 0-7.1 0l-2 2a5 5 0 1 0 7.1 7.1l1.1-1.1"/></svg></span><input id="urlInput" type="url" spellcheck="false" placeholder="YouTube / TikTok / Instagram / X 게시물 링크" aria-describedby="urlHelp" required><button id="pasteBtn" type="button" class="paste-button" title="클립보드에서 붙여넣기">붙여넣기</button></div>
             <div class="field-bottom"><span id="urlHelp">YouTube · TikTok · Instagram · X(트위터) 영상 지원</span><span class="limit-mark">MAX 2 HOURS</span></div>
             <button id="inspectBtn" type="submit" class="primary-button"><span id="inspectLabel">영상 불러오기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-            <button id="directAltBtn" type="button" class="fallback-button">외부 서버로 바로 불러오기</button><p class="alt-privacy-inline">유튜브 전용 예비 경로입니다. 선택 시 영상 ID가 여러 외부 공개 서버에 순차적으로 전송될 수 있습니다. 일반 영상·쇼츠 모두 가능하며 무료 서버의 파일 크기 제한이 적용됩니다.</p>
+            <button id="directAltBtn" type="button" class="fallback-button">외부 서버로 바로 불러오기</button><p class="alt-privacy-inline">유튜브 전용 예비 경로입니다. 선택 시 영상 ID가 여러 외부 공개 서버에 순차적으로 전송될 수 있습니다. 일반 영상·쇼츠의 다운로드를 시도하지만, 공개 서버들의 YouTube 접근이 차단돼 실패할 수 있어요.</p>
           </form>
           <div id="errorBox" class="error-box hidden" role="alert"></div>
           <p id="instagramPrivacy" class="alt-privacy-inline hidden">인스타그램 공개 게시물을 읽을 때 vxInstagram 미리보기 서버를 이용하고, 릴스 처리가 실패하면 Instagramfix 등 독립 미리보기 서버로 자동 전환해요. 게시물 주소가 해당 서비스에 전달되지만 파일 저장은 FRAME STUDIO 안에서 이루어집니다. 비공개·로그인 필요 콘텐츠는 지원하지 않아요.</p>
@@ -52,8 +52,8 @@
             <button id="socialTikwmBtn" class="fallback-button hidden" type="button">TikWM 처리 서버로 영상 불러오기</button>
           </div>
           <div id="fallbackSection" class="fallback-card hidden">
-            <strong>유튜브 직접 추출 실패 — 다른 서버로 재시도</strong>
-            <p id="fallbackDescription">유튜브 직접 연결에 실패했습니다. 아래 버튼을 누르면 공식 목록의 외부 Invidious 공개 서버들을 순서대로 확인하며, <b>영상 ID만 전달</b>해 정보를 불러옵니다. 이후 영상·음성을 해당 서버에서 받아 MP4·MP3로 변환해요. 모든 서버가 막혀 있으면 실패할 수 있습니다.</p>
+            <strong>유튜브 정보 추출 실패 — 서버 접근 상태를 확인하세요</strong>
+            <p id="fallbackDescription">유튜브가 이 클라우드 서버에 영상 정보를 제공하지 않아 실패할 수 있어요. 외부 Invidious 방식도 API 접근을 거부할 수 있으며, 다운로드 성공을 보장하지 않습니다. 외부 경로를 선택하면 해당 서비스에 <b>영상 ID만 전달</b>해 정보를 요청합니다.</p>
             <button id="alternateBtn" type="button" class="fallback-button">외부 서버로 불러오기</button>
             <button id="fallbackBtn" type="button" class="fallback-button secondary-fallback">Cobalt 웹사이트에서 시도하기 ↗</button>
           </div>
