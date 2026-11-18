@@ -198,3 +198,24 @@ def test_no_persistent_usage_logging_in_app_config():
     assert '--no-access-log' in docker
     assert 'access_log=False' in source
     assert 'shutil.rmtree(WORKDIR, ignore_errors=True)' in source
+
+
+def test_youtube_player_response_failure_is_not_mislabeled_duration():
+    """A real failure from Nov 18 2026 must suggest the manual fallback."""
+    from server import _safe_error
+    raw = "ERROR: [youtube] GKEq2jYD1SU: Failed to extract any player response; please report this issue"
+    result = _safe_error(RuntimeError(raw))
+    assert "재생 정보" in result
+    assert "영상 길이와는 무관" in result
+    assert "외부 서버" in result
+
+def test_invidious_fallback_buttons_have_real_click_handlers():
+    """Both previously inert buttons must lead to the manual, opt-in fallback."""
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] / 'static' / 'app.js').read_text()
+    page = (Path(__file__).resolve().parents[1] / 'static' / 'index.html').read_text()
+    assert "request('/api/inspect-alt', { url })" in js
+    assert "$('directAltBtn').addEventListener('click', inspectYouTubeFallback)" in js
+    assert "$('alternateBtn').addEventListener('click', inspectYouTubeFallback)" in js
+    assert "유튜브가 이 서버에 정상적인 재생 정보를" in js
+    assert "v1.8.2" in page and "app.js?v=1.8.2" in page
