@@ -112,6 +112,10 @@ def _read_info(video_id: str) -> dict:
             continue
         # Needed for safely resolving host-relative '/latest_version' media URLs.
         info["_frame_origin"] = origin
+        # An instance can reply 200 with an empty or unusable format list.
+        # Do not let that hide potentially working streams on another host.
+        if not _candidates(info, "video") or not _candidates(info, "audio"):
+            continue
         return info
     raise AlternativeError(
         "연결한 외부 공개 영상 서버들이 현재 응답하지 않거나 이 영상을 제공하지 않아요. "
