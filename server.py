@@ -226,6 +226,12 @@ def _safe_error(exc: Exception) -> str:
         return ('유튜브가 이 서버의 접속을 봇으로 판단해 차단했습니다. '
                 '공개 쇼츠에서도 발생할 수 있으며 링크나 영상의 공개 설정 문제가 아닙니다. '
                 '현재 서버에서는 추출할 수 없어요.')
+    if ('failed to extract any player response' in lower or
+            'all player responses are invalid' in lower or
+            'unable to extract player response' in lower):
+        return ('유튜브가 이 서버에 정상적인 재생 정보를 제공하지 않았어요. '
+                '영상 길이와는 무관하게 발생할 수 있는 추출 오류예요. '
+                '아래 외부 서버 불러오기를 시도해 주세요.')
     if 'requested format is not available' in lower:
         return '선택한 화질을 제공하지 않아요. 다른 화질을 선택해 주세요.'
     if 'private video' in lower or 'sign in' in lower or 'login' in lower or 'age-restricted' in lower:
