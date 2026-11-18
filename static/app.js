@@ -36,12 +36,12 @@ function updatePlatformControls() {
 }
 elements.url.addEventListener('input', updatePlatformControls);
 function isServerBotBlock(message) {
-  return /유튜브가 이 서버의 접속|봇으로 판단|서버의 접근 제한/.test(message || '');
+  return /유튜브가 이 서버의 접속|유튜브가 이 서버에 정상적인 재생 정보를|봇으로 판단|서버의 접근 제한/.test(message || '');
 }
 function showError(message) {
   elements.error.textContent = message;
   show(elements.error);
-  if (state.url && isServerBotBlock(message)) show($('fallbackSection'));
+  if (state.url && detectPlatform(state.url) === 'youtube' && isServerBotBlock(message)) show($('fallbackSection'));
 }
 function clearError() {
   hide(elements.error); elements.error.textContent = '';
@@ -92,6 +92,38 @@ function openExternalFallback() {
 }
 $('fallbackBtn').addEventListener('click', openExternalFallback);
 $('fallbackJobBtn').addEventListener('click', openExternalFallback);
+// The two in-page Invidious buttons were previously rendered but had no click
+// handlers, so a player-response extraction failure left users stuck.
+async function inspectYouTubeFallback() {
+  const url = elements.url.value.trim();
+  if (detectPlatform(url) !== 'youtube') {
+    showError('유효한 유튜브 영상 주소를 입력해 주세요.');
+    return;
+  }
+  if (state.pollTimer) clearTimeout(state.pollTimer);
+  state.url = url;
+  state.info = null;
+  state.jobId = null;
+  hide(elements.video); hide(elements.options); hide(elements.progress);
+  const direct = $('directAltBtn'), alternate = $('alternateBtn');
+  setLoading(direct, true);
+  setLoading(alternate, true);
+  clearError();
+  try {
+    const info = await request('/api/inspect-alt', { url });
+    displayVideo(info);
+    elements.video.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (error) {
+    showError(error.message);
+    // Preserve an explicit fallback option when the independent server fails.
+    show($('fallbackSection'));
+  } finally {
+    setLoading(direct, false);
+    setLoading(alternate, false);
+  }
+}
+$('directAltBtn').addEventListener('click', inspectYouTubeFallback);
+$('alternateBtn').addEventListener('click', inspectYouTubeFallback);
 async function request(url, data) {
   const response = await fetch(url, {
     method: 'POST',
@@ -248,6 +280,7 @@ async function pollJob(jobId) {
       show($('retryBtn'));
       if (state.info?.site === 'instagram' || state.info?.site === 'tiktok') showSocialFallback(state.info.site);
       if (isServerBotBlock(data.error) || state.info?.provider === 'invidious') show($('fallbackJobBtn'));
+      if (state.info?.provider === 'youtube' && isServerBotBlock(data.error)) show($('fallbackSection'));
       else hide($('fallbackJobBtn'));
       setLoading(elements.export, false);
       return;
