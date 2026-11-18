@@ -180,12 +180,12 @@ def test_mobile_frontend_cache_busting_and_twitter_platform():
     """Old Android browser cache must not hide new supported platforms."""
     from fastapi.testclient import TestClient
     client = TestClient(app)
-    homepage = client.get('/?v=1.8.1')
+    homepage = client.get('/?v=1.8.2')
     assert homepage.status_code == 200
     assert homepage.headers.get('cache-control') == 'no-store, no-cache, must-revalidate'
-    assert '/static/app.js?v=1.8.1' in homepage.text
+    assert '/static/app.js?v=1.8.2' in homepage.text
     assert 'X(트위터)' in homepage.text
-    script = client.get('/static/app.js?v=1.8.1')
+    script = client.get('/static/app.js?v=1.8.2')
     assert script.status_code == 200
     assert script.headers.get('cache-control') == 'no-store, no-cache, must-revalidate'
     assert "'x.com'" in script.text and "return 'twitter'" in script.text
