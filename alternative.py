@@ -20,6 +20,14 @@ from typing import Callable
 INVIDIOUS_HOST = "yt.chocolatemoo53.com"
 COMPANION_HOST = "yt-comp2.chocolatemoo53.com"
 INVIDIOUS_ORIGIN = "https://" + INVIDIOUS_HOST
+# Published official Invidious instances only. Third-party access is opt-in.
+# https://docs.invidious.io/instances/
+INVIDIOUS_ORIGINS = (
+    INVIDIOUS_ORIGIN,
+    "https://invidious.f5.si",
+    "https://inv.nadeko.net",
+)
+INVIDIOUS_HOSTS = frozenset(urllib.parse.urlsplit(url).hostname for url in INVIDIOUS_ORIGINS)
 # The hard-coded three-minute pilot limit is no longer necessary.
 # Long videos may still exceed the file-size, network, or hosting constraints.
 ALT_MAX_SECONDS = min(7200, max(60, int(os.getenv("FRAME_MAX_DURATION", "7200"))))
@@ -30,7 +38,7 @@ ALT_AUDIO_BYTES = min(110 * 1024 * 1024, ALT_MAX_MEDIA_BYTES)
 MAX_TRANSFER_SECONDS = 20 * 60
 REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 MAX_REDIRECTS = 3
-ALLOWED_HOSTS = frozenset((INVIDIOUS_HOST, COMPANION_HOST))
+ALLOWED_HOSTS = frozenset((*INVIDIOUS_HOSTS, COMPANION_HOST))
 
 
 class AlternativeError(Exception):
@@ -49,7 +57,7 @@ def _validate_media_url(url: str) -> str:
     """Allowlist redirects even when the upstream metadata is malicious."""
     parts = urllib.parse.urlsplit(url)
     hostname = (parts.hostname or "").lower()
-    trusted_host = (hostname == INVIDIOUS_HOST or
+    trusted_host = (hostname in INVIDIOUS_HOSTS or
                     re.fullmatch(r"yt-comp[0-9]+\.chocolatemoo53\.com", hostname) is not None)
     if (parts.scheme != "https" or not trusted_host
             or parts.port not in (None, 443) or parts.username or parts.password):
@@ -63,36 +71,52 @@ def _validate_media_url(url: str) -> str:
 
 
 def _read_info(video_id: str) -> dict:
+    """Try fixed documented public instances, only after the user's opt-in.
+
+    A failure from one instance does not establish that the video is private.
+    Only the canonical 11-character video ID is forwarded.
+    """
     if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
         raise AlternativeError("영상 주소를 확인해 주세요.")
-    url = f"{INVIDIOUS_ORIGIN}/api/v1/videos/{video_id}?local=true"
-    request = urllib.request.Request(url, headers={
-        "Accept": "application/json", "User-Agent": "FrameStudio/1.0"
-    })
-    try:
-        with OPENER.open(request, timeout=16) as resp:
-            if resp.status != 200 or "json" not in resp.headers.get("content-type", "").lower():
-                raise AlternativeError("외부 서버에서 영상 정보를 확인할 수 없어요.")
-            data_bytes = resp.read(700_001)
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
-        raise AlternativeError("외부 영상 서버가 일시적으로 응답하지 않아요.") from None
-    if len(data_bytes) > 700_000:
-        raise AlternativeError("외부 영상 서버의 응답이 너무 커요.")
-    try:
-        info = json.loads(data_bytes)
-    except (ValueError, UnicodeDecodeError):
-        raise AlternativeError("외부 영상 서버의 응답을 해석할 수 없어요.") from None
-    if not isinstance(info, dict) or info.get("videoId") != video_id:
-        raise AlternativeError("영상 ID 검증에 실패했어요.")
-    if info.get("liveNow") or info.get("isUpcoming") or info.get("paid") or info.get("premium"):
-        raise AlternativeError("라이브·유료·제한된 영상은 이 경로에서 지원하지 않아요.")
-    duration = int(info.get("lengthSeconds") or 0)
-    if not 0 < duration <= ALT_MAX_SECONDS:
-        raise AlternativeError(f"현재 서버에서는 최대 {ALT_MAX_SECONDS // 60}분 길이의 영상을 지원해요. 영상 길이가 더 길면 구간을 나누거나 별도 서버가 필요해요.")
-    if not isinstance(info.get("adaptiveFormats"), list):
-        raise AlternativeError("외부 서버에 영상 추출 정보가 없어요.")
-    return info
-
+    for origin in INVIDIOUS_ORIGINS:
+        url = f"{origin}/api/v1/videos/{video_id}?local=true"
+        request = urllib.request.Request(url, headers={
+            "Accept": "application/json", "User-Agent": "FrameStudio/1.8"
+        })
+        try:
+            with OPENER.open(request, timeout=9) as resp:
+                if resp.status != 200 or "json" not in resp.headers.get("content-type", "").lower():
+                    continue
+                data_bytes = resp.read(700_001)
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
+            continue
+        if len(data_bytes) > 700_000:
+            continue
+        try:
+            info = json.loads(data_bytes)
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if not isinstance(info, dict) or info.get("videoId") != video_id:
+            continue
+        if info.get("liveNow") or info.get("isUpcoming") or info.get("paid") or info.get("premium"):
+            raise AlternativeError("라이브·유료·제한된 영상은 이 경로에서 지원하지 않아요.")
+        try:
+            duration = int(info.get("lengthSeconds") or 0)
+        except (TypeError, ValueError, OverflowError):
+            duration = 0
+        if not 0 < duration <= ALT_MAX_SECONDS:
+            raise AlternativeError(
+                f"현재 서버에서는 최대 {ALT_MAX_SECONDS // 60}분 길이의 영상을 지원해요. "
+                "영상 길이가 더 길면 별도 서버가 필요해요.")
+        if not isinstance(info.get("adaptiveFormats"), list):
+            continue
+        # Needed for safely resolving host-relative '/latest_version' media URLs.
+        info["_frame_origin"] = origin
+        return info
+    raise AlternativeError(
+        "연결한 외부 공개 영상 서버들이 현재 응답하지 않거나 이 영상을 제공하지 않아요. "
+        "유튜브 링크나 영상 길이만의 문제는 아닐 수 있어요. "
+        "잠시 후 다시 시도하거나 아래 Cobalt 웹사이트를 이용해 보세요.")
 
 def _video_height(fmt: dict) -> int:
     match = re.search(r"(\d{3,4})p", str(fmt.get("qualityLabel") or fmt.get("resolution") or ""))
@@ -109,7 +133,7 @@ def _candidates(info: dict, kind: str) -> list[dict]:
         if not isinstance(raw, str) or not raw:
             continue
         try:
-            _validate_media_url(urllib.parse.urljoin(INVIDIOUS_ORIGIN, raw))
+            _validate_media_url(urllib.parse.urljoin(info.get("_frame_origin", INVIDIOUS_ORIGIN), raw))
         except AlternativeError:
             continue
         result.append(fmt)
@@ -186,8 +210,9 @@ def _choose_sources(info: dict, mode: str, quality: int) -> tuple[dict | None, d
     return video[0], chosen_audio
 
 
-def _download(url: str, output: Path, maximum: int, update: Callable[[int], None]):
-    url = _validate_media_url(urllib.parse.urljoin(INVIDIOUS_ORIGIN, url))
+def _download(url: str, output: Path, maximum: int, update: Callable[[int], None],
+              origin: str = INVIDIOUS_ORIGIN):
+    url = _validate_media_url(urllib.parse.urljoin(origin, url))
     deadline = time.monotonic() + MAX_TRANSFER_SECONDS
     for hop in range(MAX_REDIRECTS + 1):
         request = urllib.request.Request(url, headers={
@@ -243,10 +268,12 @@ def obtain_source(
     """Download one authorized video, bounded by storage, traffic, and time."""
     info = _read_info(video_id)
     video_format, audio_format = _choose_sources(info, mode, quality)
+    origin = info.get("_frame_origin", INVIDIOUS_ORIGIN)
     audio = folder / ("alt_audio.m4a" if "audio/mp4" in audio_format["type"] else "alt_audio.webm")
     update(5, "외부 서버에서 오디오를 가져오는 중...")
     _download(audio_format["url"], audio, ALT_AUDIO_BYTES,
-              lambda percent: update(5 + int(percent * .25), "오디오를 받아오는 중..."))
+              lambda percent: update(5 + int(percent * .25), "오디오를 받아오는 중..."),
+              origin=origin)
     if mode in ("mp3", "m4a", "opus"):
         return audio
     if audio.stat().st_size >= ALT_MAX_MEDIA_BYTES:
@@ -256,7 +283,8 @@ def obtain_source(
     video = folder / ("alt_video.mp4" if "video/mp4" in video_format["type"] else "alt_video.webm")
     update(32, "외부 서버에서 영상을 가져오는 중...")
     _download(video_format["url"], video, max(1, ALT_MAX_MEDIA_BYTES - audio.stat().st_size),
-              lambda percent: update(32 + int(percent * .43), "영상을 받아오는 중..."))
+              lambda percent: update(32 + int(percent * .43), "영상을 받아오는 중..."),
+              origin=origin)
     output = folder / "source.mkv"
     update(76, "영상과 오디오를 합치는 중...")
     try:
