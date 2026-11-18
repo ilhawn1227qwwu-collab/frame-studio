@@ -180,12 +180,12 @@ def test_mobile_frontend_cache_busting_and_twitter_platform():
     """Old Android browser cache must not hide new supported platforms."""
     from fastapi.testclient import TestClient
     client = TestClient(app)
-    homepage = client.get('/?v=1.8.3')
+    homepage = client.get('/?v=1.8.4')
     assert homepage.status_code == 200
     assert homepage.headers.get('cache-control') == 'no-store, no-cache, must-revalidate'
-    assert '/static/app.js?v=1.8.3' in homepage.text
+    assert '/static/app.js?v=1.8.4' in homepage.text
     assert 'X(트위터)' in homepage.text
-    script = client.get('/static/app.js?v=1.8.3')
+    script = client.get('/static/app.js?v=1.8.4')
     assert script.status_code == 200
     assert script.headers.get('cache-control') == 'no-store, no-cache, must-revalidate'
     assert "'x.com'" in script.text and "return 'twitter'" in script.text
@@ -218,4 +218,13 @@ def test_invidious_fallback_buttons_have_real_click_handlers():
     assert "$('directAltBtn').addEventListener('click', inspectYouTubeFallback)" in js
     assert "$('alternateBtn').addEventListener('click', inspectYouTubeFallback)" in js
     assert "유튜브가 이 서버에 정상적인 재생 정보를" in js
-    assert "v1.8.3" in page and "app.js?v=1.8.3" in page
+    assert "v1.8.4" in page and "app.js?v=1.8.4" in page
+
+
+def test_exhausted_external_servers_stop_dead_end_retries():
+    """Never present a known broken Invidious retry loop as a working fix."""
+    from pathlib import Path
+    code = (Path(__file__).resolve().parents[1] / 'static' / 'app.js').read_text()
+    assert "direct.classList.add('hidden')" in code
+    assert "alternate.classList.add('hidden')" in code
+    assert "성공을 보장하지 않아요" in code
