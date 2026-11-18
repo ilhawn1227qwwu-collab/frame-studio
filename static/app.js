@@ -115,7 +115,11 @@ async function inspectYouTubeFallback() {
     elements.video.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } catch (error) {
     showError(error.message);
-    // Preserve an explicit fallback option when the independent server fails.
+    // Preserve an external-site option even when every API endpoint failed.
+    const description = $('fallbackDescription');
+    if (description && /외부 공개 영상 서버들이/.test(error.message)) {
+      description.textContent = '연결 가능한 공개 Invidious 서버를 찾지 못했어요. 계속 같은 버튼을 누르기보다, 아래 Cobalt 웹사이트에서 시도하거나 나중에 재시도해 주세요. 다른 서비스는 별도로 운영되므로 작동을 보장할 수 없습니다.';
+    }
     show($('fallbackSection'));
   } finally {
     setLoading(direct, false);
@@ -224,6 +228,8 @@ elements.form.addEventListener('submit', async (event) => {
   state.url = url; state.info = null;
   hide(elements.video); hide(elements.options); hide(elements.progress);
   hide($('fallbackSection'));
+  const description = $('fallbackDescription');
+  if (description) description.textContent = '유튜브 직접 연결에 실패했습니다. 아래 버튼은 공식 목록의 외부 Invidious 공개 서버들을 순서대로 확인하며, 영상 ID만 전달합니다. 모든 서버가 막혀 있으면 실패할 수 있습니다.';
   setLoading(elements.inspect, true);
   elements.inspectLabel.textContent = '영상 확인 중...';
   try {
